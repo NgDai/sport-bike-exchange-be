@@ -9,9 +9,8 @@ import lombok.Setter;
 @AllArgsConstructor
 @Getter
 @Setter
-public class brand {
-    private String brand_id;
-    private String name;
-    private String country;
-    private String description;
+public class wishlist {
+    private String wishlist_id;
+    private String user_id;
+    private String post_id;
 }

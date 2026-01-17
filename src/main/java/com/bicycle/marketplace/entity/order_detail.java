@@ -9,9 +9,9 @@ import lombok.Setter;
 @AllArgsConstructor
 @Getter
 @Setter
-public class brand {
-    private String brand_id;
-    private String name;
-    private String country;
-    private String description;
+public class order_detail {
+    private String order_detail_id;
+    private String order_id;
+    private String post_id;
+    private int quantity;
 }
