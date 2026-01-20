@@ -1,4 +1,4 @@
-package com.bicycle.marketplace.entity;
+package com.bicycle.marketplace.model;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

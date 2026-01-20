@@ -1,4 +1,4 @@
-package com.bicycle.marketplace.entity;
+package com.bicycle.marketplace.model;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -9,8 +9,8 @@ import lombok.Setter;
 @AllArgsConstructor
 @Getter
 @Setter
-public class category {
-    private String category_id;
-    private String name;
-    private String bicycle_type;
+public class wishlist {
+    private String wishlist_id;
+    private String user_id;
+    private String post_id;
 }
