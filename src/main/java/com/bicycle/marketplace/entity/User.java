@@ -1,9 +1,6 @@
 package com.bicycle.marketplace.entity;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import lombok.*;
 
 import java.util.Date;
@@ -14,6 +11,8 @@ import java.util.Date;
 @Getter
 @Setter
 @ToString
+@Entity
+@Table(name = "User")
 public class User {
 
     @Id
