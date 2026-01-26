@@ -1,6 +1,5 @@
-package com.bicycle.marketplace.entity;
+package com.bicycle.marketplace.dto.request;
 
-import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -12,11 +11,7 @@ import java.time.LocalDate;
 @AllArgsConstructor
 @Getter
 @Setter
-@Entity
-public class User {
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private String userId;
+public class UserCreationRequest {
     private String username;
     private String password;
     private String fullName;
