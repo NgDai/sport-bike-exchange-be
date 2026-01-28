@@ -3,35 +3,36 @@ package com.bicycle.marketplace.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.LocalDateTime;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 @Entity
-@Table(name = "inspection_reports")
+@Table(name = "InspectionReport")
 public class InspectionReport {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "report_id", unique = true, nullable = false)
-    private Long reportId;
+    @Column(name = "reportId", nullable = false)
+    private Integer reportId;
 
-    @Column(name = "frame_condition")
-    private String frameCondition;
+    @Column(name = "disputeId")
+    private Integer disputeId;
 
-    @Column(name = "brake_condition")
-    private String brakeCondition;
+    @Column(name = "inspectorId")
+    private Integer inspectorId;
 
-    @Column(name = "wheel_condition")
-    private String wheelCondition;
+    @Column(name = "result")
+    private String result;
 
-    @Column(name = "seller_sign")
-    private String sellerSign;
+    @Column(name = "reason", columnDefinition = "TEXT")
+    private String reason;
 
-    @Column(name = "buyer_sign")
-    private String buyerSign;
+    @Column(name = "note", columnDefinition = "TEXT")
+    private String note;
 
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "inspection_id", nullable = false)
-    private Inspection inspection;
+    @Column(name = "createdAt")
+    private LocalDateTime createdAt;
 }
