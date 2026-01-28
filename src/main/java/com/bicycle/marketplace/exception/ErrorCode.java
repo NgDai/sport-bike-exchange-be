@@ -1,0 +1,17 @@
+package com.bicycle.marketplace.exception;
+
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+
+@Getter
+@AllArgsConstructor
+public enum ErrorCode {
+    USERNAME_ALREADY_EXISTS(1001, "Username already exists"),
+    USER_NOT_FOUND(1002, "User not found"),
+    UNCATEGORIZED_EXCEPTION(9999, "Uncategorized error"),
+    PASSWORD_INVALID(1003, "Password is invalid")
+    ;
+
+    private int code;
+    private String message;
+}

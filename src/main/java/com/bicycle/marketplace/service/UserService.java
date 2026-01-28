@@ -4,6 +4,8 @@ import com.bicycle.marketplace.Repository.IUserRepository;
 import com.bicycle.marketplace.dto.request.UserCreationRequest;
 import com.bicycle.marketplace.dto.request.UserUpdateRequest;
 import com.bicycle.marketplace.entity.Users;
+import com.bicycle.marketplace.exception.AppException;
+import com.bicycle.marketplace.exception.ErrorCode;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -16,6 +18,10 @@ public class UserService {
 
     public Users createUser(UserCreationRequest request) {
         Users user = new Users();
+
+        if(userRepository.existsByUsername(request.getUsername())) {
+            throw new AppException(ErrorCode.USERNAME_ALREADY_EXISTS);
+        }
 
         user.setUsername(request.getUsername());
         user.setPassword(request.getPassword());

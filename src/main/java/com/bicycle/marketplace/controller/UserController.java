@@ -2,8 +2,10 @@ package com.bicycle.marketplace.controller;
 
 import com.bicycle.marketplace.dto.request.UserCreationRequest;
 import com.bicycle.marketplace.dto.request.UserUpdateRequest;
+import com.bicycle.marketplace.dto.response.ApiResponse;
 import com.bicycle.marketplace.entity.Users;
 import com.bicycle.marketplace.service.UserService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -16,8 +18,11 @@ public class UserController {
     private UserService userService;
 
     @PostMapping
-    Users createUser(@RequestBody UserCreationRequest request) {
-        return userService.createUser(request);
+    ApiResponse<Users> createUser(@RequestBody @Valid UserCreationRequest request) {
+        ApiResponse<Users> apiResponse = new ApiResponse<>();
+        apiResponse.setResult(userService.createUser(request));
+        apiResponse.setMessage("User created successfully");
+        return apiResponse;
     }
 
     @GetMapping
