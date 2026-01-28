@@ -1,8 +1,9 @@
-package com.bicycle.marketplace.entity;
+package com.bicycle.marketplace.dto.response;
 
-import jakarta.persistence.*;
-import jakarta.validation.constraints.NotNull;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDate;
@@ -11,11 +12,7 @@ import java.time.LocalDate;
 @AllArgsConstructor
 @Getter
 @Setter
-@Entity
-@Builder
-public class Users {
-    @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+public class UserResponse {
     private int userId;
     private String username;
     private String password;

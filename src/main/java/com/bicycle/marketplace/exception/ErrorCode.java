@@ -11,6 +11,7 @@ public enum ErrorCode {
     UNCATEGORIZED_EXCEPTION(9999, "Uncategorized error"),
     PASSWORD_INVALID(1003, "Password is invalid"),
     INVALID_KEY(1004, "Invalid message key")
+    
     ;
 
     private int code;

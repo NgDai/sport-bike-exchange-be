@@ -3,6 +3,7 @@ package com.bicycle.marketplace.controller;
 import com.bicycle.marketplace.dto.request.UserCreationRequest;
 import com.bicycle.marketplace.dto.request.UserUpdateRequest;
 import com.bicycle.marketplace.dto.response.ApiResponse;
+import com.bicycle.marketplace.dto.response.UserResponse;
 import com.bicycle.marketplace.entity.Users;
 import com.bicycle.marketplace.service.UserService;
 import jakarta.validation.Valid;
@@ -31,12 +32,12 @@ public class UserController {
     }
 
     @GetMapping("/{userId}")
-    Users getUserById(@PathVariable int userId) {
+    UserResponse getUserById(@PathVariable int userId) {
         return userService.getUserById(userId);
     }
 
     @PutMapping("/{userId}")
-    Users updateUser(@PathVariable int userId, @RequestBody UserUpdateRequest request) {
+    UserResponse updateUser(@PathVariable int userId, @RequestBody UserUpdateRequest request) {
         return userService.updateUser(userId, request);
     }
 
@@ -46,7 +47,7 @@ public class UserController {
         return "User deleted successfully";
     }
     @PutMapping("/deactivate/{userId}")
-    Users deActiveUser(@PathVariable int userId) {
+    UserResponse deActiveUser(@PathVariable int userId) {
         return userService.deActiveUser(userId);
     }
 }

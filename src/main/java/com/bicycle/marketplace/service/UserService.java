@@ -3,35 +3,35 @@ package com.bicycle.marketplace.service;
 import com.bicycle.marketplace.Repository.IUserRepository;
 import com.bicycle.marketplace.dto.request.UserCreationRequest;
 import com.bicycle.marketplace.dto.request.UserUpdateRequest;
+import com.bicycle.marketplace.dto.response.UserResponse;
 import com.bicycle.marketplace.entity.Users;
 import com.bicycle.marketplace.exception.AppException;
 import com.bicycle.marketplace.exception.ErrorCode;
+import com.bicycle.marketplace.mapper.UserMapper;
+import lombok.Builder;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
+@FieldDefaults(level = lombok.AccessLevel.PRIVATE, makeFinal = true)
 public class UserService {
-    @Autowired
-    private IUserRepository userRepository;
+    IUserRepository userRepository;
+    UserMapper userMapper;
 
     public Users createUser(UserCreationRequest request) {
-        Users user = new Users();
-
         if(userRepository.existsByUsername(request.getUsername())) {
             throw new AppException(ErrorCode.USERNAME_ALREADY_EXISTS);
         }
-
-        user.setUsername(request.getUsername());
-        user.setPassword(request.getPassword());
-        user.setFullName(request.getFullName());
-        user.setEmail(request.getEmail());
-        user.setPhone(request.getPhone());
-        user.setWalletBalance(request.getWalletBalance());
-        user.setStatus(request.getStatus());
-        user.setCreate_date(request.getCreate_date());
-
+        Users user = userMapper.toUser(request);
+        PasswordEncoder passwordEncoder = new BCryptPasswordEncoder(5);
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
         return userRepository.save(user);
     }
 
@@ -39,29 +39,24 @@ public class UserService {
         return userRepository.findAll();
     }
 
-    public Users getUserById(int userId) {
-        return userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
+    public UserResponse getUserById(int userId) {
+        return userMapper.toUserResponse(userRepository.findById(userId).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND)));
     }
 
-    public Users updateUser(int userId, UserUpdateRequest request) {
-        Users user = getUserById(userId);
-
-        user.setPassword(request.getPassword());
-        user.setFullName(request.getFullName());
-        user.setEmail(request.getEmail());
-        user.setPhone(request.getPhone());
-
-        return userRepository.save(user);
+    public UserResponse updateUser(int userId, UserUpdateRequest request) {
+        Users user = userRepository.findById(userId).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+        userMapper.updateUser(user, request);
+        return userMapper.toUserResponse(userRepository.save(user));
     }
 
     public void deleteUser(int userId) {
-        Users user = getUserById(userId);
+        Users user = userRepository.findById(userId).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
         userRepository.delete(user);
     }
 
-    public Users deActiveUser(int userId) {
-        Users user = getUserById(userId);
+    public UserResponse deActiveUser(int userId) {
+        Users user = userRepository.findById(userId).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
         user.setStatus("Inactive");
-        return userRepository.save(user);
+        return userMapper.toUserResponse(userRepository.save(user));
     }
 }
