@@ -1,8 +1,27 @@
 package com.bicycle.marketplace.security;
 
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+import org.springframework.security.core.userdetails.UserDetails;
+
+import com.nimbusds.jose.JOSEException;
+import com.nimbusds.jose.JWSAlgorithm;
+import com.nimbusds.jose.JWSHeader;
+import com.nimbusds.jose.JWSObject;
+import com.nimbusds.jose.JWSVerifier;
+import com.nimbusds.jose.Payload;
+import com.nimbusds.jose.crypto.MACSigner;
+import com.nimbusds.jose.crypto.MACVerifier;
+import com.nimbusds.jwt.JWTClaimsSet;
+import com.nimbusds.jwt.SignedJWT;
+
+import java.text.ParseException;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.Date;
+
+@Component
 public class JWTTokenProvider {
-<<<<<<< Updated upstream
-=======
 
     @Value("${jwt.secret}")
     private String secretKey;
@@ -140,5 +159,4 @@ public class JWTTokenProvider {
     public long getAccessTokenExpiration() {
         return accessTokenExpiration;
     }
->>>>>>> Stashed changes
 }
