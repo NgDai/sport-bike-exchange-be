@@ -10,9 +10,8 @@ public enum ErrorCode {
     USER_NOT_FOUND(1002, "User not found"),
     UNCATEGORIZED_EXCEPTION(9999, "Uncategorized error"),
     PASSWORD_INVALID(1003, "Password is invalid"),
-    INVALID_KEY(1004, "Invalid message key")
-    
-    ;
+    INVALID_KEY(1004, "Invalid message key"),
+    USER_INVALID_AUTHENTICATIED(1005, "User authentication failed");
 
     private int code;
     private String message;

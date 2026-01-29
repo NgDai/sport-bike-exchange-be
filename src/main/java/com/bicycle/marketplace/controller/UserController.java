@@ -46,6 +46,7 @@ public class UserController {
         userService.deleteUser(userId);
         return "User deleted successfully";
     }
+
     @PutMapping("/deactivate/{userId}")
     UserResponse deActiveUser(@PathVariable int userId) {
         return userService.deActiveUser(userId);

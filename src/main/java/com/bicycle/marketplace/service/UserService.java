@@ -26,7 +26,7 @@ public class UserService {
     UserMapper userMapper;
 
     public Users createUser(UserCreationRequest request) {
-        if(userRepository.existsByUsername(request.getUsername())) {
+        if (userRepository.existsByUsername(request.getUsername())) {
             throw new AppException(ErrorCode.USERNAME_ALREADY_EXISTS);
         }
         Users user = userMapper.toUser(request);
@@ -35,7 +35,7 @@ public class UserService {
         return userRepository.save(user);
     }
 
-    public List<Users> getAllUser(){
+    public List<Users> getAllUser() {
         return userRepository.findAll();
     }
 
