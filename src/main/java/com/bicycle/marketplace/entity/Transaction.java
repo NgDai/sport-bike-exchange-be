@@ -10,7 +10,6 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Builder
 @Entity
-@Table(name = "Transaction")
 public class Transaction {
 
     @Id
@@ -18,14 +17,23 @@ public class Transaction {
     @Column(name = "transactionId", unique = true, nullable = false)
     private Integer transactionId;
 
-    @Column(name = "listingId")
-    private Integer listingId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "listingId")
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    private BikeListing listing;
 
-    @Column(name = "buyerId")
-    private Integer buyerId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "buyerId")
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    private User buyer;
 
-    @Column(name = "sellerId")
-    private Integer sellerId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "sellerId")
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    private User seller;
 
     @Column(name = "finalPrice")
     private Double finalPrice;

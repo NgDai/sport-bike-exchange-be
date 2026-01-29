@@ -10,7 +10,6 @@ import java.io.Serializable;
 @AllArgsConstructor
 @Builder
 @Entity
-@Table(name = "UserRole")
 @IdClass(UserRole.UserRoleId.class)
 public class UserRole {
 
@@ -21,6 +20,18 @@ public class UserRole {
     @Id
     @Column(name = "roleId", nullable = false)
     private Integer roleId;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "userId", nullable = false, insertable = false, updatable = false)
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    private User user;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "roleId", nullable = false, insertable = false, updatable = false)
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    private Role role;
 
     @Data
     @NoArgsConstructor

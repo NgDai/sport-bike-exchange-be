@@ -10,7 +10,6 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Builder
 @Entity
-@Table(name = "WalletTransaction")
 public class WalletTransaction {
 
     @Id
@@ -18,8 +17,11 @@ public class WalletTransaction {
     @Column(name = "walletTransId", unique = true, nullable = false)
     private Integer walletTransId;
 
-    @Column(name = "walletId")
-    private Integer walletId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "walletId")
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    private Wallet wallet;
 
     @Column(name = "amount")
     private Double amount;

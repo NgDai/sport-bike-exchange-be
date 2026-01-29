@@ -10,7 +10,6 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Builder
 @Entity
-@Table(name = "Event")
 public class Event {
 
     @Id
@@ -18,8 +17,11 @@ public class Event {
     @Column(name = "eventId", unique = true, nullable = false)
     private Integer eventId;
 
-    @Column(name = "createBy")
-    private Integer createBy;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "createBy")
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    private User createBy;
 
     @Column(name = "name")
     private String name;
