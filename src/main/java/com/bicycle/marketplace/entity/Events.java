@@ -9,14 +9,17 @@ import lombok.Setter;
 import java.time.LocalDate;
 
 @Entity
-@Getter @Setter
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 public class Events {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private int eventId;
-    private int createBy;
+    @ManyToOne
+    @JoinColumn(name = "create_by")
+    private Users creator;
     private String name;
     private String location;
     private LocalDate startDate;
