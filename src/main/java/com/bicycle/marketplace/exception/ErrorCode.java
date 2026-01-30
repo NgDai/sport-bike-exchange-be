@@ -11,7 +11,9 @@ public enum ErrorCode {
     UNCATEGORIZED_EXCEPTION(9999, "Uncategorized error"),
     PASSWORD_INVALID(1003, "Password is invalid"),
     INVALID_KEY(1004, "Invalid message key"),
-    USER_INVALID_AUTHENTICATIED(1005, "User authentication failed");
+    LISTING_NOT_FOUND(1005, "Posting/Listing not found"),
+    USER_INVALID_AUTHENTICATIED(1006, "User authentication failed")
+    ;
 
     private int code;
     private String message;

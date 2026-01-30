@@ -5,6 +5,7 @@ import com.bicycle.marketplace.dto.request.AuthenticationRequest;
 import com.bicycle.marketplace.dto.request.IntrospecRequest;
 import com.bicycle.marketplace.dto.response.AuthenticationResponse;
 import com.bicycle.marketplace.dto.response.IntrospecResponse;
+import com.bicycle.marketplace.entity.Users;
 import com.bicycle.marketplace.exception.AppException;
 import com.bicycle.marketplace.exception.ErrorCode;
 import com.nimbusds.jose.*;
@@ -70,22 +71,21 @@ public class AuthenticationService {
 
         return AuthenticationResponse.builder()
                 .token(token)
-                .userId(user.getUserId())
-                .username(user.getUsername())
-                .fullName(user.getFullName())
-                .email(user.getEmail())
-                .phone(user.getPhone())
-                .walletBalance(user.getWalletBalance())
-                .status(user.getStatus())
                 .build();
     }
 
     private String generateToken(String username) {
-        JWSHeader header = new JWSHeader(JWSAlgorithm.HS512);
-
+        JWSHeader header = new JWSHeader(JWSAlgorithm.HS256);
+        Users user = userRepository.findByUsername(username).orElseThrow();
         JWTClaimsSet jwtClaimSet = new JWTClaimsSet.Builder()
-                .subject(username)
+                .subject(user.getUsername())
                 .issuer("BicycleMarketplace")
+                .claim("userId", user.getUserId())
+                .claim("FullName", user.getFullName())
+                .claim("Email", user.getEmail())
+                .claim("Phone", user.getPhone())
+                .claim("WalletBalance", user.getWalletBalance())
+                .claim("Status", user.getStatus())
                 .issueTime(new Date())
                 .expirationTime(new Date(
                         Instant.now().plus(1, ChronoUnit.HOURS).toEpochMilli()))
