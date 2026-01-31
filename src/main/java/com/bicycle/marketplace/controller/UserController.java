@@ -17,6 +17,7 @@ import java.util.List;
 public class UserController {
     @Autowired
     private UserService userService;
+    ApiResponse<UserResponse> apiResponse = new ApiResponse<>();
 
     @PostMapping
     ApiResponse<Users> createUser(@RequestBody @Valid UserCreationRequest request) {
@@ -27,28 +28,38 @@ public class UserController {
     }
 
     @GetMapping
-    List<Users> getUsers() {
-        return userService.getAllUser();
+    ApiResponse<List<Users>> getUsers() {
+        ApiResponse<List<Users>> apiResponse = new ApiResponse<>();
+        apiResponse.setResult(userService.getAllUser());
+        apiResponse.setMessage("Users retrieved successfully");
+        return apiResponse;
     }
 
     @GetMapping("/{userId}")
-    UserResponse getUserById(@PathVariable int userId) {
-        return userService.getUserById(userId);
+    ApiResponse<UserResponse> getUserById(@PathVariable int userId) {
+        apiResponse.setResult(userService.getUserById(userId));
+        apiResponse.setMessage("User found successfully");
+        return apiResponse;
     }
 
     @PutMapping("/{userId}")
-    UserResponse updateUser(@PathVariable int userId, @RequestBody UserUpdateRequest request) {
-        return userService.updateUser(userId, request);
+    ApiResponse<UserResponse> updateUser(@PathVariable int userId, @RequestBody UserUpdateRequest request) {
+        apiResponse.setResult(userService.updateUser(userId, request));
+        apiResponse.setMessage("User updated successfully");
+        return apiResponse;
     }
 
     @DeleteMapping("/{userId}")
-    String deleteUser(@PathVariable int userId) {
-        userService.deleteUser(userId);
-        return "User deleted successfully";
+    ApiResponse<String> deleteUser(@PathVariable int userId) {
+        ApiResponse<String> apiResponse = new ApiResponse<>();
+        apiResponse.setResult(userService.deleteUser(userId));
+        return apiResponse;
     }
 
     @PutMapping("/deactivate/{userId}")
-    UserResponse deActiveUser(@PathVariable int userId) {
-        return userService.deActiveUser(userId);
+    ApiResponse<UserResponse> deActiveUser(@PathVariable int userId) {
+        apiResponse.setResult(userService.deActiveUser(userId));
+        apiResponse.setMessage("User deactivated successfully");
+        return apiResponse;
     }
 }

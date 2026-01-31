@@ -46,12 +46,15 @@ public class UserService {
     public UserResponse updateUser(int userId, UserUpdateRequest request) {
         Users user = userRepository.findById(userId).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
         userMapper.updateUser(user, request);
+        PasswordEncoder passwordEncoder = new BCryptPasswordEncoder(5);
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
         return userMapper.toUserResponse(userRepository.save(user));
     }
 
-    public void deleteUser(int userId) {
+    public String deleteUser(int userId) {
         Users user = userRepository.findById(userId).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
         userRepository.delete(user);
+        return "User deleted successfully";
     }
 
     public UserResponse deActiveUser(int userId) {

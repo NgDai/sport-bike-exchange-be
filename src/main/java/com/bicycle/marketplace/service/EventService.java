@@ -35,9 +35,9 @@ public class EventService {
         event.setLocation(request.getLocation());
         event.setStartDate(request.getStartDate());
         event.setEndDate(request.getEndDate());
-//        event.setSellerDepositRate(request.getSellerDepositRate());
-//        event.setBuyerDepositRate(request.getBuyerDepositRate());
-//        event.setPlatformFeeRate(request.getPlatformFeeRate());
+        event.setSellerDepositRate(request.getSellerDepositRate());
+        event.setBuyerDepositRate(request.getBuyerDepositRate());
+        event.setPlatformFeeRate(request.getPlatformFeeRate());
         event.setStatus(request.getStatus());
 
         eventRepository.save(event);
