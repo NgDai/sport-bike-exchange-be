@@ -1,5 +1,6 @@
 package com.bicycle.marketplace.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -14,9 +15,11 @@ public class BikeListing {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
+    @JsonIgnore
     private int listingId;
     @ManyToOne
     @JoinColumn(name = "seller_id")
+    @JsonIgnore
     private Users seller;
 
     @ManyToOne

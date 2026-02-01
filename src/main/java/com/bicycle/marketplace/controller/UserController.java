@@ -17,13 +17,11 @@ import java.util.List;
 public class UserController {
     @Autowired
     private UserService userService;
-    ApiResponse<UserResponse> apiResponse = new ApiResponse<>();
 
     @PostMapping
     ApiResponse<Users> createUser(@RequestBody @Valid UserCreationRequest request) {
         ApiResponse<Users> apiResponse = new ApiResponse<>();
         apiResponse.setResult(userService.createUser(request));
-        apiResponse.setMessage("User created successfully");
         return apiResponse;
     }
 
@@ -31,21 +29,20 @@ public class UserController {
     ApiResponse<List<Users>> getUsers() {
         ApiResponse<List<Users>> apiResponse = new ApiResponse<>();
         apiResponse.setResult(userService.getAllUser());
-        apiResponse.setMessage("Users retrieved successfully");
         return apiResponse;
     }
 
     @GetMapping("/{userId}")
     ApiResponse<UserResponse> getUserById(@PathVariable int userId) {
+        ApiResponse<UserResponse> apiResponse = new ApiResponse<>();
         apiResponse.setResult(userService.getUserById(userId));
-        apiResponse.setMessage("User found successfully");
         return apiResponse;
     }
 
     @PutMapping("/{userId}")
     ApiResponse<UserResponse> updateUser(@PathVariable int userId, @RequestBody UserUpdateRequest request) {
+        ApiResponse<UserResponse> apiResponse = new ApiResponse<>();
         apiResponse.setResult(userService.updateUser(userId, request));
-        apiResponse.setMessage("User updated successfully");
         return apiResponse;
     }
 
@@ -58,8 +55,8 @@ public class UserController {
 
     @PutMapping("/deactivate/{userId}")
     ApiResponse<UserResponse> deActiveUser(@PathVariable int userId) {
+        ApiResponse<UserResponse> apiResponse = new ApiResponse<>();
         apiResponse.setResult(userService.deActiveUser(userId));
-        apiResponse.setMessage("User deactivated successfully");
         return apiResponse;
     }
 }
