@@ -1,4 +1,4 @@
-package com.bicycle.marketplace.entity;
+package com.bicycle.marketplace.entities;
 
 import jakarta.persistence.*;
 import lombok.*;
@@ -13,20 +13,21 @@ import java.util.Date;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Entity
-public class Deposit {
+public class InspectionReport {
+
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    int depositId;
-    @ManyToOne
-    @JoinColumn(name = "user_id")
-    Users user;
+    int reportId;
+    @OneToOne
+    @JoinColumn(name = "dispute_id")
+    Dispute dispute;
 
     @ManyToOne
-    @JoinColumn(name = "listing_id")
-    BikeListing listing;
-    String type;
-    double amount;
-    String nvarchar;
+    @JoinColumn(name = "inspector_id")
+    Users inspector;
+    String result;
+    String reason;
+    String note;
     @CreationTimestamp
     Date createAt;
 }

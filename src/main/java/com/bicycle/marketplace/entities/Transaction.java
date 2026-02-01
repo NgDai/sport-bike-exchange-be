@@ -1,4 +1,4 @@
-package com.bicycle.marketplace.entity;
+package com.bicycle.marketplace.entities;
 
 import jakarta.persistence.*;
 import lombok.*;
@@ -13,20 +13,32 @@ import java.util.Date;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Entity
-
-public class ListingApproval {
+public class Transaction {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    int approvalId;
+    int transactionId;
     @ManyToOne
     @JoinColumn(name = "listing_id")
     BikeListing listing;
 
     @ManyToOne
-    @JoinColumn(name = "approval_by")
-    Users approver;
-    String decision;
-    String note;
+    @JoinColumn(name = "buyer_id")
+    Users buyer;
+
+    @ManyToOne
+    @JoinColumn(name = "seller_id")
+    Users seller;
+
+    @OneToOne
+    @JoinColumn(name = "deposit_id")
+    Deposit deposit;
+
+    @OneToOne
+    @JoinColumn(name = "reservation_id")
+    Reservation reservation;
+    String status;
+    double amount;
     @CreationTimestamp
     Date createdAt;
+    Date completedAt;
 }

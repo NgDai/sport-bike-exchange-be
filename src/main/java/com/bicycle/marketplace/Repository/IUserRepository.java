@@ -1,6 +1,6 @@
 package com.bicycle.marketplace.Repository;
 
-import com.bicycle.marketplace.entity.Users;
+import com.bicycle.marketplace.entities.Users;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

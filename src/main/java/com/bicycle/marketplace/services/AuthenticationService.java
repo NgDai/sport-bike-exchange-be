@@ -1,11 +1,11 @@
-package com.bicycle.marketplace.service;
+package com.bicycle.marketplace.services;
 
 import com.bicycle.marketplace.Repository.IUserRepository;
 import com.bicycle.marketplace.dto.request.AuthenticationRequest;
 import com.bicycle.marketplace.dto.request.IntrospecRequest;
 import com.bicycle.marketplace.dto.response.AuthenticationResponse;
 import com.bicycle.marketplace.dto.response.IntrospecResponse;
-import com.bicycle.marketplace.entity.Users;
+import com.bicycle.marketplace.entities.Users;
 import com.bicycle.marketplace.exception.AppException;
 import com.bicycle.marketplace.exception.ErrorCode;
 import com.nimbusds.jose.*;
@@ -13,7 +13,7 @@ import com.nimbusds.jose.crypto.MACSigner;
 import com.nimbusds.jose.crypto.MACVerifier;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.NonFinal;
 import lombok.extern.slf4j.Slf4j;
@@ -31,13 +31,13 @@ import java.util.Date;
 @Slf4j
 @Service
 @Component
-@AllArgsConstructor
+@RequiredArgsConstructor
 @FieldDefaults(level = lombok.AccessLevel.PRIVATE, makeFinal = true)
 public class AuthenticationService {
     IUserRepository userRepository;
     @NonFinal
-    //@Value("${jwt.signer.key}")
-    protected static String signerKey = "f56614ec2de8b1c09c520066c7f2c595f96271ba791712381cf4fbebdc55759d";
+    @Value("${jwt.signer.key}")
+    protected String signerKey;
 
     public IntrospecResponse introspect(IntrospecRequest request) throws ParseException, JOSEException {
         var token = request.getToken();

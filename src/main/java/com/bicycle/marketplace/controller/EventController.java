@@ -3,9 +3,8 @@ package com.bicycle.marketplace.controller;
 
 import com.bicycle.marketplace.dto.request.EventCreationRequest;
 import com.bicycle.marketplace.dto.response.ApiResponse;
-import com.bicycle.marketplace.entity.Events;
-import com.bicycle.marketplace.service.EventService;
-import com.bicycle.marketplace.service.UserService;
+import com.bicycle.marketplace.entities.Events;
+import com.bicycle.marketplace.services.EventService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 

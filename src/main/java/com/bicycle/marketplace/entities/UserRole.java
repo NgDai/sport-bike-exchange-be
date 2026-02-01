@@ -1,10 +1,8 @@
-package com.bicycle.marketplace.entity;
+package com.bicycle.marketplace.entities;
 
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
-
-import java.util.Date;
 
 @Data
 @NoArgsConstructor
@@ -13,17 +11,15 @@ import java.util.Date;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Entity
 
-public class CheckIn {
+public class UserRole {
     @Id
     @GeneratedValue(strategy = jakarta.persistence.GenerationType.AUTO)
-    int checkInId;
+    int userRoleId;
     @ManyToOne
     @JoinColumn(name = "user_id")
     Users user;
 
     @ManyToOne
-    @JoinColumn(name = "event_id")
-    Events event;
-    String roleId;
-    Date checkInTime;
+    @JoinColumn(name = "role_id")
+    Role role;
 }

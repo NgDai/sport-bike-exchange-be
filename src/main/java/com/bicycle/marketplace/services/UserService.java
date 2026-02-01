@@ -1,17 +1,15 @@
-package com.bicycle.marketplace.service;
+package com.bicycle.marketplace.services;
 
 import com.bicycle.marketplace.Repository.IUserRepository;
 import com.bicycle.marketplace.dto.request.UserCreationRequest;
 import com.bicycle.marketplace.dto.request.UserUpdateRequest;
 import com.bicycle.marketplace.dto.response.UserResponse;
-import com.bicycle.marketplace.entity.Users;
+import com.bicycle.marketplace.entities.Users;
 import com.bicycle.marketplace.exception.AppException;
 import com.bicycle.marketplace.exception.ErrorCode;
 import com.bicycle.marketplace.mapper.UserMapper;
-import lombok.Builder;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -59,7 +57,11 @@ public class UserService {
 
     public UserResponse deActiveUser(int userId) {
         Users user = userRepository.findById(userId).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
-        user.setStatus("Inactive");
+        if(user.getStatus().matches("Inactive")){
+            user.setStatus("Active");
+        }else{
+            user.setStatus("Inactive");
+        }
         return userMapper.toUserResponse(userRepository.save(user));
     }
 }

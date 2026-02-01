@@ -1,8 +1,8 @@
-package com.bicycle.marketplace.service;
+package com.bicycle.marketplace.services;
 
 import com.bicycle.marketplace.Repository.IEventRepository;
 import com.bicycle.marketplace.dto.request.EventCreationRequest;
-import com.bicycle.marketplace.entity.Events;
+import com.bicycle.marketplace.entities.Events;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

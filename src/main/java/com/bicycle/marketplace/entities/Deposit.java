@@ -1,4 +1,4 @@
-package com.bicycle.marketplace.entity;
+package com.bicycle.marketplace.entities;
 
 import jakarta.persistence.*;
 import lombok.*;
@@ -13,20 +13,20 @@ import java.util.Date;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Entity
-
-public class DepositSettlement {
+public class Deposit {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    int settlementId;
+    int depositId;
     @ManyToOne
-    @JoinColumn(name = "deposit_id")
-    Deposit deposit;
+    @JoinColumn(name = "user_id")
+    Users user;
 
     @ManyToOne
-    @JoinColumn(name = "receiver_id")
-    Users receiver;
+    @JoinColumn(name = "listing_id")
+    BikeListing listing;
+    String type;
     double amount;
-    String reason;
+    String nvarchar;
     @CreationTimestamp
     Date createAt;
 }
