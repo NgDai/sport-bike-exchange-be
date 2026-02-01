@@ -21,34 +21,41 @@ public class EventController {
     ApiResponse<Events> createEvent(@RequestBody EventCreationRequest request) {
         ApiResponse<Events> apiResponse = new ApiResponse<>();
         apiResponse.setResult(eventService.createEvent(request));
-        apiResponse.setMessage("Event created successfully");
         return apiResponse;
     }
 
-
     @GetMapping
-    List<Events> getAllEvents() {
-        return eventService.getAllEvents();
+    ApiResponse<List<Events>> getAllEvents() {
+        ApiResponse<List<Events>> apiResponse = new ApiResponse<>();
+        apiResponse.setResult(eventService.getAllEvents());
+        return apiResponse;
     }
 
     @GetMapping("/{eventId}")
-    Events getEventById(@PathVariable int eventId) {
-        return eventService.getEventById(eventId);
+    ApiResponse<Events> getEventById(@PathVariable int eventId) {
+        ApiResponse<Events> apiResponse = new ApiResponse<>();
+        apiResponse.setResult(eventService.getEventById(eventId));
+        return apiResponse;
     }
 
     @PutMapping("/{eventId}")
-    void updateEvent(@PathVariable int eventId, @RequestBody EventCreationRequest request) {
+    ApiResponse<Void> updateEvent(@PathVariable int eventId, @RequestBody EventCreationRequest request) {
         eventService.updateEvent(eventId, request);
+        return new ApiResponse<>();
     }
 
     @PutMapping("/status/{eventId}")
-    Events updateEventStatus(@PathVariable int eventId, @RequestBody EventCreationRequest request) {
-        return eventService.updateEventStatus(eventId, request);
+    ApiResponse<Events> updateEventStatus(@PathVariable int eventId, @RequestBody EventCreationRequest request) {
+        ApiResponse<Events> apiResponse = new ApiResponse<>();
+        apiResponse.setResult(eventService.updateEventStatus(eventId, request));
+        return apiResponse;
     }
 
     @DeleteMapping("/{eventId}")
-    String deleteEvent(@PathVariable int eventId) {
+    ApiResponse<String> deleteEvent(@PathVariable int eventId) {
         eventService.deleteEvent(eventId);
-        return "Event deleted successfully";
+        ApiResponse<String> apiResponse = new ApiResponse<>();
+        apiResponse.setResult("Event deleted successfully");
+        return apiResponse;
     }
 }

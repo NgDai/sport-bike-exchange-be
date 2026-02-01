@@ -31,6 +31,7 @@ public class AuthendicationController {
     ApiResponse<AuthenticationResponse> authenticate(@RequestBody AuthenticationRequest request) {
         var result = authenticationService.authendicate(request);
         return ApiResponse.<AuthenticationResponse>builder()
+                .code(0)
                 .result(result)
                 .build();
     }
@@ -39,6 +40,7 @@ public class AuthendicationController {
     ApiResponse<IntrospecResponse> introspect(@RequestBody IntrospecRequest request) throws ParseException, JOSEException {
         var result = authenticationService.introspect(request);
         return ApiResponse.<IntrospecResponse>builder()
+                .code(0)
                 .result(result)
                 .build();
     }
