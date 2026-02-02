@@ -24,6 +24,7 @@ public class BikeListing {
 
     @ManyToOne
     @JoinColumn(name = "event_id")
+    @JsonIgnore
     private Events event;
     private String title;
     private String brand;
