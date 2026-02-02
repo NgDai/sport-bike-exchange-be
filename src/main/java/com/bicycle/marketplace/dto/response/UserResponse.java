@@ -7,6 +7,7 @@ import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDate;
+import java.util.Set;
 
 @NoArgsConstructor
 @AllArgsConstructor
@@ -19,6 +20,7 @@ public class UserResponse {
     private String phone;
     private String walletBalance;
     private String status;
+    private Set<String> role;
     @CreationTimestamp
     private LocalDate create_date;
 }
