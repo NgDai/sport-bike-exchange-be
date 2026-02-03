@@ -7,6 +7,7 @@ import com.bicycle.marketplace.dto.response.AuthenticationResponse;
 import com.bicycle.marketplace.dto.response.IntrospecResponse;
 import com.bicycle.marketplace.services.AuthenticationService;
 import com.nimbusds.jose.JOSEException;
+import jakarta.validation.Valid;
 import lombok.Builder;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -26,7 +27,7 @@ public class AuthenticationController {
     AuthenticationService authenticationService;
 
     @PostMapping("/login")
-    ApiResponse<AuthenticationResponse> authenticate(@RequestBody AuthenticationRequest request) {
+    ApiResponse<AuthenticationResponse> authenticate(@RequestBody @Valid AuthenticationRequest request) {
         var result = authenticationService.authendicate(request);
         return ApiResponse.<AuthenticationResponse>builder()
                 .result(result)
