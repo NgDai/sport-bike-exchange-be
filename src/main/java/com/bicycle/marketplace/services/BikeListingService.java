@@ -41,10 +41,23 @@ public class BikeListingService {
                 .orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
 
         BikeListing listing = new BikeListing();
-        mapRequestToEntity(request, listing);
         listing.setSeller(seller);
         listing.setEvent(event);
         listing.setCreatedAt(LocalDateTime.now());
+        listing.setTitle(request.getTitle());
+        listing.setBrand(request.getBrand());
+        listing.setModel(request.getModel());
+        listing.setCategory(request.getCategory());
+        listing.setFrameSize(request.getFrameSize());
+        listing.setWheelSize(request.getWheelSize());
+        listing.setManufactureYear(request.getManufactureYear());
+        listing.setBrakeType(request.getBrakeType());
+        listing.setTransmission(request.getTransmission());
+        listing.setWeight(request.getWeight());
+        listing.setImageUrl(request.getImageUrl());
+        listing.setDescription(request.getDescription());
+        listing.setPrice(request.getPrice());
+        listing.setStatus(request.getStatus());
 
         return bikeListingRepository.save(listing);
     }
@@ -63,7 +76,21 @@ public class BikeListingService {
             listing.setEvent(event);
         }
 
-        mapRequestToEntity(request, listing);
+        if (request.getTitle() != null) listing.setTitle(request.getTitle());
+        if (request.getBrand() != null) listing.setBrand(request.getBrand());
+        if (request.getModel() != null) listing.setModel(request.getModel());
+        if (request.getCategory() != null) listing.setCategory(request.getCategory());
+        if (request.getFrameSize() != null) listing.setFrameSize(request.getFrameSize());
+        if (request.getWheelSize() != null) listing.setWheelSize(request.getWheelSize());
+        if (request.getManufactureYear() != null) listing.setManufactureYear(request.getManufactureYear());
+        if (request.getBrakeType() != null) listing.setBrakeType(request.getBrakeType());
+        if (request.getTransmission() != null) listing.setTransmission(request.getTransmission());
+        if (request.getWeight() != null) listing.setWeight(request.getWeight());
+        if (request.getImageUrl() != null) listing.setImageUrl(request.getImageUrl());
+        if (request.getDescription() != null) listing.setDescription(request.getDescription());
+        if (request.getPrice() != null) listing.setPrice(request.getPrice());
+        if (request.getStatus() != null) listing.setStatus(request.getStatus());
+
         return bikeListingRepository.save(listing);
     }
 
@@ -79,39 +106,5 @@ public class BikeListingService {
     public BikeListing getBikeListingById(int listingId) {
         return bikeListingRepository.findById(listingId)
                 .orElseThrow(() -> new AppException(ErrorCode.LISTING_NOT_FOUND));
-    }
-
-    private void mapRequestToEntity(PostingCreationRequest request, BikeListing listing) {
-        if (request.getTitle() != null) listing.setTitle(request.getTitle());
-        if (request.getBrand() != null) listing.setBrand(request.getBrand());
-        if (request.getModel() != null) listing.setModel(request.getModel());
-        if (request.getCategory() != null) listing.setCategory(request.getCategory());
-        if (request.getFrameSize() != null) listing.setFrameSize(request.getFrameSize());
-        if (request.getWheelSize() != null) listing.setWheelSize(request.getWheelSize());
-        if (request.getManufactureYear() != null) listing.setManufactureYear(request.getManufactureYear());
-        if (request.getBrakeType() != null) listing.setBrakeType(request.getBrakeType());
-        if (request.getTransmission() != null) listing.setTransmission(request.getTransmission());
-        if (request.getWeight() != null) listing.setWeight(request.getWeight());
-        if (request.getImageUrl() != null) listing.setImageUrl(request.getImageUrl());
-        if (request.getDescription() != null) listing.setDescription(request.getDescription());
-        if (request.getPrice() != null) listing.setPrice(request.getPrice());
-        if (request.getStatus() != null) listing.setStatus(request.getStatus());
-    }
-
-    private void mapRequestToEntity(PostingUpdateRequest request, BikeListing listing) {
-        if (request.getTitle() != null) listing.setTitle(request.getTitle());
-        if (request.getBrand() != null) listing.setBrand(request.getBrand());
-        if (request.getModel() != null) listing.setModel(request.getModel());
-        if (request.getCategory() != null) listing.setCategory(request.getCategory());
-        if (request.getFrameSize() != null) listing.setFrameSize(request.getFrameSize());
-        if (request.getWheelSize() != null) listing.setWheelSize(request.getWheelSize());
-        if (request.getManufactureYear() != null) listing.setManufactureYear(request.getManufactureYear());
-        if (request.getBrakeType() != null) listing.setBrakeType(request.getBrakeType());
-        if (request.getTransmission() != null) listing.setTransmission(request.getTransmission());
-        if (request.getWeight() != null) listing.setWeight(request.getWeight());
-        if (request.getImageUrl() != null) listing.setImageUrl(request.getImageUrl());
-        if (request.getDescription() != null) listing.setDescription(request.getDescription());
-        if (request.getPrice() != null) listing.setPrice(request.getPrice());
-        if (request.getStatus() != null) listing.setStatus(request.getStatus());
     }
 }
