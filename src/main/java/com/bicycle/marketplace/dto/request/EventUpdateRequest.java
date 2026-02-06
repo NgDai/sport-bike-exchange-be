@@ -15,8 +15,8 @@ public class EventUpdateRequest {
     private String location;
     private LocalDate startDate;
     private LocalDate endDate;
-//    private double sellerDepositRate;
-//    private double buyerDepositRate;
-//    private double platformFeeRate;
+    private double sellerDepositRate;
+    private double buyerDepositRate;
+    private double platformFeeRate;
     private String status;
 }

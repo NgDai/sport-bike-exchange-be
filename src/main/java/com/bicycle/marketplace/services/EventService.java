@@ -2,7 +2,12 @@ package com.bicycle.marketplace.services;
 
 import com.bicycle.marketplace.Repository.IEventRepository;
 import com.bicycle.marketplace.dto.request.EventCreationRequest;
+import com.bicycle.marketplace.dto.request.EventUpdateRequest;
+import com.bicycle.marketplace.dto.response.EventResponse;
 import com.bicycle.marketplace.entities.Events;
+import com.bicycle.marketplace.exception.AppException;
+import com.bicycle.marketplace.exception.ErrorCode;
+import com.bicycle.marketplace.mapper.EventMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -12,8 +17,10 @@ import java.util.List;
 public class EventService {
     @Autowired
     private IEventRepository eventRepository;
+    @Autowired
+    private EventMapper eventMapper;
 
-    public Events createEvent(EventCreationRequest request) {
+    public EventResponse createEvent(EventCreationRequest request) {
         Events event = new Events();
 
         event.setName(request.getName());
@@ -25,40 +32,35 @@ public class EventService {
         event.setPlatformFeeRate(request.getPlatformFeeRate());
         event.setStatus(request.getStatus());
 
-        return eventRepository.save(event);
+        return eventMapper.toEventResponse(eventRepository.save(event));
     }
 
-    public void updateEvent(int eventId, EventCreationRequest request) {
-        Events event = getEventById(eventId);
+    public EventResponse updateEvent(int eventId, EventUpdateRequest request) {
+        Events event = eventRepository.findById(eventId).orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
 
-        event.setName(request.getName());
-        event.setLocation(request.getLocation());
-        event.setStartDate(request.getStartDate());
-        event.setEndDate(request.getEndDate());
-        event.setSellerDepositRate(request.getSellerDepositRate());
-        event.setBuyerDepositRate(request.getBuyerDepositRate());
-        event.setPlatformFeeRate(request.getPlatformFeeRate());
+        eventMapper.updateEvent(event, request);
+
+        return eventMapper.toEventResponse(eventRepository.save(event));
+    }
+
+    public EventResponse updateEventStatus(int eventId, EventCreationRequest request) {
+        Events event = eventRepository.findById(eventId).orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
         event.setStatus(request.getStatus());
-
-        eventRepository.save(event);
+        return eventMapper.toEventResponse(eventRepository.save(event));
     }
 
-    public Events updateEventStatus(int eventId, EventCreationRequest request) {
-        Events event = getEventById(eventId);
-        event.setStatus(request.getStatus());
-        return eventRepository.save(event);
-    }
-
-    public void deleteEvent(int eventId) {
-        Events event = getEventById(eventId);
+    public String deleteEvent(int eventId) {
+        Events event = eventRepository.findById(eventId).orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
         eventRepository.delete(event);
+        return "Event deleted successfully";
     }
 
     public List<Events> getAllEvents() {
         return eventRepository.findAll();
     }
 
-    public Events getEventById(int eventId) {
-        return eventRepository.findById(eventId).orElseThrow(() -> new RuntimeException("Event not found"));
+    public EventResponse getEventById(int eventId) {
+        Events event = eventRepository.findById(eventId).orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
+        return eventMapper.toEventResponse(event);
     }
 }

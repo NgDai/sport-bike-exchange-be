@@ -2,7 +2,9 @@ package com.bicycle.marketplace.controller;
 
 
 import com.bicycle.marketplace.dto.request.EventCreationRequest;
+import com.bicycle.marketplace.dto.request.EventUpdateRequest;
 import com.bicycle.marketplace.dto.response.ApiResponse;
+import com.bicycle.marketplace.dto.response.EventResponse;
 import com.bicycle.marketplace.entities.Events;
 import com.bicycle.marketplace.services.EventService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,44 +19,50 @@ public class EventController {
     private EventService eventService;
 
     @PostMapping
-    ApiResponse<Events> createEvent(@RequestBody EventCreationRequest request) {
-        ApiResponse<Events> apiResponse = new ApiResponse<>();
+    ApiResponse<EventResponse> createEvent(@RequestBody EventCreationRequest request) {
+        ApiResponse<EventResponse> apiResponse = new ApiResponse<>();
         apiResponse.setResult(eventService.createEvent(request));
+        apiResponse.setMessage("Event created successfully");
         return apiResponse;
     }
+
 
     @GetMapping
     ApiResponse<List<Events>> getAllEvents() {
         ApiResponse<List<Events>> apiResponse = new ApiResponse<>();
         apiResponse.setResult(eventService.getAllEvents());
+        apiResponse.setMessage("Events fetched successfully");
         return apiResponse;
     }
 
     @GetMapping("/{eventId}")
-    ApiResponse<Events> getEventById(@PathVariable int eventId) {
-        ApiResponse<Events> apiResponse = new ApiResponse<>();
+    ApiResponse<EventResponse> getEventById(@PathVariable int eventId) {
+        ApiResponse<EventResponse> apiResponse = new ApiResponse<>();
         apiResponse.setResult(eventService.getEventById(eventId));
+        apiResponse.setMessage("Event fetched successfully");
         return apiResponse;
     }
 
     @PutMapping("/{eventId}")
-    ApiResponse<Void> updateEvent(@PathVariable int eventId, @RequestBody EventCreationRequest request) {
-        eventService.updateEvent(eventId, request);
-        return new ApiResponse<>();
+    ApiResponse<EventResponse> updateEvent(@PathVariable int eventId, @RequestBody EventUpdateRequest request) {
+        ApiResponse<EventResponse> apiResponse = new ApiResponse<>();
+        apiResponse.setResult(eventService.updateEvent(eventId, request));
+        apiResponse.setMessage("Event updated successfully");
+        return apiResponse;
     }
 
     @PutMapping("/status/{eventId}")
-    ApiResponse<Events> updateEventStatus(@PathVariable int eventId, @RequestBody EventCreationRequest request) {
-        ApiResponse<Events> apiResponse = new ApiResponse<>();
+    ApiResponse<EventResponse> updateEventStatus(@PathVariable int eventId, @RequestBody EventCreationRequest request) {
+        ApiResponse<EventResponse> apiResponse = new ApiResponse<>();
         apiResponse.setResult(eventService.updateEventStatus(eventId, request));
+        apiResponse.setMessage("Event status updated successfully");
         return apiResponse;
     }
 
     @DeleteMapping("/{eventId}")
     ApiResponse<String> deleteEvent(@PathVariable int eventId) {
-        eventService.deleteEvent(eventId);
         ApiResponse<String> apiResponse = new ApiResponse<>();
-        apiResponse.setResult("Event deleted successfully");
+        apiResponse.setResult(eventService.deleteEvent(eventId));
         return apiResponse;
     }
 }

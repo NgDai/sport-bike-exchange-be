@@ -15,7 +15,14 @@ public enum ErrorCode {
     USER_INVALID_AUTHENTICATIED(1006, "User authentication failed"),
     EVENT_NOT_FOUND(1007, "Event not found"),
     POSTING_SELLER_ID_REQUIRED(1008, "sellerId is required"),
-    POSTING_EVENT_ID_REQUIRED(1009, "eventId is required")
+    POSTING_EVENT_ID_REQUIRED(1009, "eventId is required"),
+    CHECKIN_NOT_FOUND(1010, "Check-in record not found"),
+    DEPOSIT_NOT_FOUND(1011, "Deposit record not found"),
+    DEPOSITSETTLEMENT_NOT_FOUND(1012, "Deposit settlement record not found"),
+    DISPUTE_NOT_FOUND(1013, "Dispute record not found"),
+    INSPECTIONREPORT_NOT_FOUND(1014, "Inspection report not found"),
+    RESERVATION_NOT_FOUND(1015, "Reservation not found"),
+    TRANSACTION_NOT_FOUND(1016, "Transaction not found")
     ;
 
     private int code;
