@@ -5,5 +5,5 @@
 package com.bicycle.marketplace.Repository;
 
 // placeholder - intentionally left blank after rollback
-public interface IRoleRepository {
+public interface IUserRoleRepository {
 }

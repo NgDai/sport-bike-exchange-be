@@ -22,11 +22,13 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
 import java.text.ParseException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
+import java.util.StringJoiner;
 
 @Slf4j
 @Service
@@ -67,25 +69,20 @@ public class AuthenticationService {
             throw new AppException(ErrorCode.USER_INVALID_AUTHENTICATIED);
         }
 
-        var token = generateToken(request.getUsername());
+        var token = generateToken(user);
 
         return AuthenticationResponse.builder()
                 .token(token)
                 .build();
     }
 
-    private String generateToken(String username) {
+    private String generateToken(Users user) {
         JWSHeader header = new JWSHeader(JWSAlgorithm.HS256);
-        Users user = userRepository.findByUsername(username).orElseThrow();
         JWTClaimsSet jwtClaimSet = new JWTClaimsSet.Builder()
                 .subject(user.getUsername())
                 .issuer("BicycleMarketplace")
-                .claim("userId", user.getUserId())
                 .claim("FullName", user.getFullName())
-                .claim("Email", user.getEmail())
-                .claim("Phone", user.getPhone())
-                .claim("WalletBalance", user.getWalletBalance())
-                .claim("Status", user.getStatus())
+                .claim("scope", buildScope(user))
                 .issueTime(new Date())
                 .expirationTime(new Date(
                         Instant.now().plus(1, ChronoUnit.HOURS).toEpochMilli()))
@@ -100,5 +97,13 @@ public class AuthenticationService {
             log.error("Cannot create token", e);
             throw new RuntimeException(e);
         }
+    }
+
+    private String buildScope(Users user) {
+        StringJoiner scope = new StringJoiner(" ");
+        if(!CollectionUtils.isEmpty(user.getRole()))
+            user.getRole().forEach(scope::add);
+
+        return scope.toString();
     }
 }

@@ -7,13 +7,17 @@ import com.bicycle.marketplace.dto.response.UserResponse;
 import com.bicycle.marketplace.entities.Users;
 import com.bicycle.marketplace.services.UserService;
 import jakarta.validation.Valid;
+import lombok.extern.java.Log;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.actuate.endpoint.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
 @RequestMapping("/users")
+@Log
 public class UserController {
     @Autowired
     private UserService userService;
@@ -27,6 +31,11 @@ public class UserController {
 
     @GetMapping
     ApiResponse<List<Users>> getUsers() {
+        var authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        log.info("Username: " + authentication.getName());
+        authentication.getAuthorities().forEach(grantedAuthority -> log.info(grantedAuthority.getAuthority()));
+
         ApiResponse<List<Users>> apiResponse = new ApiResponse<>();
         apiResponse.setResult(userService.getAllUser());
         return apiResponse;
@@ -40,7 +49,7 @@ public class UserController {
     }
 
     @PutMapping("/{userId}")
-    ApiResponse<UserResponse> updateUser(@PathVariable int userId, @RequestBody UserUpdateRequest request) {
+    ApiResponse<UserResponse> updateUser(@PathVariable int userId, @RequestBody @Valid UserUpdateRequest request) {
         ApiResponse<UserResponse> apiResponse = new ApiResponse<>();
         apiResponse.setResult(userService.updateUser(userId, request));
         return apiResponse;

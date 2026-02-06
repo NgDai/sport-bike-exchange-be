@@ -7,6 +7,7 @@ import com.bicycle.marketplace.dto.response.AuthenticationResponse;
 import com.bicycle.marketplace.dto.response.IntrospecResponse;
 import com.bicycle.marketplace.services.AuthenticationService;
 import com.nimbusds.jose.JOSEException;
+import jakarta.validation.Valid;
 import lombok.Builder;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -22,14 +23,13 @@ import java.text.ParseException;
 @RequiredArgsConstructor
 @FieldDefaults(level = lombok.AccessLevel.PRIVATE, makeFinal = true)
 @Builder
-public class AuthendicationController {
+public class AuthenticationController {
     AuthenticationService authenticationService;
 
     @PostMapping("/login")
-    ApiResponse<AuthenticationResponse> authenticate(@RequestBody AuthenticationRequest request) {
+    ApiResponse<AuthenticationResponse> authenticate(@RequestBody @Valid AuthenticationRequest request) {
         var result = authenticationService.authendicate(request);
         return ApiResponse.<AuthenticationResponse>builder()
-                .code(0)
                 .result(result)
                 .build();
     }
@@ -38,7 +38,6 @@ public class AuthendicationController {
     ApiResponse<IntrospecResponse> introspect(@RequestBody IntrospecRequest request) throws ParseException, JOSEException {
         var result = authenticationService.introspect(request);
         return ApiResponse.<IntrospecResponse>builder()
-                .code(0)
                 .result(result)
                 .build();
     }
