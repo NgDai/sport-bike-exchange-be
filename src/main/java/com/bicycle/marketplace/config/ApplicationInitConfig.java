@@ -1,13 +1,11 @@
 package com.bicycle.marketplace.config;
 
 import com.bicycle.marketplace.Repository.IUserRepository;
-import com.bicycle.marketplace.entities.UserRole;
 import com.bicycle.marketplace.entities.Users;
 import com.bicycle.marketplace.enums.Role;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.java.Log;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
