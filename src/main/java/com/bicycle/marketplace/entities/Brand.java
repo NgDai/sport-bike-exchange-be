@@ -2,20 +2,21 @@ package com.bicycle.marketplace.entities;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
-@Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Getter
+@Setter
+@Entity
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-@Entity
-
-public class Role {
+public class Brand {
     @Id
-    @GeneratedValue(strategy = jakarta.persistence.GenerationType.AUTO)
-    int roleId;
-    String roleName;
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    int brandId;
+    String name;
 }

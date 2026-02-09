@@ -4,22 +4,19 @@ import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
-@Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Getter
+@Setter
+@Entity
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-@Entity
-
-public class UserRole {
+public class Wishlist {
     @Id
-    @GeneratedValue(strategy = jakarta.persistence.GenerationType.AUTO)
-    int userRoleId;
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    int wishlistId;
     @ManyToOne
-    @JoinColumn(name = "user_id")
-    Users user;
-
-    @ManyToOne
-    @JoinColumn(name = "role_id")
-    Role role;
+    Users userId;
+    @OneToOne
+    BikeListing listingId;
 }
