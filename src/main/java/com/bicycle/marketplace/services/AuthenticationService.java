@@ -87,7 +87,6 @@ public class AuthenticationService {
                 .expirationTime(new Date(
                         Instant.now().plus(1, ChronoUnit.HOURS).toEpochMilli()))
                 .build();
-
         JWSObject jwsObject = new JWSObject(header, new Payload(jwtClaimSet.toJSONObject()));
 
         try {
