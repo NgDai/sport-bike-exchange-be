@@ -17,7 +17,6 @@ import java.text.ParseException;
 
 @RestController
 @RequestMapping("/auth")
-@CrossOrigin(origins = "http://localhost:3000")
 @RequiredArgsConstructor
 @FieldDefaults(level = lombok.AccessLevel.PRIVATE, makeFinal = true)
 @Builder
@@ -33,7 +32,8 @@ public class AuthenticationController {
     }
 
     @PostMapping("/introspect")
-    ApiResponse<IntrospecResponse> introspect(@RequestBody IntrospecRequest request) throws ParseException, JOSEException {
+    ApiResponse<IntrospecResponse> introspect(@RequestBody IntrospecRequest request)
+            throws ParseException, JOSEException {
         var result = authenticationService.introspect(request);
         return ApiResponse.<IntrospecResponse>builder()
                 .result(result)
