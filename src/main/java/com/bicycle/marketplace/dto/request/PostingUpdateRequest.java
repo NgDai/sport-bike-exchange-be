@@ -12,10 +12,10 @@ import lombok.Setter;
 public class PostingUpdateRequest {
     private Integer sellerId;
     private Integer eventId;
+    private Integer brandId;
+    private Integer categoryId;
     private String title;
-    private String brand;
     private String model;
-    private String category;
     private String frameSize;
     private String wheelSize;
     private Integer manufactureYear;

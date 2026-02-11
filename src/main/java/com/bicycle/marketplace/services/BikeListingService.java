@@ -1,11 +1,15 @@
 package com.bicycle.marketplace.services;
 
 import com.bicycle.marketplace.Repository.IBikeListingRepository;
+import com.bicycle.marketplace.Repository.IBrandRepository;
+import com.bicycle.marketplace.Repository.ICategoryRepository;
 import com.bicycle.marketplace.Repository.IEventRepository;
 import com.bicycle.marketplace.Repository.IUserRepository;
 import com.bicycle.marketplace.dto.request.PostingCreationRequest;
 import com.bicycle.marketplace.dto.request.PostingUpdateRequest;
 import com.bicycle.marketplace.entities.BikeListing;
+import com.bicycle.marketplace.entities.Brand;
+import com.bicycle.marketplace.entities.Category;
 import com.bicycle.marketplace.entities.Events;
 import com.bicycle.marketplace.entities.Users;
 import com.bicycle.marketplace.exception.AppException;
@@ -28,6 +32,12 @@ public class BikeListingService {
     @Autowired
     private IEventRepository eventRepository;
 
+    @Autowired
+    private IBrandRepository brandRepository;
+
+    @Autowired
+    private ICategoryRepository categoryRepository;
+
     public BikeListing createBikeListing(PostingCreationRequest request) {
         if (request.getSellerId() == null) {
             throw new AppException(ErrorCode.POSTING_SELLER_ID_REQUIRED);
@@ -35,19 +45,29 @@ public class BikeListingService {
         if (request.getEventId() == null) {
             throw new AppException(ErrorCode.POSTING_EVENT_ID_REQUIRED);
         }
+        if (request.getBrandId() == null) {
+            throw new AppException(ErrorCode.POSTING_BRAND_ID_REQUIRED);
+        }
+        if (request.getCategoryId() == null) {
+            throw new AppException(ErrorCode.POSTING_CATEGORY_ID_REQUIRED);
+        }
         Users seller = userRepository.findById(request.getSellerId())
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
         Events event = eventRepository.findById(request.getEventId())
                 .orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
+        Brand brand = brandRepository.findById(request.getBrandId())
+                .orElseThrow(() -> new AppException(ErrorCode.BRAND_NOT_FOUND));
+        Category category = categoryRepository.findById(request.getCategoryId())
+                .orElseThrow(() -> new AppException(ErrorCode.CATEGORY_NOT_FOUND));
 
         BikeListing listing = new BikeListing();
         listing.setSeller(seller);
         listing.setEvent(event);
+        listing.setBrand(brand);
+        listing.setCategory(category);
         listing.setCreatedAt(LocalDateTime.now());
         listing.setTitle(request.getTitle());
-        listing.setBrand(request.getBrand());
         listing.setModel(request.getModel());
-        listing.setCategory(request.getCategory());
         listing.setFrameSize(request.getFrameSize());
         listing.setWheelSize(request.getWheelSize());
         listing.setManufactureYear(request.getManufactureYear());
@@ -75,11 +95,19 @@ public class BikeListingService {
                     .orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
             listing.setEvent(event);
         }
+        if (request.getBrandId() != null) {
+            Brand brand = brandRepository.findById(request.getBrandId())
+                    .orElseThrow(() -> new AppException(ErrorCode.BRAND_NOT_FOUND));
+            listing.setBrand(brand);
+        }
+        if (request.getCategoryId() != null) {
+            Category category = categoryRepository.findById(request.getCategoryId())
+                    .orElseThrow(() -> new AppException(ErrorCode.CATEGORY_NOT_FOUND));
+            listing.setCategory(category);
+        }
 
         if (request.getTitle() != null) listing.setTitle(request.getTitle());
-        if (request.getBrand() != null) listing.setBrand(request.getBrand());
         if (request.getModel() != null) listing.setModel(request.getModel());
-        if (request.getCategory() != null) listing.setCategory(request.getCategory());
         if (request.getFrameSize() != null) listing.setFrameSize(request.getFrameSize());
         if (request.getWheelSize() != null) listing.setWheelSize(request.getWheelSize());
         if (request.getManufactureYear() != null) listing.setManufactureYear(request.getManufactureYear());
