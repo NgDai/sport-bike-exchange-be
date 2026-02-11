@@ -1,190 +1,1162 @@
--- 1. Table: role
-CREATE TABLE role (
-    role_id SERIAL PRIMARY KEY,
-    role_name VARCHAR(255)
-);
-
--- 2. Table: users
-CREATE TABLE users (
-    user_id SERIAL PRIMARY KEY,
-    username VARCHAR(255),
-    password VARCHAR(255),
-    full_name VARCHAR(255),
-    email VARCHAR(255),
-    phone VARCHAR(255),
-    wallet_balance VARCHAR(255),
-    status VARCHAR(255),
-    create_date DATE
-    -- Note: 'role' Set<String> is skipped in favor of the explicit 'UserRole' entity relationship
-);
-
--- 3. Table: user_role
-CREATE TABLE user_role (
-    user_role_id SERIAL PRIMARY KEY,
-    user_id INTEGER,
-    role_id INTEGER,
-    CONSTRAINT fk_user_role_user FOREIGN KEY (user_id) REFERENCES users(user_id),
-    CONSTRAINT fk_user_role_role FOREIGN KEY (role_id) REFERENCES role(role_id)
-);
-
--- 4. Table: events
-CREATE TABLE events (
-    event_id SERIAL PRIMARY KEY,
-    create_by INTEGER,
-    name VARCHAR(255),
-    location VARCHAR(255),
-    start_date DATE,
-    end_date DATE,
-    seller_deposit_rate DOUBLE PRECISION,
-    buyer_deposit_rate DOUBLE PRECISION,
-    platform_fee_rate DOUBLE PRECISION,
-    status VARCHAR(255),
-    CONSTRAINT fk_events_creator FOREIGN KEY (create_by) REFERENCES users(user_id)
-);
-
--- 5. Table: bike_listing
-CREATE TABLE bike_listing (
-    listing_id SERIAL PRIMARY KEY,
-    seller_id INTEGER,
-    event_id INTEGER,
-    title VARCHAR(255),
-    brand VARCHAR(255),
-    model VARCHAR(255),
-    category VARCHAR(255),
-    frame_size VARCHAR(255),
-    wheel_size VARCHAR(255),
-    manufacture_year INTEGER,
-    brake_type VARCHAR(255),
-    transmission VARCHAR(255),
-    weight DOUBLE PRECISION,
-    image_url VARCHAR(255),
-    description VARCHAR(255),
-    price DOUBLE PRECISION,
-    status VARCHAR(255),
-    created_at TIMESTAMP,
-    CONSTRAINT fk_bike_listing_seller FOREIGN KEY (seller_id) REFERENCES users(user_id),
-    CONSTRAINT fk_bike_listing_event FOREIGN KEY (event_id) REFERENCES events(event_id)
-);
-
--- 6. Table: deposit
-CREATE TABLE deposit (
-    deposit_id SERIAL PRIMARY KEY,
-    user_id INTEGER,
-    listing_id INTEGER,
-    type VARCHAR(255),
-    amount DOUBLE PRECISION,
-    nvarchar VARCHAR(255), -- Field name from entity is 'nvarchar'
-    create_at TIMESTAMP,
-    CONSTRAINT fk_deposit_user FOREIGN KEY (user_id) REFERENCES users(user_id),
-    CONSTRAINT fk_deposit_listing FOREIGN KEY (listing_id) REFERENCES bike_listing(listing_id)
-);
-
--- 7. Table: check_in
-CREATE TABLE check_in (
-    check_in_id SERIAL PRIMARY KEY,
-    user_id INTEGER,
-    event_id INTEGER,
-    role_id VARCHAR(255), -- Mapped as String based on entity definition
-    check_in_time TIMESTAMP,
-    CONSTRAINT fk_check_in_user FOREIGN KEY (user_id) REFERENCES users(user_id),
-    CONSTRAINT fk_check_in_event FOREIGN KEY (event_id) REFERENCES events(event_id)
-);
-
--- 8. Table: wallet
-CREATE TABLE wallet (
-    wallet_id SERIAL PRIMARY KEY,
-    user_id INTEGER,
-    balance DOUBLE PRECISION,
-    last_updated TIMESTAMP,
-    CONSTRAINT fk_wallet_user FOREIGN KEY (user_id) REFERENCES users(user_id)
-);
-
--- 9. Table: wallet_transaction
-CREATE TABLE wallet_transaction (
-    wallet_trans_id SERIAL PRIMARY KEY,
-    wallet_id INTEGER,
-    amount DOUBLE PRECISION,
-    type VARCHAR(255),
-    description VARCHAR(255),
-    created_at TIMESTAMP,
-    CONSTRAINT fk_wallet_trans_wallet FOREIGN KEY (wallet_id) REFERENCES wallet(wallet_id)
-);
-
--- 10. Table: reservation
-CREATE TABLE reservation (
-    reservation_id SERIAL PRIMARY KEY,
-    buyer_id INTEGER,
-    bike_listing_id INTEGER,
-    status VARCHAR(255),
-    created_at TIMESTAMP,
-    CONSTRAINT fk_reservation_buyer FOREIGN KEY (buyer_id) REFERENCES users(user_id),
-    CONSTRAINT fk_reservation_listing FOREIGN KEY (bike_listing_id) REFERENCES bike_listing(listing_id)
-);
-
--- 11. Table: transaction
-CREATE TABLE transaction (
-    transaction_id SERIAL PRIMARY KEY,
-    listing_id INTEGER,
-    buyer_id INTEGER,
-    seller_id INTEGER,
-    deposit_id INTEGER,
-    reservation_id INTEGER,
-    status VARCHAR(255),
-    amount DOUBLE PRECISION,
-    created_at TIMESTAMP,
-    completed_at TIMESTAMP,
-    CONSTRAINT fk_transaction_listing FOREIGN KEY (listing_id) REFERENCES bike_listing(listing_id),
-    CONSTRAINT fk_transaction_buyer FOREIGN KEY (buyer_id) REFERENCES users(user_id),
-    CONSTRAINT fk_transaction_seller FOREIGN KEY (seller_id) REFERENCES users(user_id),
-    CONSTRAINT fk_transaction_deposit FOREIGN KEY (deposit_id) REFERENCES deposit(deposit_id),
-    CONSTRAINT fk_transaction_reservation FOREIGN KEY (reservation_id) REFERENCES reservation(reservation_id)
-);
-
--- 12. Table: deposit_settlement
-CREATE TABLE deposit_settlement (
-    settlement_id SERIAL PRIMARY KEY,
-    deposit_id INTEGER,
-    receiver_id INTEGER,
-    amount DOUBLE PRECISION,
-    reason VARCHAR(255),
-    create_at TIMESTAMP,
-    CONSTRAINT fk_settlement_deposit FOREIGN KEY (deposit_id) REFERENCES deposit(deposit_id),
-    CONSTRAINT fk_settlement_receiver FOREIGN KEY (receiver_id) REFERENCES users(user_id)
-);
-
--- 13. Table: dispute
-CREATE TABLE dispute (
-    dispute_id SERIAL PRIMARY KEY,
-    transaction_id INTEGER,
-    raised_by INTEGER,
-    reason VARCHAR(255),
-    status VARCHAR(255),
-    create_at TIMESTAMP,
-    CONSTRAINT fk_dispute_transaction FOREIGN KEY (transaction_id) REFERENCES transaction(transaction_id),
-    CONSTRAINT fk_dispute_raiser FOREIGN KEY (raised_by) REFERENCES users(user_id)
-);
-
--- 14. Table: inspection_report
-CREATE TABLE inspection_report (
-    report_id SERIAL PRIMARY KEY,
-    dispute_id INTEGER,
-    inspector_id INTEGER,
-    result VARCHAR(255),
-    reason VARCHAR(255),
-    note VARCHAR(255),
-    create_at TIMESTAMP,
-    CONSTRAINT fk_inspection_dispute FOREIGN KEY (dispute_id) REFERENCES dispute(dispute_id),
-    CONSTRAINT fk_inspection_inspector FOREIGN KEY (inspector_id) REFERENCES users(user_id)
-);
-
--- 15. Table: listing_approval
-CREATE TABLE listing_approval (
-    approval_id SERIAL PRIMARY KEY,
-    listing_id INTEGER,
-    approval_by INTEGER,
-    decision VARCHAR(255),
-    note VARCHAR(255),
-    created_at TIMESTAMP,
-    CONSTRAINT fk_approval_listing FOREIGN KEY (listing_id) REFERENCES bike_listing(listing_id),
-    CONSTRAINT fk_approval_approver FOREIGN KEY (approval_by) REFERENCES users(user_id)
-);
+[
+  {
+    "table_schema": "public",
+    "table_name": "bicycle",
+    "column_name": "bike_id",
+    "data_type": "integer",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_schema": "public",
+    "table_name": "bicycle",
+    "column_name": "bike_type",
+    "data_type": "character varying",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_schema": "public",
+    "table_name": "bicycle",
+    "column_name": "brake_type",
+    "data_type": "character varying",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_schema": "public",
+    "table_name": "bicycle",
+    "column_name": "color",
+    "data_type": "character varying",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_schema": "public",
+    "table_name": "bicycle",
+    "column_name": "drivetrain",
+    "data_type": "character varying",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_schema": "public",
+    "table_name": "bicycle",
+    "column_name": "fork_type",
+    "data_type": "character varying",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_schema": "public",
+    "table_name": "bicycle",
+    "column_name": "frame_material",
+    "data_type": "character varying",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_schema": "public",
+    "table_name": "bicycle",
+    "column_name": "frame_size",
+    "data_type": "character varying",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_schema": "public",
+    "table_name": "bicycle",
+    "column_name": "number_of_gears",
+    "data_type": "character varying",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_schema": "public",
+    "table_name": "bicycle",
+    "column_name": "wheel_size",
+    "data_type": "character varying",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_schema": "public",
+    "table_name": "bicycle",
+    "column_name": "year_manufacture",
+    "data_type": "date",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_schema": "public",
+    "table_name": "bicycle",
+    "column_name": "brand_id",
+    "data_type": "integer",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_schema": "public",
+    "table_name": "bicycle",
+    "column_name": "category_id",
+    "data_type": "integer",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_schema": "public",
+    "table_name": "bicycle",
+    "column_name": "drive_train",
+    "data_type": "character varying",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_schema": "public",
+    "table_name": "bicycle",
+    "column_name": "number_of_gear",
+    "data_type": "character varying",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_schema": "public",
+    "table_name": "bicycle",
+    "column_name": "year_manufactured",
+    "data_type": "date",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_schema": "public",
+    "table_name": "bicycle",
+    "column_name": "brand_id_brand_id",
+    "data_type": "integer",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_schema": "public",
+    "table_name": "bicycle",
+    "column_name": "cate_id_cate_id",
+    "data_type": "integer",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_schema": "public",
+    "table_name": "bike_listing",
+    "column_name": "listing_id",
+    "data_type": "integer",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_schema": "public",
+    "table_name": "bike_listing",
+    "column_name": "brake_type",
+    "data_type": "character varying",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_schema": "public",
+    "table_name": "bike_listing",
+    "column_name": "brand",
+    "data_type": "character varying",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_schema": "public",
+    "table_name": "bike_listing",
+    "column_name": "category",
+    "data_type": "character varying",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_schema": "public",
+    "table_name": "bike_listing",
+    "column_name": "created_at",
+    "data_type": "timestamp without time zone",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_schema": "public",
+    "table_name": "bike_listing",
+    "column_name": "description",
+    "data_type": "character varying",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_schema": "public",
+    "table_name": "bike_listing",
+    "column_name": "frame_size",
+    "data_type": "character varying",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_schema": "public",
+    "table_name": "bike_listing",
+    "column_name": "image_url",
+    "data_type": "character varying",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_schema": "public",
+    "table_name": "bike_listing",
+    "column_name": "manufacture_year",
+    "data_type": "integer",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_schema": "public",
+    "table_name": "bike_listing",
+    "column_name": "model",
+    "data_type": "character varying",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_schema": "public",
+    "table_name": "bike_listing",
+    "column_name": "price",
+    "data_type": "double precision",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_schema": "public",
+    "table_name": "bike_listing",
+    "column_name": "status",
+    "data_type": "character varying",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_schema": "public",
+    "table_name": "bike_listing",
+    "column_name": "title",
+    "data_type": "character varying",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_schema": "public",
+    "table_name": "bike_listing",
+    "column_name": "transmission",
+    "data_type": "character varying",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_schema": "public",
+    "table_name": "bike_listing",
+    "column_name": "weight",
+    "data_type": "double precision",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_schema": "public",
+    "table_name": "bike_listing",
+    "column_name": "wheel_size",
+    "data_type": "character varying",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_schema": "public",
+    "table_name": "bike_listing",
+    "column_name": "event_id",
+    "data_type": "integer",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_schema": "public",
+    "table_name": "bike_listing",
+    "column_name": "seller_id",
+    "data_type": "integer",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_schema": "public",
+    "table_name": "brand",
+    "column_name": "brand_id",
+    "data_type": "integer",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_schema": "public",
+    "table_name": "brand",
+    "column_name": "name",
+    "data_type": "character varying",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_schema": "public",
+    "table_name": "category",
+    "column_name": "category_id",
+    "data_type": "integer",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_schema": "public",
+    "table_name": "category",
+    "column_name": "bicycle_type",
+    "data_type": "character varying",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_schema": "public",
+    "table_name": "category",
+    "column_name": "name",
+    "data_type": "character varying",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_schema": "public",
+    "table_name": "category",
+    "column_name": "cate_id",
+    "data_type": "integer",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_schema": "public",
+    "table_name": "check_in",
+    "column_name": "check_in_id",
+    "data_type": "integer",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_schema": "public",
+    "table_name": "check_in",
+    "column_name": "check_in_time",
+    "data_type": "timestamp without time zone",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_schema": "public",
+    "table_name": "check_in",
+    "column_name": "role",
+    "data_type": "character varying",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_schema": "public",
+    "table_name": "check_in",
+    "column_name": "status",
+    "data_type": "character varying",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_schema": "public",
+    "table_name": "check_in",
+    "column_name": "event_id",
+    "data_type": "integer",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_schema": "public",
+    "table_name": "check_in",
+    "column_name": "user_id",
+    "data_type": "integer",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_schema": "public",
+    "table_name": "check_in",
+    "column_name": "role_id",
+    "data_type": "character varying",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_schema": "public",
+    "table_name": "deposit",
+    "column_name": "deposit_id",
+    "data_type": "integer",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_schema": "public",
+    "table_name": "deposit",
+    "column_name": "amount",
+    "data_type": "double precision",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_schema": "public",
+    "table_name": "deposit",
+    "column_name": "created_at",
+    "data_type": "timestamp without time zone",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_schema": "public",
+    "table_name": "deposit",
+    "column_name": "status",
+    "data_type": "character varying",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_schema": "public",
+    "table_name": "deposit",
+    "column_name": "type",
+    "data_type": "character varying",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_schema": "public",
+    "table_name": "deposit",
+    "column_name": "listing_id",
+    "data_type": "integer",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_schema": "public",
+    "table_name": "deposit",
+    "column_name": "user_id",
+    "data_type": "integer",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_schema": "public",
+    "table_name": "deposit",
+    "column_name": "create_at",
+    "data_type": "timestamp without time zone",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_schema": "public",
+    "table_name": "deposit",
+    "column_name": "nvarchar",
+    "data_type": "character varying",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_schema": "public",
+    "table_name": "deposit_settlement",
+    "column_name": "settlement_id",
+    "data_type": "integer",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_schema": "public",
+    "table_name": "deposit_settlement",
+    "column_name": "amount",
+    "data_type": "double precision",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_schema": "public",
+    "table_name": "deposit_settlement",
+    "column_name": "create_at",
+    "data_type": "timestamp without time zone",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_schema": "public",
+    "table_name": "deposit_settlement",
+    "column_name": "reason",
+    "data_type": "character varying",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_schema": "public",
+    "table_name": "deposit_settlement",
+    "column_name": "deposit_id",
+    "data_type": "integer",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_schema": "public",
+    "table_name": "deposit_settlement",
+    "column_name": "receiver_id",
+    "data_type": "integer",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_schema": "public",
+    "table_name": "dispute",
+    "column_name": "dispute_id",
+    "data_type": "integer",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_schema": "public",
+    "table_name": "dispute",
+    "column_name": "created_at",
+    "data_type": "timestamp without time zone",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_schema": "public",
+    "table_name": "dispute",
+    "column_name": "reason",
+    "data_type": "character varying",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_schema": "public",
+    "table_name": "dispute",
+    "column_name": "status",
+    "data_type": "character varying",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_schema": "public",
+    "table_name": "dispute",
+    "column_name": "raised_by",
+    "data_type": "integer",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_schema": "public",
+    "table_name": "dispute",
+    "column_name": "transaction_id",
+    "data_type": "integer",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_schema": "public",
+    "table_name": "dispute",
+    "column_name": "create_at",
+    "data_type": "timestamp without time zone",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_schema": "public",
+    "table_name": "event_bicycle",
+    "column_name": "event_bike_id",
+    "data_type": "integer",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_schema": "public",
+    "table_name": "event_bicycle",
+    "column_name": "create_date",
+    "data_type": "date",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_schema": "public",
+    "table_name": "event_bicycle",
+    "column_name": "type",
+    "data_type": "character varying",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_schema": "public",
+    "table_name": "event_bicycle",
+    "column_name": "event_id",
+    "data_type": "integer",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_schema": "public",
+    "table_name": "event_bicycle",
+    "column_name": "listing_id",
+    "data_type": "integer",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_schema": "public",
+    "table_name": "event_bicycle",
+    "column_name": "bicycle_id_bike_id",
+    "data_type": "integer",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_schema": "public",
+    "table_name": "event_bicycle",
+    "column_name": "event_id_event_id",
+    "data_type": "integer",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_schema": "public",
+    "table_name": "events",
+    "column_name": "event_id",
+    "data_type": "integer",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_schema": "public",
+    "table_name": "events",
+    "column_name": "buyer_deposit_rate",
+    "data_type": "double precision",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_schema": "public",
+    "table_name": "events",
+    "column_name": "end_date",
+    "data_type": "date",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_schema": "public",
+    "table_name": "events",
+    "column_name": "location",
+    "data_type": "character varying",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_schema": "public",
+    "table_name": "events",
+    "column_name": "name",
+    "data_type": "character varying",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_schema": "public",
+    "table_name": "events",
+    "column_name": "platform_fee_rate",
+    "data_type": "double precision",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_schema": "public",
+    "table_name": "events",
+    "column_name": "seller_deposit_rate",
+    "data_type": "double precision",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_schema": "public",
+    "table_name": "events",
+    "column_name": "start_date",
+    "data_type": "date",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_schema": "public",
+    "table_name": "events",
+    "column_name": "status",
+    "data_type": "character varying",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_schema": "public",
+    "table_name": "events",
+    "column_name": "create_by",
+    "data_type": "integer",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_schema": "public",
+    "table_name": "inspection_report",
+    "column_name": "report_id",
+    "data_type": "integer",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_schema": "public",
+    "table_name": "inspection_report",
+    "column_name": "created_at",
+    "data_type": "timestamp without time zone",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_schema": "public",
+    "table_name": "inspection_report",
+    "column_name": "note",
+    "data_type": "character varying",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_schema": "public",
+    "table_name": "inspection_report",
+    "column_name": "reason",
+    "data_type": "character varying",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_schema": "public",
+    "table_name": "inspection_report",
+    "column_name": "result",
+    "data_type": "character varying",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_schema": "public",
+    "table_name": "inspection_report",
+    "column_name": "dispute_id",
+    "data_type": "integer",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_schema": "public",
+    "table_name": "inspection_report",
+    "column_name": "inspector_id",
+    "data_type": "integer",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_schema": "public",
+    "table_name": "inspection_report",
+    "column_name": "create_at",
+    "data_type": "timestamp without time zone",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_schema": "public",
+    "table_name": "reservation",
+    "column_name": "reservation_id",
+    "data_type": "integer",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_schema": "public",
+    "table_name": "reservation",
+    "column_name": "reserved_at",
+    "data_type": "timestamp without time zone",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_schema": "public",
+    "table_name": "reservation",
+    "column_name": "status",
+    "data_type": "character varying",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_schema": "public",
+    "table_name": "reservation",
+    "column_name": "buyer_id",
+    "data_type": "integer",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_schema": "public",
+    "table_name": "reservation",
+    "column_name": "listing_id",
+    "data_type": "integer",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_schema": "public",
+    "table_name": "reservation",
+    "column_name": "created_at",
+    "data_type": "timestamp without time zone",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_schema": "public",
+    "table_name": "reservation",
+    "column_name": "bike_listing_id",
+    "data_type": "integer",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_schema": "public",
+    "table_name": "transaction",
+    "column_name": "transaction_id",
+    "data_type": "integer",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_schema": "public",
+    "table_name": "transaction",
+    "column_name": "actual_price",
+    "data_type": "double precision",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_schema": "public",
+    "table_name": "transaction",
+    "column_name": "amount",
+    "data_type": "double precision",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_schema": "public",
+    "table_name": "transaction",
+    "column_name": "create_at",
+    "data_type": "timestamp without time zone",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_schema": "public",
+    "table_name": "transaction",
+    "column_name": "status",
+    "data_type": "character varying",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_schema": "public",
+    "table_name": "transaction",
+    "column_name": "update_at",
+    "data_type": "timestamp without time zone",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_schema": "public",
+    "table_name": "transaction",
+    "column_name": "buyer_id",
+    "data_type": "integer",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_schema": "public",
+    "table_name": "transaction",
+    "column_name": "deposit_id",
+    "data_type": "integer",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_schema": "public",
+    "table_name": "transaction",
+    "column_name": "event_id",
+    "data_type": "integer",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_schema": "public",
+    "table_name": "transaction",
+    "column_name": "listing_id",
+    "data_type": "integer",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_schema": "public",
+    "table_name": "transaction",
+    "column_name": "reservation_id",
+    "data_type": "integer",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_schema": "public",
+    "table_name": "transaction",
+    "column_name": "seller_id",
+    "data_type": "integer",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_schema": "public",
+    "table_name": "transaction",
+    "column_name": "completed_at",
+    "data_type": "timestamp without time zone",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_schema": "public",
+    "table_name": "transaction",
+    "column_name": "created_at",
+    "data_type": "timestamp without time zone",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_schema": "public",
+    "table_name": "users",
+    "column_name": "user_id",
+    "data_type": "integer",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_schema": "public",
+    "table_name": "users",
+    "column_name": "created_at",
+    "data_type": "date",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_schema": "public",
+    "table_name": "users",
+    "column_name": "email",
+    "data_type": "character varying",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_schema": "public",
+    "table_name": "users",
+    "column_name": "full_name",
+    "data_type": "character varying",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_schema": "public",
+    "table_name": "users",
+    "column_name": "password",
+    "data_type": "character varying",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_schema": "public",
+    "table_name": "users",
+    "column_name": "phone",
+    "data_type": "character varying",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_schema": "public",
+    "table_name": "users",
+    "column_name": "role",
+    "data_type": "ARRAY",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_schema": "public",
+    "table_name": "users",
+    "column_name": "status",
+    "data_type": "character varying",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_schema": "public",
+    "table_name": "users",
+    "column_name": "username",
+    "data_type": "character varying",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_schema": "public",
+    "table_name": "users",
+    "column_name": "create_date",
+    "data_type": "date",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_schema": "public",
+    "table_name": "users",
+    "column_name": "wallet_balance",
+    "data_type": "character varying",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_schema": "public",
+    "table_name": "wallet",
+    "column_name": "wallet_id",
+    "data_type": "integer",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_schema": "public",
+    "table_name": "wallet",
+    "column_name": "balance",
+    "data_type": "double precision",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_schema": "public",
+    "table_name": "wallet",
+    "column_name": "updated_at",
+    "data_type": "timestamp without time zone",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_schema": "public",
+    "table_name": "wallet",
+    "column_name": "user_id",
+    "data_type": "integer",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_schema": "public",
+    "table_name": "wallet",
+    "column_name": "last_updated",
+    "data_type": "timestamp without time zone",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_schema": "public",
+    "table_name": "wallet_transaction",
+    "column_name": "wallet_trans_id",
+    "data_type": "integer",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_schema": "public",
+    "table_name": "wallet_transaction",
+    "column_name": "amount",
+    "data_type": "double precision",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_schema": "public",
+    "table_name": "wallet_transaction",
+    "column_name": "create_at",
+    "data_type": "timestamp without time zone",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_schema": "public",
+    "table_name": "wallet_transaction",
+    "column_name": "description",
+    "data_type": "character varying",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_schema": "public",
+    "table_name": "wallet_transaction",
+    "column_name": "type",
+    "data_type": "character varying",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_schema": "public",
+    "table_name": "wallet_transaction",
+    "column_name": "wallet_id",
+    "data_type": "integer",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_schema": "public",
+    "table_name": "wallet_transaction",
+    "column_name": "created_at",
+    "data_type": "timestamp without time zone",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_schema": "public",
+    "table_name": "wishlist",
+    "column_name": "wishlist_id",
+    "data_type": "integer",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_schema": "public",
+    "table_name": "wishlist",
+    "column_name": "listing_id",
+    "data_type": "integer",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_schema": "public",
+    "table_name": "wishlist",
+    "column_name": "user_id",
+    "data_type": "integer",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_schema": "public",
+    "table_name": "wishlist",
+    "column_name": "listing_id_listing_id",
+    "data_type": "integer",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_schema": "public",
+    "table_name": "wishlist",
+    "column_name": "user_id_user_id",
+    "data_type": "integer",
+    "is_nullable": "YES",
+    "column_default": null
+  }
+]
