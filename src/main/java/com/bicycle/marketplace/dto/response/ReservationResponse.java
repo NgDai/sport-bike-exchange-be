@@ -15,5 +15,5 @@ public class ReservationResponse {
     private int bikeListingId;
     private int buyerId;
     private String status;
-    private Date createAt;
+    private Date reservedAt;
 }

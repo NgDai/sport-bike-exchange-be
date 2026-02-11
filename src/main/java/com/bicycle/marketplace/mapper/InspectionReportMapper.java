@@ -10,5 +10,6 @@ import org.mapstruct.MappingTarget;
 @Mapper(componentModel = "spring")
 public interface InspectionReportMapper {
     InspectionReportResponse toInspectorReportResponse(InspectionReport inspectionReport);
+    InspectionReport toInspectionReport(InspectionReportCreationRequest request);
     void updateInspectionReport(@MappingTarget InspectionReport inspectionReport, InspectionReportUpdateRequest request);
 }

@@ -10,5 +10,6 @@ import org.mapstruct.MappingTarget;
 @Mapper(componentModel = "spring")
 public interface DepositMapper {
     DepositResponse toDepositResponse(Deposit deposit);
+    Deposit toDeposit(DepositCreationRequest request);
     void updateDeposit(@MappingTarget Deposit deposit, DepositUpdateRequest request);
 }

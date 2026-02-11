@@ -13,6 +13,7 @@ import java.util.Date;
 public class TransactionUpdateRequest {
     private String status;
     private double amount;
+    private double actualPrice;
     private Date createdAt;
-    private Date completedAt;
+    private Date updateAt;
 }

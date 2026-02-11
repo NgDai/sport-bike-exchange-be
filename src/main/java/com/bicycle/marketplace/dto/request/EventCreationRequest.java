@@ -12,7 +12,12 @@ import java.time.LocalDate;
 @NoArgsConstructor
 public class EventCreationRequest {
     private String name;
+    private String bikeType;
     private String location;
+    private String address;
+    private LocalDate createDate;
+    private LocalDate publicDate;
+    private LocalDate updateDate;
     private LocalDate startDate;
     private LocalDate endDate;
     private double sellerDepositRate;

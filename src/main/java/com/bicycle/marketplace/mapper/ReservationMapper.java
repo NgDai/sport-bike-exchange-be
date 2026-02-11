@@ -10,5 +10,6 @@ import org.mapstruct.MappingTarget;
 @Mapper(componentModel = "spring")
 public interface ReservationMapper {
     ReservationResponse toReservationResponse(Reservation reservation);
+    Reservation toReservation(ReservationCreationRequest request);
     void updateReservation(@MappingTarget Reservation reservation, ReservationUpdateRequest request);
 }

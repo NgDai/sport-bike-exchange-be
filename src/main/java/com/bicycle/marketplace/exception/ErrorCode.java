@@ -27,11 +27,15 @@ public enum ErrorCode {
     POSTING_EVENT_ID_REQUIRED(1009, "eventId is required"),
     CHECKIN_NOT_FOUND(1010, "Check-in record not found"),
     DEPOSIT_NOT_FOUND(1011, "Deposit record not found"),
-    DEPOSITSETTLEMENT_NOT_FOUND(1012, "Deposit settlement record not found"),
+    BICYCLE_NOT_FOUND(1012, "Bicycle record not found"),
     DISPUTE_NOT_FOUND(1013, "Dispute record not found"),
     INSPECTIONREPORT_NOT_FOUND(1014, "Inspection report not found"),
     RESERVATION_NOT_FOUND(1015, "Reservation not found"),
-    TRANSACTION_NOT_FOUND(1016, "Transaction not found")
+    TRANSACTION_NOT_FOUND(1016, "Transaction not found"),
+    BRAND_NOT_FOUND(1017, "Brand not found"),
+    CATEGORY_NOT_FOUND(1018, "Category not found"),
+    EVENT_BICYCLE_NOT_FOUND(1019, "Bicycle not found in the specified event"),
+    WISHLIST_NOT_FOUND(1020, "Wishlist not found")
     ;
 
     private int code;

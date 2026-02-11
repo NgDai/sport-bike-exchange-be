@@ -21,9 +21,7 @@ public class ReservationService {
     private ReservationMapper reservationMapper;
 
     public ReservationResponse createReservation(ReservationCreationRequest request) {
-        Reservation reservation = new Reservation();
-        reservation.setStatus(request.getStatus());
-        reservation.setReservedAt(request.getCreatedAt());
+        Reservation reservation = reservationMapper.toReservation(request);
         return reservationMapper.toReservationResponse(reservationRepository.save(reservation));
     }
 

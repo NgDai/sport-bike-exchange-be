@@ -10,5 +10,6 @@ import org.mapstruct.MappingTarget;
 @Mapper(componentModel = "spring")
 public interface TransactionMapper {
     TransactionResponse toTransactionResponse(Transaction transaction);
+    Transaction toTransaction(TransactionCreationRequest request);
     void updateTransaction(@MappingTarget Transaction transaction, TransactionUpdateRequest request);
 }

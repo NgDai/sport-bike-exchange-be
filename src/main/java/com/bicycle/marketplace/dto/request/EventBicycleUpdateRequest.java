@@ -4,15 +4,13 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.hibernate.annotations.CreationTimestamp;
 
-import java.util.Date;
+import java.time.LocalDate;
 
 @Getter @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class DepositSettlementCreationRequest {
-    private double amount;
-    private String reason;
-    private Date createAt;
+public class EventBicycleUpdateRequest {
+    private String type;
+    private LocalDate createDate;
 }

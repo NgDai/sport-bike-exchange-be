@@ -22,6 +22,6 @@ public class DepositResponse {
     private int listingId;
     private String type;
     private double amount;
-    private String nvarchar;
+    private String status;
     private Date createAt;
 }

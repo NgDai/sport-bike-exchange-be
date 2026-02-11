@@ -21,10 +21,7 @@ public class DepositService {
     private DepositMapper depositMapper;
 
     public DepositResponse createDeposit(DepositCreationRequest request) {
-        Deposit deposit = new Deposit();
-        deposit.setType(request.getType());
-        deposit.setAmount(request.getAmount());
-        deposit.setCreatedAt(request.getCreateAt());
+        Deposit deposit = depositMapper.toDeposit(request);
         return depositMapper.toDepositResponse(depositRepository.save(deposit));
     }
 

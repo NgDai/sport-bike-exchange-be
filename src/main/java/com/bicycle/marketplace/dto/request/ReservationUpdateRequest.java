@@ -12,5 +12,5 @@ import java.util.Date;
 @NoArgsConstructor
 public class ReservationUpdateRequest {
     private String status;
-    private Date createdAt;
+    private Date reservedAt;
 }

@@ -21,10 +21,7 @@ public class DisputeService {
     private DisputeMapper disputeMapper;
 
     public DisputeResponse createDispute(DisputeCreationRequest request) {
-        Dispute dispute = new Dispute();
-        dispute.setReason(request.getReason());
-        dispute.setStatus(request.getStatus());
-        dispute.setCreatedAt(request.getCreateAt());
+        Dispute dispute = disputeMapper.toDispute(request);
         return disputeMapper.toDisputeResponse(disputeRepository.save(dispute));
     }
 

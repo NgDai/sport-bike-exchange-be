@@ -10,5 +10,6 @@ import org.mapstruct.MappingTarget;
 @Mapper(componentModel = "spring")
 public interface CheckInMapper {
     CheckInResponse toCheckInResponse(CheckIn checkIn);
+    CheckIn toCheckIn(CheckInCreationRequest request);
     void updateCheckIn(@MappingTarget CheckIn checkIn, CheckInUpdateRequest request);
 }

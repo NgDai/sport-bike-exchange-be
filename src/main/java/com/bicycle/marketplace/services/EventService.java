@@ -21,17 +21,7 @@ public class EventService {
     private EventMapper eventMapper;
 
     public EventResponse createEvent(EventCreationRequest request) {
-        Events event = new Events();
-
-        event.setName(request.getName());
-        event.setLocation(request.getLocation());
-        event.setStartDate(request.getStartDate());
-        event.setEndDate(request.getEndDate());
-        event.setSellerDepositRate(request.getSellerDepositRate());
-        event.setBuyerDepositRate(request.getBuyerDepositRate());
-        event.setPlatformFeeRate(request.getPlatformFeeRate());
-        event.setStatus(request.getStatus());
-
+        Events event = eventMapper.toEvents(request);
         return eventMapper.toEventResponse(eventRepository.save(event));
     }
 

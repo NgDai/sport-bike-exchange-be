@@ -15,6 +15,6 @@ import java.util.Date;
 public class DepositCreationRequest {
     private String type;
     private double amount;
-    private String nvarchar;
+    private String status;
     private Date createAt;
 }

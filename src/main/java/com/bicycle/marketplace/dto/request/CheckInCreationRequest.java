@@ -8,7 +8,6 @@ import lombok.Setter;
 import java.time.LocalDateTime;
 import java.util.Date;
 
-import com.bicycle.marketplace.enums.CheckInStatus;
 
 @Getter
 @Setter
@@ -16,6 +15,7 @@ import com.bicycle.marketplace.enums.CheckInStatus;
 @NoArgsConstructor
 
 public class CheckInCreationRequest {
-    private CheckInStatus role;
+    private String role;
+    private String status;
     private Date checkInTime;
 }

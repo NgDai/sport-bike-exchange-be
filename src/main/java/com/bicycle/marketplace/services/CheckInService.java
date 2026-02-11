@@ -23,10 +23,7 @@ public class CheckInService {
     private CheckInMapper checkInMapper;
 
     public CheckInResponse createCheckIn(CheckInCreationRequest request) {
-        CheckIn checkIn = new CheckIn();
-
-        checkIn.setRole(request.getRole().name());
-        checkIn.setCheckInTime(request.getCheckInTime());
+        CheckIn checkIn = checkInMapper.toCheckIn(request);
 
         return checkInMapper.toCheckInResponse(checkInRepository.save(checkIn));
     }

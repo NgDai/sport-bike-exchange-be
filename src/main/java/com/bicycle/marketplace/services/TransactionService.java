@@ -21,12 +21,7 @@ public class TransactionService {
     private TransactionMapper transactionMapper;
 
     public TransactionResponse createTransaction(TransactionCreationRequest request) {
-        Transaction transaction = new Transaction();
-        transaction.setAmount(request.getAmount());
-        transaction.setStatus(request.getStatus());
-        transaction.setCreateAt(request.getCreatedAt());
-        // transaction.setCompletedAt(request.getCompletedAt()); // Field removed from
-        // Entity
+        Transaction transaction = transactionMapper.toTransaction(request);
         return transactionMapper.toTransactionResponse(transactionRepository.save(transaction));
     }
 

@@ -21,11 +21,7 @@ public class InspectionReportService {
     private InspectionReportMapper inspectionReportMapper;
 
     public InspectionReportResponse createInspectionReport(InspectionReportCreationRequest request) {
-        InspectionReport inspectionReport = new InspectionReport();
-        inspectionReport.setResult(request.getResult());
-        inspectionReport.setNote(request.getNote());
-        inspectionReport.setReason(request.getReason());
-        inspectionReport.setCreatedAt(request.getCreateAt());
+        InspectionReport inspectionReport = inspectionReportMapper.toInspectionReport(request);
         return inspectionReportMapper.toInspectorReportResponse(inspectionReportRepository.save(inspectionReport));
     }
 
