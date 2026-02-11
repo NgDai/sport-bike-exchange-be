@@ -22,9 +22,8 @@ public class Users {
     private String fullName;
     private String email;
     private String phone;
-    private String walletBalance;
     private String status;
     private Set<String> role;
     @CreationTimestamp
-    private LocalDate create_date;
+    private LocalDate createdAt;
 }

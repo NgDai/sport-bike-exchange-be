@@ -14,9 +14,11 @@ import lombok.experimental.FieldDefaults;
 public class Wishlist {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    int wishlistId;
+    private int wishlistId;
     @ManyToOne
-    Users userId;
-    @OneToOne
-    BikeListing listingId;
+    @JoinColumn(name = "user_id")
+    private Users user;
+    @ManyToOne
+    @JoinColumn(name = "listing_id")
+    private BikeListing listing;
 }

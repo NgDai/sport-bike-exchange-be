@@ -18,16 +18,18 @@ public class Bicycle {
     @GeneratedValue(strategy = GenerationType.AUTO)
     int bikeId;
     @ManyToOne
-    Brand brandId;
+    @JoinColumn(name = "brandId")
+    Brand brand;
     @ManyToOne
-    Category cateId;
+    @JoinColumn(name = "categoryId")
+    Category category;
     String bikeType;
     String wheelSize;
-    String numberOfGear;
+    String numberOfGears;
     String brakeType;
-    LocalDate yearManufactured;
+    LocalDate yearManufacture;
     String frameSize;
-    String driveTrain;
+    String drivetrain;
     String forkType;
     String color;
     String frameMaterial;

@@ -20,12 +20,11 @@ public class Dispute {
     @OneToOne
     @JoinColumn(name = "transaction_id")
     Transaction transaction;
-
     @ManyToOne
     @JoinColumn(name = "raised_by")
-    Users raiser;
+    Users raisedBy;
     String reason;
     String status;
     @CreationTimestamp
-    Date createAt;
+    Date createdAt;
 }

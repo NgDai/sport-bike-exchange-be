@@ -19,9 +19,12 @@ public class EventBicycle {
     @GeneratedValue(strategy = GenerationType.AUTO)
     int eventBikeId;
     @ManyToOne
-    Events eventId;
-    @OneToOne
-    Bicycle bicycleId;
+    @JoinColumn(name = "event_id")
+    Events event;
+    @ManyToOne
+    @JoinColumn(name = "listing_id")
+    BikeListing listing;
+    String type;
     @CreationTimestamp
     LocalDate createDate;
 }

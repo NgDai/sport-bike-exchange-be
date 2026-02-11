@@ -25,5 +25,5 @@ public class WalletTransaction {
     String type;
     String description;
     @CreationTimestamp
-    Date createdAt;
+    Date createAt;
 }

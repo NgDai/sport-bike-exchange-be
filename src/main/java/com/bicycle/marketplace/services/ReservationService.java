@@ -20,30 +20,33 @@ public class ReservationService {
     @Autowired
     private ReservationMapper reservationMapper;
 
-    public ReservationResponse createReservation(ReservationCreationRequest request){
+    public ReservationResponse createReservation(ReservationCreationRequest request) {
         Reservation reservation = new Reservation();
         reservation.setStatus(request.getStatus());
-        reservation.setCreatedAt(request.getCreatedAt());
+        reservation.setReservedAt(request.getCreatedAt());
         return reservationMapper.toReservationResponse(reservationRepository.save(reservation));
     }
 
-    public ReservationResponse updateReservation(int reservationId, ReservationUpdateRequest request){
-        Reservation reservation = reservationRepository.findById(reservationId).orElseThrow(() -> new AppException(ErrorCode.RESERVATION_NOT_FOUND));
+    public ReservationResponse updateReservation(int reservationId, ReservationUpdateRequest request) {
+        Reservation reservation = reservationRepository.findById(reservationId)
+                .orElseThrow(() -> new AppException(ErrorCode.RESERVATION_NOT_FOUND));
         reservationMapper.updateReservation(reservation, request);
         return reservationMapper.toReservationResponse(reservationRepository.save(reservation));
     }
 
-    public List<Reservation> findAllReservations(){
+    public List<Reservation> findAllReservations() {
         return reservationRepository.findAll();
     }
 
     public ReservationResponse findReservationById(int reservationId) {
-        Reservation reservation = reservationRepository.findById(reservationId).orElseThrow(() -> new AppException(ErrorCode.RESERVATION_NOT_FOUND));
+        Reservation reservation = reservationRepository.findById(reservationId)
+                .orElseThrow(() -> new AppException(ErrorCode.RESERVATION_NOT_FOUND));
         return reservationMapper.toReservationResponse(reservation);
     }
 
     public String deleteReservation(int reservationId) {
-        Reservation reservation = reservationRepository.findById(reservationId).orElseThrow(() -> new AppException(ErrorCode.RESERVATION_NOT_FOUND));
+        Reservation reservation = reservationRepository.findById(reservationId)
+                .orElseThrow(() -> new AppException(ErrorCode.RESERVATION_NOT_FOUND));
         reservationRepository.delete(reservation);
         return "Reservation deleted successfully";
     }

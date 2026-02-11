@@ -8,10 +8,14 @@ import lombok.Setter;
 import java.time.LocalDateTime;
 import java.util.Date;
 
-@Getter @Setter
-@AllArgsConstructor @NoArgsConstructor
+import com.bicycle.marketplace.enums.CheckInStatus;
+
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
 
 public class CheckInCreationRequest {
-    private String roleId;
+    private CheckInStatus role;
     private Date checkInTime;
 }

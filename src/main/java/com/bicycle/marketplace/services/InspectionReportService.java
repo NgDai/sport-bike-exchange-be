@@ -25,12 +25,14 @@ public class InspectionReportService {
         inspectionReport.setResult(request.getResult());
         inspectionReport.setNote(request.getNote());
         inspectionReport.setReason(request.getReason());
-        inspectionReport.setCreateAt(request.getCreateAt());
+        inspectionReport.setCreatedAt(request.getCreateAt());
         return inspectionReportMapper.toInspectorReportResponse(inspectionReportRepository.save(inspectionReport));
     }
 
-    public InspectionReportResponse updateInspectionReport(int inspectionReportId, InspectionReportUpdateRequest request) {
-        InspectionReport inspectionReport = inspectionReportRepository.findById(inspectionReportId).orElseThrow(() -> new AppException(ErrorCode.INSPECTIONREPORT_NOT_FOUND));
+    public InspectionReportResponse updateInspectionReport(int inspectionReportId,
+            InspectionReportUpdateRequest request) {
+        InspectionReport inspectionReport = inspectionReportRepository.findById(inspectionReportId)
+                .orElseThrow(() -> new AppException(ErrorCode.INSPECTIONREPORT_NOT_FOUND));
         inspectionReportMapper.updateInspectionReport(inspectionReport, request);
         return inspectionReportMapper.toInspectorReportResponse(inspectionReportRepository.save(inspectionReport));
     }
@@ -40,12 +42,14 @@ public class InspectionReportService {
     }
 
     public InspectionReportResponse findInspectionReportById(int inspectionReportId) {
-        InspectionReport inspectionReport = inspectionReportRepository.findById(inspectionReportId).orElseThrow(() -> new AppException(ErrorCode.INSPECTIONREPORT_NOT_FOUND));
+        InspectionReport inspectionReport = inspectionReportRepository.findById(inspectionReportId)
+                .orElseThrow(() -> new AppException(ErrorCode.INSPECTIONREPORT_NOT_FOUND));
         return inspectionReportMapper.toInspectorReportResponse(inspectionReport);
     }
 
     public String deleteInspectionReport(int inspectionReportId) {
-        InspectionReport inspectionReport = inspectionReportRepository.findById(inspectionReportId).orElseThrow(() -> new AppException(ErrorCode.INSPECTIONREPORT_NOT_FOUND));
+        InspectionReport inspectionReport = inspectionReportRepository.findById(inspectionReportId)
+                .orElseThrow(() -> new AppException(ErrorCode.INSPECTIONREPORT_NOT_FOUND));
         inspectionReportRepository.delete(inspectionReport);
         return "Inspection Report deleted successfully";
     }

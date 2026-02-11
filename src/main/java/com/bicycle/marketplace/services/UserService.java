@@ -61,12 +61,14 @@ public class UserService {
         return userMapper.toUserResponse(userRepository.save(user));
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     public String deleteUser(int userId) {
         Users user = userRepository.findById(userId).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
         userRepository.delete(user);
         return "User deleted successfully";
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     public UserResponse deActiveUser(int userId) {
         Users user = userRepository.findById(userId).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
         if(user.getStatus().matches("Inactive")){

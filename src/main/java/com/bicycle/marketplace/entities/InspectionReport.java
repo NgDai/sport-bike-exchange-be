@@ -21,7 +21,6 @@ public class InspectionReport {
     @OneToOne
     @JoinColumn(name = "dispute_id")
     Dispute dispute;
-
     @ManyToOne
     @JoinColumn(name = "inspector_id")
     Users inspector;
@@ -29,5 +28,5 @@ public class InspectionReport {
     String reason;
     String note;
     @CreationTimestamp
-    Date createAt;
+    Date createdAt;
 }

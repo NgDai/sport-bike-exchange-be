@@ -24,12 +24,13 @@ public class DisputeService {
         Dispute dispute = new Dispute();
         dispute.setReason(request.getReason());
         dispute.setStatus(request.getStatus());
-        dispute.setCreateAt(request.getCreateAt());
+        dispute.setCreatedAt(request.getCreateAt());
         return disputeMapper.toDisputeResponse(disputeRepository.save(dispute));
     }
 
     public DisputeResponse updateDispute(int disputeId, DisputeUpdateRequest request) {
-        Dispute dispute = disputeRepository.findById(disputeId).orElseThrow(() -> new AppException(ErrorCode.DISPUTE_NOT_FOUND));
+        Dispute dispute = disputeRepository.findById(disputeId)
+                .orElseThrow(() -> new AppException(ErrorCode.DISPUTE_NOT_FOUND));
         disputeMapper.updateDispute(dispute, request);
         return disputeMapper.toDisputeResponse(disputeRepository.save(dispute));
     }
@@ -39,12 +40,14 @@ public class DisputeService {
     }
 
     public DisputeResponse findDisputeById(int disputeId) {
-        Dispute dispute = disputeRepository.findById(disputeId).orElseThrow(() -> new AppException(ErrorCode.DISPUTE_NOT_FOUND));
+        Dispute dispute = disputeRepository.findById(disputeId)
+                .orElseThrow(() -> new AppException(ErrorCode.DISPUTE_NOT_FOUND));
         return disputeMapper.toDisputeResponse(dispute);
     }
 
     public String deleteDispute(int disputeId) {
-        Dispute dispute = disputeRepository.findById(disputeId).orElseThrow(() -> new AppException(ErrorCode.DISPUTE_NOT_FOUND));
+        Dispute dispute = disputeRepository.findById(disputeId)
+                .orElseThrow(() -> new AppException(ErrorCode.DISPUTE_NOT_FOUND));
         disputeRepository.delete(dispute);
         return "Dispute deleted successfully";
     }

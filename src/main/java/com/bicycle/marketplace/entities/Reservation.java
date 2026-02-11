@@ -18,13 +18,12 @@ public class Reservation {
     @GeneratedValue(strategy = GenerationType.AUTO)
     int reservationId;
     @ManyToOne
+    @JoinColumn(name = "listing_id")
+    BikeListing listing;
+    @ManyToOne
     @JoinColumn(name = "buyer_id")
     Users buyer;
-
-    @ManyToOne
-    @JoinColumn(name = "bike_listing_id")
-    BikeListing bikeListing;
     String status;
     @CreationTimestamp
-    Date createdAt;
+    Date reservedAt;
 }

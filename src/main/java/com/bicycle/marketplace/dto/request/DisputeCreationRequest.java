@@ -8,7 +8,8 @@ import org.hibernate.annotations.CreationTimestamp;
 
 import java.util.Date;
 
-@Getter @Setter
+@Getter
+@Setter
 @AllArgsConstructor
 @NoArgsConstructor
 

@@ -17,7 +17,7 @@ import lombok.experimental.FieldDefaults;
 public class Category {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    int cateId;
+    int categoryId;
     String name;
     String bicycleType;
 }

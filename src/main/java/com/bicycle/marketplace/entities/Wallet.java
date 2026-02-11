@@ -3,6 +3,7 @@ package com.bicycle.marketplace.entities;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.util.Date;
 
@@ -21,5 +22,6 @@ public class Wallet {
     @JoinColumn(name = "user_id")
     Users user;
     double balance;
-    Date lastUpdated;
+    @UpdateTimestamp
+    Date updatedAt;
 }

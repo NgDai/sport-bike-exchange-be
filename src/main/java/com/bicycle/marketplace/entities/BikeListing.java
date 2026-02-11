@@ -21,7 +21,6 @@ public class BikeListing {
     @JoinColumn(name = "seller_id")
     @JsonIgnore
     private Users seller;
-
     @ManyToOne
     @JoinColumn(name = "event_id")
     @JsonIgnore

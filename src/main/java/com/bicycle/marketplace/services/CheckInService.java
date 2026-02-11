@@ -25,14 +25,15 @@ public class CheckInService {
     public CheckInResponse createCheckIn(CheckInCreationRequest request) {
         CheckIn checkIn = new CheckIn();
 
-        checkIn.setRoleId(request.getRoleId());
+        checkIn.setRole(request.getRole().name());
         checkIn.setCheckInTime(request.getCheckInTime());
 
         return checkInMapper.toCheckInResponse(checkInRepository.save(checkIn));
     }
 
     public CheckInResponse updateCheckIn(int checkInId, CheckInUpdateRequest request) {
-        CheckIn checkIn = checkInRepository.findById(checkInId).orElseThrow(() -> new AppException(ErrorCode.CHECKIN_NOT_FOUND));
+        CheckIn checkIn = checkInRepository.findById(checkInId)
+                .orElseThrow(() -> new AppException(ErrorCode.CHECKIN_NOT_FOUND));
         checkInMapper.updateCheckIn(checkIn, request);
         return checkInMapper.toCheckInResponse(checkInRepository.save(checkIn));
     }
@@ -42,12 +43,14 @@ public class CheckInService {
     }
 
     public CheckInResponse findCheckInById(int checkInId) {
-        CheckIn checkIn = checkInRepository.findById(checkInId).orElseThrow(() -> new AppException(ErrorCode.CHECKIN_NOT_FOUND));
+        CheckIn checkIn = checkInRepository.findById(checkInId)
+                .orElseThrow(() -> new AppException(ErrorCode.CHECKIN_NOT_FOUND));
         return checkInMapper.toCheckInResponse(checkIn);
     }
 
     public String deleteCheckIn(int checkInId) {
-        CheckIn checkIn = checkInRepository.findById(checkInId).orElseThrow(() -> new AppException(ErrorCode.CHECKIN_NOT_FOUND));
+        CheckIn checkIn = checkInRepository.findById(checkInId)
+                .orElseThrow(() -> new AppException(ErrorCode.CHECKIN_NOT_FOUND));
         checkInRepository.delete(checkIn);
         return "Check-In deleted successfully";
     }

@@ -20,10 +20,10 @@ public class CheckIn {
     @ManyToOne
     @JoinColumn(name = "user_id")
     Users user;
-
     @ManyToOne
     @JoinColumn(name = "event_id")
     Events event;
-    String roleId;
+    String role;
+    String status;
     Date checkInTime;
 }

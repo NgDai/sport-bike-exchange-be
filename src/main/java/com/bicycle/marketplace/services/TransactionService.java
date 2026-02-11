@@ -24,13 +24,15 @@ public class TransactionService {
         Transaction transaction = new Transaction();
         transaction.setAmount(request.getAmount());
         transaction.setStatus(request.getStatus());
-        transaction.setCreatedAt(request.getCreatedAt());
-        transaction.setCompletedAt(request.getCompletedAt());
+        transaction.setCreateAt(request.getCreatedAt());
+        // transaction.setCompletedAt(request.getCompletedAt()); // Field removed from
+        // Entity
         return transactionMapper.toTransactionResponse(transactionRepository.save(transaction));
     }
 
     public TransactionResponse updateTransaction(int transactionId, TransactionUpdateRequest request) {
-        Transaction transaction = transactionRepository.findById(transactionId).orElseThrow(() -> new AppException(ErrorCode.TRANSACTION_NOT_FOUND));
+        Transaction transaction = transactionRepository.findById(transactionId)
+                .orElseThrow(() -> new AppException(ErrorCode.TRANSACTION_NOT_FOUND));
         transactionMapper.updateTransaction(transaction, request);
         return transactionMapper.toTransactionResponse(transactionRepository.save(transaction));
     }
@@ -40,12 +42,14 @@ public class TransactionService {
     }
 
     public TransactionResponse findTransactionById(int transactionId) {
-        Transaction transaction = transactionRepository.findById(transactionId).orElseThrow(() -> new AppException(ErrorCode.TRANSACTION_NOT_FOUND));
+        Transaction transaction = transactionRepository.findById(transactionId)
+                .orElseThrow(() -> new AppException(ErrorCode.TRANSACTION_NOT_FOUND));
         return transactionMapper.toTransactionResponse(transaction);
     }
 
     public String deleteTransaction(int transactionId) {
-        Transaction transaction = transactionRepository.findById(transactionId).orElseThrow(() -> new AppException(ErrorCode.TRANSACTION_NOT_FOUND));
+        Transaction transaction = transactionRepository.findById(transactionId)
+                .orElseThrow(() -> new AppException(ErrorCode.TRANSACTION_NOT_FOUND));
         transactionRepository.delete(transaction);
         return "Transaction deleted successfully";
     }

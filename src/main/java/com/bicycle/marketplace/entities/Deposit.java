@@ -20,13 +20,12 @@ public class Deposit {
     @ManyToOne
     @JoinColumn(name = "user_id")
     Users user;
-
     @ManyToOne
     @JoinColumn(name = "listing_id")
     BikeListing listing;
     String type;
     double amount;
-    String nvarchar;
+    String status;
     @CreationTimestamp
-    Date createAt;
+    Date createdAt;
 }

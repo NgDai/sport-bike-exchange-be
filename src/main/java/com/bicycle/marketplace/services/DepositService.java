@@ -24,13 +24,13 @@ public class DepositService {
         Deposit deposit = new Deposit();
         deposit.setType(request.getType());
         deposit.setAmount(request.getAmount());
-        deposit.setNvarchar(request.getNvarchar());
-        deposit.setCreateAt(request.getCreateAt());
+        deposit.setCreatedAt(request.getCreateAt());
         return depositMapper.toDepositResponse(depositRepository.save(deposit));
     }
 
     public DepositResponse updateDeposit(int depositId, DepositUpdateRequest request) {
-        Deposit deposit = depositRepository.findById(depositId).orElseThrow(() -> new AppException(ErrorCode.DEPOSIT_NOT_FOUND));
+        Deposit deposit = depositRepository.findById(depositId)
+                .orElseThrow(() -> new AppException(ErrorCode.DEPOSIT_NOT_FOUND));
         depositMapper.updateDeposit(deposit, request);
         return depositMapper.toDepositResponse(depositRepository.save(deposit));
     }
@@ -40,12 +40,14 @@ public class DepositService {
     }
 
     public DepositResponse findDepositById(int depositId) {
-        Deposit deposit = depositRepository.findById(depositId).orElseThrow(() -> new AppException(ErrorCode.DEPOSIT_NOT_FOUND));
+        Deposit deposit = depositRepository.findById(depositId)
+                .orElseThrow(() -> new AppException(ErrorCode.DEPOSIT_NOT_FOUND));
         return depositMapper.toDepositResponse(deposit);
     }
 
     public String deleteDeposit(int depositId) {
-        Deposit deposit = depositRepository.findById(depositId).orElseThrow(() -> new AppException(ErrorCode.DEPOSIT_NOT_FOUND));
+        Deposit deposit = depositRepository.findById(depositId)
+                .orElseThrow(() -> new AppException(ErrorCode.DEPOSIT_NOT_FOUND));
         depositRepository.delete(deposit);
         return "Deposit deleted successfully";
     }
