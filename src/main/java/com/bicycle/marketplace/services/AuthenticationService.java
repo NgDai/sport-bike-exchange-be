@@ -63,8 +63,8 @@ public class AuthenticationService {
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 
         PasswordEncoder passwordEncoder = new BCryptPasswordEncoder(5);
-        boolean authenticated = passwordEncoder.matches(request.getPassword(), user.getPassword());
-
+        //boolean authenticated = passwordEncoder.matches(request.getPassword(), user.getPassword());
+        boolean authenticated = request.getPassword().equalsIgnoreCase(user.getPassword());
         if (!authenticated) {
             throw new AppException(ErrorCode.USER_INVALID_AUTHENTICATIED);
         }

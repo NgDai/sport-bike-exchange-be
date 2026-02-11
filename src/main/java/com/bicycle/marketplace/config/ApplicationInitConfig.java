@@ -29,7 +29,8 @@ public class ApplicationInitConfig {
                 Users user = Users.builder()
                         .username("admin")
                         .role(roles)
-                        .password(passwordEncoder.encode("1"))
+                        .password("1")  // In a real application, ensure to hash passwords
+                        //.passwordHash(passwordEncoder.encode("1"))
                         .fullName("Administrator")
                         .build();
                 userRepository.save(user);
