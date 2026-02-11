@@ -31,7 +31,11 @@ public enum ErrorCode {
     DISPUTE_NOT_FOUND(1013, "Dispute record not found"),
     INSPECTIONREPORT_NOT_FOUND(1014, "Inspection report not found"),
     RESERVATION_NOT_FOUND(1015, "Reservation not found"),
-    TRANSACTION_NOT_FOUND(1016, "Transaction not found")
+    TRANSACTION_NOT_FOUND(1016, "Transaction not found"),
+    POSTING_BRAND_ID_REQUIRED(1019, "brandId is required"),
+    POSTING_CATEGORY_ID_REQUIRED(1020, "categoryId is required"),
+    BRAND_NOT_FOUND(1021, "Brand not found"),
+    CATEGORY_NOT_FOUND(1022, "Category not found")
     ;
 
     private int code;
