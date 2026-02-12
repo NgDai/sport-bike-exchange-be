@@ -5,6 +5,5 @@ import lombok.*;
 public enum Role {
     ADMIN,
     INSPECTOR,
-    SELLER,
-    BUYER
+    USER
 }

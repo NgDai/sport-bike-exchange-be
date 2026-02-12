@@ -38,7 +38,21 @@ public class UserService {
         //user.setPassword(passwordEncoder.encode(request.getPassword()));
 
         HashSet<String> roles = new HashSet<>();
-        roles.add(Role.BUYER.name());
+        roles.add(Role.USER.name());
+
+        user.setRole(roles);
+        return userRepository.save(user);
+    }
+
+    public Users createInspector(UserCreationRequest request) {
+        if (userRepository.existsByUsername(request.getUsername())) {
+            throw new AppException(ErrorCode.USERNAME_ALREADY_EXISTS);
+        }
+        Users user = userMapper.toUser(request);
+        //user.setPassword(passwordEncoder.encode(request.getPassword()));
+
+        HashSet<String> roles = new HashSet<>();
+        roles.add(Role.INSPECTOR.name());
 
         user.setRole(roles);
         return userRepository.save(user);

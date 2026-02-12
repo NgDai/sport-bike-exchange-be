@@ -29,6 +29,13 @@ public class UserController {
         return apiResponse;
     }
 
+    @PostMapping("/inspector")
+    ApiResponse<Users> createInspector(@RequestBody @Valid UserCreationRequest request) {
+        ApiResponse<Users> apiResponse = new ApiResponse<>();
+        apiResponse.setResult(userService.createInspector(request));
+        return apiResponse;
+    }
+
     @GetMapping
     ApiResponse<List<Users>> getUsers() {
         var authentication = SecurityContextHolder.getContext().getAuthentication();
