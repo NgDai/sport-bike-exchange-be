@@ -26,6 +26,5 @@ public class UserUpdateRequest {
     @Size(max = 20, message = "PHONE_MAX_LENGTH")
     private String phone;
 
-    @Size(max = 50, message = "STATUS_MAX_LENGTH")
-    private String status;
+    private String address;
 }

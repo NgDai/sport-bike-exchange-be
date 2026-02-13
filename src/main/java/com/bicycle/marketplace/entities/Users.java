@@ -23,6 +23,7 @@ public class Users {
     private String email;
     private String phone;
     private String status;
+    private String address;
     private Set<String> role;
     @CreationTimestamp
     private LocalDate createdAt;

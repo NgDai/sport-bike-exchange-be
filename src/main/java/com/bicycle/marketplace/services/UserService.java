@@ -40,6 +40,7 @@ public class UserService {
         HashSet<String> roles = new HashSet<>();
         roles.add(Role.USER.name());
 
+        user.setStatus("Active");
         user.setRole(roles);
         return userRepository.save(user);
     }
@@ -55,6 +56,7 @@ public class UserService {
         roles.add(Role.INSPECTOR.name());
 
         user.setRole(roles);
+        user.setStatus("Active");
         return userRepository.save(user);
     }
 
@@ -68,10 +70,11 @@ public class UserService {
         return userMapper.toUserResponse(userRepository.findById(userId).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND)));
     }
 
+    @PostAuthorize("returnObject.username == authentication.name or hasRole('ADMIN')")
     public UserResponse updateUser(int userId, UserUpdateRequest request) {
         Users user = userRepository.findById(userId).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
         userMapper.updateUser(user, request);
-        user.setPassword(passwordEncoder.encode(request.getPassword()));
+        //user.setPassword(passwordEncoder.encode(request.getPassword()));
         return userMapper.toUserResponse(userRepository.save(user));
     }
 

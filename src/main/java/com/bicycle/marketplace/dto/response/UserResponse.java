@@ -18,7 +18,7 @@ public class UserResponse {
     private String fullName;
     private String email;
     private String phone;
-    private String walletBalance;
+    private String address;
     private String status;
     private Set<String> role;
     @CreationTimestamp

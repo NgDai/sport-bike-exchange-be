@@ -7,6 +7,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDate;
 
@@ -36,7 +37,9 @@ public class UserCreationRequest {
     @Size(max = 20, message = "PHONE_MAX_LENGTH")
     private String phone;
 
-    private String walletBalance;
     private String status;
+    private String address;
+
+    @CreationTimestamp
     private LocalDate create_date;
 }
