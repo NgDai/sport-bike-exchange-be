@@ -75,4 +75,11 @@ public class UserController {
         apiResponse.setResult(userService.deActiveUser(userId));
         return apiResponse;
     }
+
+    @GetMapping("/myInfo")
+    ApiResponse<UserResponse> getMyInfo() {
+        ApiResponse<UserResponse> apiResponse = new ApiResponse<>();
+        apiResponse.setResult(userService.getMyInfo());
+        return apiResponse;
+    }
 }
