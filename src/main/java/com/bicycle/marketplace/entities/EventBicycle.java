@@ -24,6 +24,10 @@ public class EventBicycle {
     @ManyToOne
     @JoinColumn(name = "listing_id")
     BikeListing listing;
+    @ManyToOne
+    @JoinColumn(name = "user_id")
+    Users seller;
+    String sellerName;
     String type;
     @CreationTimestamp
     LocalDate createDate;

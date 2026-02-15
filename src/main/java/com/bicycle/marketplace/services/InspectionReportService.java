@@ -1,6 +1,6 @@
 package com.bicycle.marketplace.services;
 
-import com.bicycle.marketplace.Repository.IInspectionReportRepository;
+import com.bicycle.marketplace.repository.IInspectionReportRepository;
 import com.bicycle.marketplace.dto.request.InspectionReportCreationRequest;
 import com.bicycle.marketplace.dto.request.InspectionReportUpdateRequest;
 import com.bicycle.marketplace.dto.response.InspectionReportResponse;

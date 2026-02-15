@@ -1,6 +1,6 @@
 package com.bicycle.marketplace.services;
 
-import com.bicycle.marketplace.Repository.ICategoryRepository;
+import com.bicycle.marketplace.repository.ICategoryRepository;
 import com.bicycle.marketplace.dto.request.CategoryCreationRequest;
 import com.bicycle.marketplace.dto.request.CategoryUpdateRequest;
 import com.bicycle.marketplace.dto.response.CategoryResponse;

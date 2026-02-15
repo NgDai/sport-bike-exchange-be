@@ -1,6 +1,6 @@
 package com.bicycle.marketplace.config;
 
-import com.bicycle.marketplace.Repository.IUserRepository;
+import com.bicycle.marketplace.repository.IUserRepository;
 import com.bicycle.marketplace.entities.Users;
 import com.bicycle.marketplace.enums.Role;
 import lombok.RequiredArgsConstructor;

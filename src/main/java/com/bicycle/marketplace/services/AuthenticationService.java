@@ -1,6 +1,6 @@
 package com.bicycle.marketplace.services;
 
-import com.bicycle.marketplace.Repository.IUserRepository;
+import com.bicycle.marketplace.repository.IUserRepository;
 import com.bicycle.marketplace.dto.request.AuthenticationRequest;
 import com.bicycle.marketplace.dto.request.IntrospecRequest;
 import com.bicycle.marketplace.dto.response.AuthenticationResponse;

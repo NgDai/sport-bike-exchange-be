@@ -1,6 +1,6 @@
 package com.bicycle.marketplace.services;
 
-import com.bicycle.marketplace.Repository.IEventRepository;
+import com.bicycle.marketplace.repository.IEventRepository;
 import com.bicycle.marketplace.dto.request.EventCreationRequest;
 import com.bicycle.marketplace.dto.request.EventUpdateRequest;
 import com.bicycle.marketplace.dto.response.EventResponse;

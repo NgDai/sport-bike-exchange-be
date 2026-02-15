@@ -1,8 +1,8 @@
 package com.bicycle.marketplace.services;
 
-import com.bicycle.marketplace.Repository.IBikeListingRepository;
-import com.bicycle.marketplace.Repository.IUserRepository;
-import com.bicycle.marketplace.Repository.IWishlistRepository;
+import com.bicycle.marketplace.repository.IBikeListingRepository;
+import com.bicycle.marketplace.repository.IUserRepository;
+import com.bicycle.marketplace.repository.IWishlistRepository;
 import com.bicycle.marketplace.dto.response.WishlistResponse;
 import com.bicycle.marketplace.dto.response.WishlistToggleResponse;
 import com.bicycle.marketplace.entities.BikeListing;

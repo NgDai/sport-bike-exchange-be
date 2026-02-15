@@ -1,6 +1,6 @@
 package com.bicycle.marketplace.services;
 
-import com.bicycle.marketplace.Repository.IDisputeRepository;
+import com.bicycle.marketplace.repository.IDisputeRepository;
 import com.bicycle.marketplace.dto.request.DisputeCreationRequest;
 import com.bicycle.marketplace.dto.request.DisputeUpdateRequest;
 import com.bicycle.marketplace.dto.response.DisputeResponse;

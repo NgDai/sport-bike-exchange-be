@@ -1,6 +1,6 @@
 package com.bicycle.marketplace.services;
 
-import com.bicycle.marketplace.Repository.IReservationRepository;
+import com.bicycle.marketplace.repository.IReservationRepository;
 import com.bicycle.marketplace.dto.request.ReservationCreationRequest;
 import com.bicycle.marketplace.dto.request.ReservationUpdateRequest;
 import com.bicycle.marketplace.dto.response.ReservationResponse;

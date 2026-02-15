@@ -1,6 +1,6 @@
 package com.bicycle.marketplace.services;
 
-import com.bicycle.marketplace.Repository.IBrandRepository;
+import com.bicycle.marketplace.repository.IBrandRepository;
 import com.bicycle.marketplace.dto.request.BrandCreationRequest;
 import com.bicycle.marketplace.dto.request.BrandUpdateRequest;
 import com.bicycle.marketplace.dto.response.BrandResponse;

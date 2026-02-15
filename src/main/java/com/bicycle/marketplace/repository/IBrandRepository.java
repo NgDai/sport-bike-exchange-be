@@ -1,4 +1,4 @@
-package com.bicycle.marketplace.Repository;
+package com.bicycle.marketplace.repository;
 
 import com.bicycle.marketplace.entities.Brand;
 import org.springframework.data.jpa.repository.JpaRepository;

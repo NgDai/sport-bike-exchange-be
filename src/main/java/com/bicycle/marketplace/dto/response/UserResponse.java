@@ -14,6 +14,7 @@ import java.util.Set;
 @Getter
 @Setter
 public class UserResponse {
+    private int userId;
     private String username;
     private String fullName;
     private String email;

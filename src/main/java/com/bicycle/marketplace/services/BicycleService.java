@@ -1,6 +1,6 @@
 package com.bicycle.marketplace.services;
 
-import com.bicycle.marketplace.Repository.IBicycleRepository;
+import com.bicycle.marketplace.repository.IBicycleRepository;
 import com.bicycle.marketplace.dto.request.BicycleCreationRequest;
 import com.bicycle.marketplace.dto.request.BicycleUpdateRequest;
 import com.bicycle.marketplace.dto.response.BicycleResponse;

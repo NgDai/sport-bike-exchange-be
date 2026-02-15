@@ -1,6 +1,6 @@
 package com.bicycle.marketplace.services;
 
-import com.bicycle.marketplace.Repository.IDepositRepository;
+import com.bicycle.marketplace.repository.IDepositRepository;
 import com.bicycle.marketplace.dto.request.DepositCreationRequest;
 import com.bicycle.marketplace.dto.request.DepositUpdateRequest;
 import com.bicycle.marketplace.dto.response.DepositResponse;

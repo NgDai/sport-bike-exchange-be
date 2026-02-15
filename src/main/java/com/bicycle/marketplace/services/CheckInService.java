@@ -1,6 +1,6 @@
 package com.bicycle.marketplace.services;
 
-import com.bicycle.marketplace.Repository.ICheckInRepository;
+import com.bicycle.marketplace.repository.ICheckInRepository;
 import com.bicycle.marketplace.dto.request.CheckInCreationRequest;
 import com.bicycle.marketplace.dto.request.CheckInUpdateRequest;
 import com.bicycle.marketplace.dto.response.CheckInResponse;
@@ -11,8 +11,6 @@ import com.bicycle.marketplace.mapper.CheckInMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
-import java.util.Date;
 import java.util.List;
 
 @Service

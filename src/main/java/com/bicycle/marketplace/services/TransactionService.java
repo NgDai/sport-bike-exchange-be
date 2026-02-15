@@ -1,6 +1,6 @@
 package com.bicycle.marketplace.services;
 
-import com.bicycle.marketplace.Repository.ITransactionRepository;
+import com.bicycle.marketplace.repository.ITransactionRepository;
 import com.bicycle.marketplace.dto.request.TransactionCreationRequest;
 import com.bicycle.marketplace.dto.request.TransactionUpdateRequest;
 import com.bicycle.marketplace.dto.response.TransactionResponse;

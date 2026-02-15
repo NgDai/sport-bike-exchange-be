@@ -1,8 +1,7 @@
-package com.bicycle.marketplace.Repository;
+package com.bicycle.marketplace.repository;
 
 import com.bicycle.marketplace.entities.EventBicycle;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository

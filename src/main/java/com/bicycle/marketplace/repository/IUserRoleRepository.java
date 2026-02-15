@@ -2,7 +2,7 @@
    Keeping this file as a harmless placeholder comment to avoid compile issues if present in VCS.
    You can safely delete this file if desired.
 */
-package com.bicycle.marketplace.Repository;
+package com.bicycle.marketplace.repository;
 
 // placeholder - intentionally left blank after rollback
 public interface IUserRoleRepository {

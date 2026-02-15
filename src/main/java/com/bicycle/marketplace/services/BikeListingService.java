@@ -1,8 +1,8 @@
 package com.bicycle.marketplace.services;
 
-import com.bicycle.marketplace.Repository.IBikeListingRepository;
-import com.bicycle.marketplace.Repository.IEventRepository;
-import com.bicycle.marketplace.Repository.IUserRepository;
+import com.bicycle.marketplace.repository.IBikeListingRepository;
+import com.bicycle.marketplace.repository.IEventRepository;
+import com.bicycle.marketplace.repository.IUserRepository;
 import com.bicycle.marketplace.dto.request.PostingCreationRequest;
 import com.bicycle.marketplace.dto.request.PostingUpdateRequest;
 import com.bicycle.marketplace.entities.BikeListing;
