@@ -40,4 +40,10 @@ public class BikeListing {
     private Double price;
     private String status;
     private LocalDateTime createdAt;
+
+    /** Optional: chi tiết xe đạp từ bảng Bicycle (liên kết Brand, Category). */
+    @OneToOne(fetch = FetchType.LAZY, optional = true)
+    @JoinColumn(name = "bicycle_id", nullable = true)
+    @JsonIgnore
+    private Bicycle bicycle;
 }
