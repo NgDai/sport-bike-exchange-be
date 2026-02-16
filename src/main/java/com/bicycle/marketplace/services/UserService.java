@@ -1,6 +1,5 @@
 package com.bicycle.marketplace.services;
 
-import com.bicycle.marketplace.repository.IUserRepository;
 import com.bicycle.marketplace.dto.request.UserCreationRequest;
 import com.bicycle.marketplace.dto.request.UserUpdateRequest;
 import com.bicycle.marketplace.dto.response.UserResponse;
@@ -9,6 +8,7 @@ import com.bicycle.marketplace.enums.Role;
 import com.bicycle.marketplace.exception.AppException;
 import com.bicycle.marketplace.exception.ErrorCode;
 import com.bicycle.marketplace.mapper.UserMapper;
+import com.bicycle.marketplace.repository.IUserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
@@ -29,12 +29,13 @@ public class UserService {
     IUserRepository userRepository;
     UserMapper userMapper;
     PasswordEncoder passwordEncoder;
+
     public Users createUser(UserCreationRequest request) {
         if (userRepository.existsByUsername(request.getUsername())) {
             throw new AppException(ErrorCode.USERNAME_ALREADY_EXISTS);
         }
         Users user = userMapper.toUser(request);
-        //user.setPassword(passwordEncoder.encode(request.getPassword()));
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
 
         HashSet<String> roles = new HashSet<>();
         roles.add(Role.USER.name());
@@ -49,7 +50,7 @@ public class UserService {
             throw new AppException(ErrorCode.USERNAME_ALREADY_EXISTS);
         }
         Users user = userMapper.toUser(request);
-        //user.setPassword(passwordEncoder.encode(request.getPassword()));
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
 
         HashSet<String> roles = new HashSet<>();
         roles.add(Role.INSPECTOR.name());
@@ -66,36 +67,45 @@ public class UserService {
 
     @PostAuthorize("returnObject.username == authentication.name or hasRole('ADMIN')")
     public UserResponse getUserById(int userId) {
-        return userMapper.toUserResponse(userRepository.findById(userId).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND)));
+        return userMapper.toUserResponse(userRepository.findById(userId)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND)));
     }
 
+    // --- HÀM UPDATE QUAN TRỌNG ---
     @PostAuthorize("returnObject.username == authentication.name or hasRole('ADMIN')")
     public UserResponse updateUser(int userId, UserUpdateRequest request) {
-        Users user = userRepository.findById(userId).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+        Users user = userRepository.findById(userId)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
         userMapper.updateUser(user, request);
-        //user.setPassword(passwordEncoder.encode(request.getPassword()));
+
+        // Nếu người dùng có gửi password mới thì mới mã hóa lại
+        if (request.getPassword() != null && !request.getPassword().isEmpty()) {
+            user.setPassword(passwordEncoder.encode(request.getPassword()));
+        }
+
         return userMapper.toUserResponse(userRepository.save(user));
     }
 
     @PreAuthorize("hasRole('ADMIN')")
     public String deleteUser(int userId) {
-        Users user = userRepository.findById(userId).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+        Users user = userRepository.findById(userId)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
         userRepository.delete(user);
         return "User deleted successfully";
     }
 
     @PreAuthorize("hasRole('ADMIN')")
     public UserResponse deActiveUser(int userId) {
-        Users user = userRepository.findById(userId).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
-        if(user.getStatus().matches("Inactive")){
+        Users user = userRepository.findById(userId)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+        if (user.getStatus().matches("Inactive")) {
             user.setStatus("Active");
-        }else{
+        } else {
             user.setStatus("Inactive");
         }
         return userMapper.toUserResponse(userRepository.save(user));
     }
 
-    @PostAuthorize("returnObject.username == authentication.name or hasRole('ADMIN')")
     public UserResponse getMyInfo() {
         var context = SecurityContextHolder.getContext();
         String name = context.getAuthentication().getName();
