@@ -84,6 +84,7 @@ public class UserService {
     public UserResponse updateUser(int userId, UserUpdateRequest request) {
         Users user = userRepository.findById(userId)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+        log.info("Updating user {} with avatar link: {}", userId, request.getAvatar());
         userMapper.updateUser(user, request);
 
         // Nếu người dùng có gửi password mới thì mới mã hóa lại

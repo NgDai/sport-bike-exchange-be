@@ -38,6 +38,7 @@ public class UserCreationRequest {
     @Pattern(regexp = "^[+]?[0-9\\s()-]{10,20}$", message = "PHONE_INVALID_FORMAT")
     private String phone;
 
+    private String avatar;
     private String status;
     private String address;
 }
