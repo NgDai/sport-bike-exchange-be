@@ -1,6 +1,7 @@
 package com.bicycle.marketplace.dto.request;
 
 import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -24,6 +25,7 @@ public class UserUpdateRequest {
     private String email;
 
     @Size(max = 20, message = "PHONE_MAX_LENGTH")
+    @Pattern(regexp = "^(|[+]?[0-9\\s()-]{10,20})$", message = "PHONE_INVALID_FORMAT")
     private String phone;
 
     private String avatar;

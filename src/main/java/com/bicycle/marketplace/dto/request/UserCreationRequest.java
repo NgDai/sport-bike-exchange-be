@@ -22,7 +22,6 @@ public class UserCreationRequest {
 
     @NotBlank(message = "PASSWORD_REQUIRED")
     @Size(min = 6, max = 100, message = "PASSWORD_INVALID")
-    @Pattern(regexp = "^(?=.*[a-zA-Z])(?=.*\\d).*$", message = "PASSWORD_INVALID_FORMAT")
     private String password;
 
     @NotBlank(message = "FULL_NAME_REQUIRED")
@@ -34,8 +33,9 @@ public class UserCreationRequest {
     @Size(max = 100)
     private String email;
 
-    @Size(max = 20, message = "PHONE_MAX_LENGTH")
-    @Pattern(regexp = "^[+]?[0-9\\s()-]*$", message = "PHONE_INVALID_FORMAT")
+    @NotBlank(message = "PHONE_REQUIRED")
+    @Size(min = 10, max = 20, message = "PHONE_MAX_LENGTH")
+    @Pattern(regexp = "^[+]?[0-9\\s()-]{10,20}$", message = "PHONE_INVALID_FORMAT")
     private String phone;
 
     private String status;

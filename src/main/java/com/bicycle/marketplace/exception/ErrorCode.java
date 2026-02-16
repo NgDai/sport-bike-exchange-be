@@ -22,6 +22,7 @@ public enum ErrorCode {
     USERNAME_INVALID_FORMAT(1022, "Username must contain only letters, numbers, underscore or hyphen"),
     PASSWORD_INVALID_FORMAT(1023, "Password must contain at least one letter and one number"),
     PHONE_INVALID_FORMAT(1024, "Phone number format is invalid"),
+    PHONE_REQUIRED(1026, "Phone number is required"),
     EMAIL_ALREADY_EXISTS(1025, "Email already exists"),
     STATUS_MAX_LENGTH(1018, "Status must not exceed 50 characters"),
     LISTING_NOT_FOUND(1005, "Posting/Listing not found"),
