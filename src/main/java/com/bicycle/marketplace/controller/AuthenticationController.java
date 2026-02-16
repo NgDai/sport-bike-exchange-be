@@ -1,10 +1,10 @@
 package com.bicycle.marketplace.controller;
 
 import com.bicycle.marketplace.dto.request.AuthenticationRequest;
-import com.bicycle.marketplace.dto.request.IntrospecRequest;
+import com.bicycle.marketplace.dto.request.IntrospectRequest;
 import com.bicycle.marketplace.dto.response.ApiResponse;
 import com.bicycle.marketplace.dto.response.AuthenticationResponse;
-import com.bicycle.marketplace.dto.response.IntrospecResponse;
+import com.bicycle.marketplace.dto.response.IntrospectResponse;
 import com.bicycle.marketplace.services.AuthenticationService;
 import com.nimbusds.jose.JOSEException;
 import jakarta.validation.Valid;
@@ -25,17 +25,17 @@ public class AuthenticationController {
 
     @PostMapping("/login")
     ApiResponse<AuthenticationResponse> authenticate(@RequestBody @Valid AuthenticationRequest request) {
-        var result = authenticationService.authendicate(request);
+        var result = authenticationService.authenticate(request);
         return ApiResponse.<AuthenticationResponse>builder()
                 .result(result)
                 .build();
     }
 
     @PostMapping("/introspect")
-    ApiResponse<IntrospecResponse> introspect(@RequestBody IntrospecRequest request)
+    ApiResponse<IntrospectResponse> introspect(@RequestBody IntrospectRequest request)
             throws ParseException, JOSEException {
         var result = authenticationService.introspect(request);
-        return ApiResponse.<IntrospecResponse>builder()
+        return ApiResponse.<IntrospectResponse>builder()
                 .result(result)
                 .build();
     }
