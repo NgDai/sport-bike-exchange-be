@@ -37,8 +37,10 @@ public class UserService {
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new AppException(ErrorCode.EMAIL_ALREADY_EXISTS);
         }
+
         Users user = userMapper.toUser(request);
-        user.setPassword(passwordEncoder.encode(request.getPassword()));
+        user.setPassword(request.getPassword());
+        // user.setPassword(passwordEncoder.encode(request.getPassword()));
 
         HashSet<String> roles = new HashSet<>();
         roles.add(Role.USER.name());
@@ -47,7 +49,6 @@ public class UserService {
         user.setRole(roles);
         return userRepository.save(user);
     }
-
     @PreAuthorize("hasRole('ADMIN')")
     public Users createInspector(UserCreationRequest request) {
         if (userRepository.existsByUsername(request.getUsername())) {
