@@ -1,5 +1,6 @@
 package com.bicycle.marketplace.controller;
 
+import com.bicycle.marketplace.dto.request.BicycleInfoRequest;
 import com.bicycle.marketplace.dto.request.PostingCreationRequest;
 import com.bicycle.marketplace.dto.request.PostingUpdateRequest;
 import com.bicycle.marketplace.dto.response.ApiResponse;
@@ -42,6 +43,14 @@ public class BikeListingController {
     ApiResponse<BikeListing> updateBikeListing(@PathVariable int listingId, @RequestBody PostingUpdateRequest request) {
         ApiResponse<BikeListing> apiResponse = new ApiResponse<>();
         apiResponse.setResult(bikeListingService.updateBikeListing(listingId, request));
+        return apiResponse;
+    }
+
+    /** Nút "Nhập thông tin xe đạp" cho bài đăng pending. Chỉ áp dụng khi status = pending. */
+    @PutMapping("/{listingId}/bicycle")
+    ApiResponse<BikeListing> addBicycleToListing(@PathVariable int listingId, @RequestBody BicycleInfoRequest request) {
+        ApiResponse<BikeListing> apiResponse = new ApiResponse<>();
+        apiResponse.setResult(bikeListingService.addBicycleToListing(listingId, request));
         return apiResponse;
     }
 

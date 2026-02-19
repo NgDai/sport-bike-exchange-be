@@ -26,4 +26,7 @@ public class PostingCreationRequest {
     private String description;
     private Double price;
     private String status;
+
+    /** Tùy chọn: nhập thông tin xe đạp ngay khi đăng bài (lấy brand/category từ GET /brands, GET /categories). */
+    private BicycleInfoRequest bicycle;
 }

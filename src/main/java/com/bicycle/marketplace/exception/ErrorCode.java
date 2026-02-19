@@ -40,7 +40,8 @@ public enum ErrorCode {
     BRAND_NOT_FOUND(1017, "Brand not found"),
     CATEGORY_NOT_FOUND(1018, "Category not found"),
     EVENT_BICYCLE_NOT_FOUND(1019, "Bicycle not found in the specified event"),
-    WISHLIST_NOT_FOUND(1020, "Wishlist not found")
+    WISHLIST_NOT_FOUND(1020, "Wishlist not found"),
+    LISTING_NOT_PENDING(1021, "Only pending listing can add or update bicycle info")
     ;
 
     private int code;

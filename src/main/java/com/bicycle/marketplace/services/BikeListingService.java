@@ -1,11 +1,18 @@
 package com.bicycle.marketplace.services;
 
+import com.bicycle.marketplace.dto.request.BicycleInfoRequest;
+import com.bicycle.marketplace.repository.IBicycleRepository;
 import com.bicycle.marketplace.repository.IBikeListingRepository;
+import com.bicycle.marketplace.repository.IBrandRepository;
+import com.bicycle.marketplace.repository.ICategoryRepository;
 import com.bicycle.marketplace.repository.IEventRepository;
 import com.bicycle.marketplace.repository.IUserRepository;
 import com.bicycle.marketplace.dto.request.PostingCreationRequest;
 import com.bicycle.marketplace.dto.request.PostingUpdateRequest;
+import com.bicycle.marketplace.entities.Bicycle;
 import com.bicycle.marketplace.entities.BikeListing;
+import com.bicycle.marketplace.entities.Brand;
+import com.bicycle.marketplace.entities.Category;
 import com.bicycle.marketplace.entities.Events;
 import com.bicycle.marketplace.entities.Users;
 import com.bicycle.marketplace.exception.AppException;
@@ -27,6 +34,15 @@ public class BikeListingService {
 
     @Autowired
     private IEventRepository eventRepository;
+
+    @Autowired
+    private IBicycleRepository bicycleRepository;
+
+    @Autowired
+    private IBrandRepository brandRepository;
+
+    @Autowired
+    private ICategoryRepository categoryRepository;
 
     public BikeListing createBikeListing(PostingCreationRequest request) {
         if (request.getSellerId() == null) {
@@ -58,6 +74,12 @@ public class BikeListingService {
         listing.setDescription(request.getDescription());
         listing.setPrice(request.getPrice());
         listing.setStatus(request.getStatus());
+
+        if (request.getBicycle() != null) {
+            Bicycle bicycle = buildBicycleFromRequest(request.getBicycle());
+            bicycle = bicycleRepository.save(bicycle);
+            listing.setBicycle(bicycle);
+        }
 
         return bikeListingRepository.save(listing);
     }
@@ -106,5 +128,41 @@ public class BikeListingService {
     public BikeListing getBikeListingById(int listingId) {
         return bikeListingRepository.findById(listingId)
                 .orElseThrow(() -> new AppException(ErrorCode.LISTING_NOT_FOUND));
+    }
+
+    /**
+     * Thêm/cập nhật thông tin xe đạp cho bài đăng pending (nút "Nhập thông tin xe đạp").
+     * Chỉ cho phép khi status = "pending". Brand/Category lấy từ GET /brands, GET /categories.
+     */
+    public BikeListing addBicycleToListing(int listingId, BicycleInfoRequest request) {
+        BikeListing listing = getBikeListingById(listingId);
+        if (!"pending".equalsIgnoreCase(listing.getStatus())) {
+            throw new AppException(ErrorCode.LISTING_NOT_PENDING);
+        }
+        Bicycle bicycle = buildBicycleFromRequest(request);
+        bicycle = bicycleRepository.save(bicycle);
+        listing.setBicycle(bicycle);
+        return bikeListingRepository.save(listing);
+    }
+
+    private Bicycle buildBicycleFromRequest(BicycleInfoRequest req) {
+        Brand brand = brandRepository.findById(req.getBrandId())
+                .orElseThrow(() -> new AppException(ErrorCode.BRAND_NOT_FOUND));
+        Category category = categoryRepository.findById(req.getCategoryId())
+                .orElseThrow(() -> new AppException(ErrorCode.CATEGORY_NOT_FOUND));
+        return Bicycle.builder()
+                .brand(brand)
+                .category(category)
+                .bikeType(req.getBikeType())
+                .wheelSize(req.getWheelSize())
+                .numberOfGears(req.getNumberOfGears())
+                .brakeType(req.getBrakeType())
+                .yearManufacture(req.getYearManufacture())
+                .frameSize(req.getFrameSize())
+                .drivetrain(req.getDrivetrain())
+                .forkType(req.getForkType())
+                .color(req.getColor())
+                .frameMaterial(req.getFrameMaterial())
+                .build();
     }
 }
