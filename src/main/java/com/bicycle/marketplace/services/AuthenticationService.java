@@ -83,9 +83,10 @@ public class AuthenticationService {
                 .issuer("BicycleMarketplace")
                 .claim("FullName", user.getFullName())
                 .claim("scope", buildScope(user))
+                .claim("avatar", user.getAvatar()) // Nhúng avatar vào token
+                .claim("userId", user.getUserId())
                 .issueTime(new Date())
-                .expirationTime(new Date(
-                        Instant.now().plus(5, ChronoUnit.HOURS).toEpochMilli()))
+                .expirationTime(new Date(Instant.now().plus(5, ChronoUnit.HOURS).toEpochMilli()))
                 .build();
         JWSObject jwsObject = new JWSObject(header, new Payload(jwtClaimSet.toJSONObject()));
 
@@ -93,7 +94,6 @@ public class AuthenticationService {
             jwsObject.sign(new MACSigner(signerKey.getBytes()));
             return jwsObject.serialize();
         } catch (JOSEException e) {
-            log.error("Cannot create token", e);
             throw new RuntimeException(e);
         }
     }

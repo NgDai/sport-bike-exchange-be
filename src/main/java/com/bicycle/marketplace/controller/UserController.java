@@ -1,5 +1,6 @@
 package com.bicycle.marketplace.controller;
 
+import com.bicycle.marketplace.dto.request.ChangePasswordRequest;
 import com.bicycle.marketplace.dto.request.UserCreationRequest;
 import com.bicycle.marketplace.dto.request.UserUpdateRequest;
 import com.bicycle.marketplace.dto.response.ApiResponse;
@@ -59,6 +60,13 @@ public class UserController {
     ApiResponse<UserResponse> updateUser(@PathVariable int userId, @RequestBody @Valid UserUpdateRequest request) {
         ApiResponse<UserResponse> apiResponse = new ApiResponse<>();
         apiResponse.setResult(userService.updateUser(userId, request));
+        return apiResponse;
+    }
+
+    @PutMapping("/password/{userId}")
+    ApiResponse<UserResponse> changePassword(@PathVariable int userId, @RequestBody @Valid ChangePasswordRequest request) {
+        ApiResponse<UserResponse> apiResponse = new ApiResponse<>();
+        apiResponse.setResult(userService.changePassword(userId, request));
         return apiResponse;
     }
 

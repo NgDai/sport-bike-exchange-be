@@ -1,5 +1,6 @@
 package com.bicycle.marketplace.services;
 
+import com.bicycle.marketplace.dto.request.ChangePasswordRequest;
 import com.bicycle.marketplace.dto.request.UserCreationRequest;
 import com.bicycle.marketplace.dto.request.UserUpdateRequest;
 import com.bicycle.marketplace.dto.response.UserResponse;
@@ -91,6 +92,25 @@ public class UserService {
         if (request.getPassword() != null && !request.getPassword().isEmpty()) {
             user.setPassword(passwordEncoder.encode(request.getPassword()));
         }
+
+        return userMapper.toUserResponse(userRepository.save(user));
+    }
+
+    @PostAuthorize("returnObject.username == authentication.name or hasRole('ADMIN')")
+    public UserResponse changePassword(int userId, ChangePasswordRequest request) {
+        Users user = userRepository.findById(userId)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+        if (!user.getPassword().equals(request.getOldPassword())) {
+            throw new RuntimeException("Mật khẩu cũ không chính xác!");
+        }
+        user.setPassword(request.getNewPassword());
+
+        /*
+        if (!passwordEncoder.matches(request.getOldPassword(), user.getPassword())) {
+            throw new RuntimeException("Mật khẩu cũ không chính xác!");
+        }
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        */
 
         return userMapper.toUserResponse(userRepository.save(user));
     }
