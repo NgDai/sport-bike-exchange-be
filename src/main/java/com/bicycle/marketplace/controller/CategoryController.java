@@ -7,6 +7,7 @@ import com.bicycle.marketplace.dto.response.CategoryResponse;
 import com.bicycle.marketplace.entities.Category;
 import com.bicycle.marketplace.services.CategoryService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -18,6 +19,7 @@ public class CategoryController {
     private CategoryService categoryService;
 
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     ApiResponse<CategoryResponse> createCategory(@RequestBody CategoryCreationRequest request) {
         ApiResponse<CategoryResponse> apiResponse = new ApiResponse<>();
         apiResponse.setResult(categoryService.createCategory(request));
@@ -26,7 +28,9 @@ public class CategoryController {
     }
 
     @PutMapping("/{categoryId}")
-    ApiResponse<CategoryResponse> updateCategory(@PathVariable int categoryId, @RequestBody CategoryUpdateRequest request) {
+    @PreAuthorize("hasRole('ADMIN')")
+    ApiResponse<CategoryResponse> updateCategory(@PathVariable int categoryId,
+            @RequestBody CategoryUpdateRequest request) {
         ApiResponse<CategoryResponse> apiResponse = new ApiResponse<>();
         apiResponse.setResult(categoryService.updateCategory(categoryId, request));
         apiResponse.setMessage("Category updated successfully");
@@ -50,11 +54,11 @@ public class CategoryController {
     }
 
     @DeleteMapping("/{categoryId}")
+    @PreAuthorize("hasRole('ADMIN')")
     ApiResponse<String> deleteCategory(@PathVariable int categoryId) {
         ApiResponse<String> apiResponse = new ApiResponse<>();
         apiResponse.setResult(categoryService.deleteCategory(categoryId));
         return apiResponse;
     }
-
 
 }

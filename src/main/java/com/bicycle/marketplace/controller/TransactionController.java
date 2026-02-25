@@ -7,6 +7,7 @@ import com.bicycle.marketplace.dto.response.TransactionResponse;
 import com.bicycle.marketplace.entities.Transaction;
 import com.bicycle.marketplace.services.TransactionService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -18,6 +19,7 @@ public class TransactionController {
     private TransactionService transactionService;
 
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     ApiResponse<TransactionResponse> createTransaction(@RequestBody TransactionCreationRequest request) {
         ApiResponse<TransactionResponse> apiResponse = new ApiResponse<>();
         apiResponse.setResult(transactionService.createTransaction(request));
@@ -26,7 +28,9 @@ public class TransactionController {
     }
 
     @PutMapping("/{transactionId}")
-    ApiResponse<TransactionResponse> updateTransaction(@PathVariable int transactionId, @RequestBody TransactionUpdateRequest request) {
+    @PreAuthorize("hasRole('ADMIN')")
+    ApiResponse<TransactionResponse> updateTransaction(@PathVariable int transactionId,
+            @RequestBody TransactionUpdateRequest request) {
         ApiResponse<TransactionResponse> apiResponse = new ApiResponse<>();
         apiResponse.setResult(transactionService.updateTransaction(transactionId, request));
         apiResponse.setMessage("Transaction updated successfully");
@@ -34,6 +38,7 @@ public class TransactionController {
     }
 
     @GetMapping
+    @PreAuthorize("hasRole('ADMIN')")
     ApiResponse<List<Transaction>> getAllTransactions() {
         ApiResponse<List<Transaction>> apiResponse = new ApiResponse<>();
         apiResponse.setResult(transactionService.findAllTransactions());
@@ -42,6 +47,7 @@ public class TransactionController {
     }
 
     @GetMapping("/{transactionId}")
+    @PreAuthorize("hasRole('ADMIN')")
     ApiResponse<TransactionResponse> getTransactionById(@PathVariable int transactionId) {
         ApiResponse<TransactionResponse> apiResponse = new ApiResponse<>();
         apiResponse.setResult(transactionService.findTransactionById(transactionId));
@@ -50,6 +56,7 @@ public class TransactionController {
     }
 
     @DeleteMapping("/{transactionId}")
+    @PreAuthorize("hasRole('ADMIN')")
     ApiResponse<String> deleteTransaction(@PathVariable int transactionId) {
         ApiResponse<String> apiResponse = new ApiResponse<>();
         apiResponse.setResult(transactionService.deleteTransaction(transactionId));

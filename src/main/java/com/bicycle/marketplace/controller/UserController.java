@@ -64,7 +64,8 @@ public class UserController {
     }
 
     @PutMapping("/password/{userId}")
-    ApiResponse<UserResponse> changePassword(@PathVariable int userId, @RequestBody @Valid ChangePasswordRequest request) {
+    ApiResponse<UserResponse> changePassword(@PathVariable int userId,
+            @RequestBody @Valid ChangePasswordRequest request) {
         ApiResponse<UserResponse> apiResponse = new ApiResponse<>();
         apiResponse.setResult(userService.changePassword(userId, request));
         return apiResponse;

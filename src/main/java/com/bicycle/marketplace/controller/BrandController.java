@@ -7,6 +7,7 @@ import com.bicycle.marketplace.dto.response.BrandResponse;
 import com.bicycle.marketplace.entities.Brand;
 import com.bicycle.marketplace.services.BrandService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -18,6 +19,7 @@ public class BrandController {
     private BrandService brandService;
 
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     ApiResponse<BrandResponse> createBrand(@RequestBody BrandCreationRequest request) {
         ApiResponse<BrandResponse> apiResponse = new ApiResponse<>();
         apiResponse.setResult(brandService.createBrand(request));
@@ -26,6 +28,7 @@ public class BrandController {
     }
 
     @PutMapping("/{brandId}")
+    @PreAuthorize("hasRole('ADMIN')")
     ApiResponse<BrandResponse> updateBrand(@PathVariable int brandId, @RequestBody BrandUpdateRequest request) {
         ApiResponse<BrandResponse> apiResponse = new ApiResponse<>();
         apiResponse.setResult(brandService.updateBrand(brandId, request));
@@ -50,6 +53,7 @@ public class BrandController {
     }
 
     @DeleteMapping("/{brandId}")
+    @PreAuthorize("hasRole('ADMIN')")
     ApiResponse<String> deleteBrand(@PathVariable int brandId) {
         ApiResponse<String> apiResponse = new ApiResponse<>();
         apiResponse.setResult(brandService.deleteBrand(brandId));

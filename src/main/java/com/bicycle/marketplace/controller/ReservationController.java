@@ -7,6 +7,7 @@ import com.bicycle.marketplace.dto.response.ReservationResponse;
 import com.bicycle.marketplace.entities.Reservation;
 import com.bicycle.marketplace.services.ReservationService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -18,7 +19,8 @@ public class ReservationController {
     private ReservationService reservationService;
 
     @PostMapping
-    ApiResponse<ReservationResponse> createReservation(@RequestBody ReservationCreationRequest request){
+    @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
+    ApiResponse<ReservationResponse> createReservation(@RequestBody ReservationCreationRequest request) {
         ApiResponse<ReservationResponse> apiResponse = new ApiResponse<>();
         apiResponse.setResult(reservationService.createReservation(request));
         apiResponse.setMessage("Reservation created successfully");
@@ -26,7 +28,9 @@ public class ReservationController {
     }
 
     @PutMapping("/{reservationId}")
-    ApiResponse<ReservationResponse> updateReservation(@PathVariable int reservationId, @RequestBody ReservationUpdateRequest request) {
+    @PreAuthorize("hasRole('ADMIN')")
+    ApiResponse<ReservationResponse> updateReservation(@PathVariable int reservationId,
+            @RequestBody ReservationUpdateRequest request) {
         ApiResponse<ReservationResponse> apiResponse = new ApiResponse<>();
         apiResponse.setResult(reservationService.updateReservation(reservationId, request));
         apiResponse.setMessage("Reservation updated successfully");
@@ -34,7 +38,8 @@ public class ReservationController {
     }
 
     @GetMapping
-    ApiResponse<List<Reservation>> findAllReservations(){
+    @PreAuthorize("hasRole('ADMIN')")
+    ApiResponse<List<Reservation>> findAllReservations() {
         ApiResponse<List<Reservation>> apiResponse = new ApiResponse<>();
         apiResponse.setResult(reservationService.findAllReservations());
         apiResponse.setMessage("Reservations fetched successfully");
@@ -42,6 +47,7 @@ public class ReservationController {
     }
 
     @GetMapping("/{reservationId}")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('USER')")
     ApiResponse<ReservationResponse> getReservationById(@PathVariable int reservationId) {
         ApiResponse<ReservationResponse> apiResponse = new ApiResponse<>();
         apiResponse.setResult(reservationService.findReservationById(reservationId));
@@ -50,6 +56,7 @@ public class ReservationController {
     }
 
     @DeleteMapping("/{reservationId}")
+    @PreAuthorize("hasRole('ADMIN')")
     ApiResponse<String> deleteReservation(@PathVariable int reservationId) {
         ApiResponse<String> apiResponse = new ApiResponse<>();
         apiResponse.setResult(reservationService.deleteReservation(reservationId));

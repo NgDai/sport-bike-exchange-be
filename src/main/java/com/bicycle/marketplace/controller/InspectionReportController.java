@@ -7,6 +7,7 @@ import com.bicycle.marketplace.dto.response.InspectionReportResponse;
 import com.bicycle.marketplace.entities.InspectionReport;
 import com.bicycle.marketplace.services.InspectionReportService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -16,6 +17,7 @@ public class InspectionReportController {
     private InspectionReportService inspectionReportService;
 
     @PostMapping
+    @PreAuthorize("hasRole('INSPECTOR') or hasRole('ADMIN')")
     ApiResponse<InspectionReportResponse> createInspectionReport(@RequestBody InspectionReportCreationRequest request) {
         ApiResponse<InspectionReportResponse> apiResponse = new ApiResponse<>();
         apiResponse.setResult(inspectionReportService.createInspectionReport(request));
@@ -24,7 +26,9 @@ public class InspectionReportController {
     }
 
     @PutMapping("/{reportId}")
-    ApiResponse<InspectionReportResponse> updateInspectionReport(@PathVariable int reportId, @RequestBody InspectionReportUpdateRequest request) {
+    @PreAuthorize("hasRole('INSPECTOR') or hasRole('ADMIN')")
+    ApiResponse<InspectionReportResponse> updateInspectionReport(@PathVariable int reportId,
+            @RequestBody InspectionReportUpdateRequest request) {
         ApiResponse<InspectionReportResponse> apiResponse = new ApiResponse<>();
         apiResponse.setResult(inspectionReportService.updateInspectionReport(reportId, request));
         apiResponse.setMessage("Inspection Report updated successfully");
@@ -32,6 +36,7 @@ public class InspectionReportController {
     }
 
     @GetMapping("/{reportId}")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('INSPECTOR')")
     ApiResponse<InspectionReportResponse> getInspectionReportById(@PathVariable int reportId) {
         ApiResponse<InspectionReportResponse> apiResponse = new ApiResponse<>();
         apiResponse.setResult(inspectionReportService.findInspectionReportById(reportId));
@@ -40,6 +45,7 @@ public class InspectionReportController {
     }
 
     @GetMapping
+    @PreAuthorize("hasRole('ADMIN')")
     ApiResponse<java.util.List<InspectionReport>> getAllInspectionReports() {
         ApiResponse<java.util.List<InspectionReport>> apiResponse = new ApiResponse<>();
         apiResponse.setResult(inspectionReportService.findAllInspectionReports());
@@ -48,6 +54,7 @@ public class InspectionReportController {
     }
 
     @DeleteMapping("/{reportId}")
+    @PreAuthorize("hasRole('ADMIN')")
     ApiResponse<String> deleteInspectionReport(@PathVariable int reportId) {
         ApiResponse<String> apiResponse = new ApiResponse<>();
         apiResponse.setResult(inspectionReportService.deleteInspectionReport(reportId));

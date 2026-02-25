@@ -7,6 +7,7 @@ import com.bicycle.marketplace.dto.response.DisputeResponse;
 import com.bicycle.marketplace.entities.Dispute;
 import com.bicycle.marketplace.services.DisputeService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -18,7 +19,8 @@ public class DisputeController {
     private DisputeService disputeService;
 
     @PostMapping
-    ApiResponse<DisputeResponse> createDispute(@RequestBody DisputeCreationRequest request){
+    @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
+    ApiResponse<DisputeResponse> createDispute(@RequestBody DisputeCreationRequest request) {
         ApiResponse<DisputeResponse> apiResponse = new ApiResponse<>();
         apiResponse.setResult(disputeService.createDispute(request));
         apiResponse.setMessage("Dispute created successfully");
@@ -26,7 +28,8 @@ public class DisputeController {
     }
 
     @PutMapping("/{disputeId}")
-    ApiResponse<DisputeResponse> updateDispute(@PathVariable int disputeId, @RequestBody DisputeUpdateRequest request){
+    @PreAuthorize("hasRole('ADMIN')")
+    ApiResponse<DisputeResponse> updateDispute(@PathVariable int disputeId, @RequestBody DisputeUpdateRequest request) {
         ApiResponse<DisputeResponse> apiResponse = new ApiResponse<>();
         apiResponse.setResult(disputeService.updateDispute(disputeId, request));
         apiResponse.setMessage("Dispute updated successfully");
@@ -34,7 +37,8 @@ public class DisputeController {
     }
 
     @GetMapping
-    ApiResponse<List<Dispute>> findAllDisputes(){
+    @PreAuthorize("hasRole('ADMIN')")
+    ApiResponse<List<Dispute>> findAllDisputes() {
         ApiResponse<List<Dispute>> apiResponse = new ApiResponse<>();
         apiResponse.setResult(disputeService.findAllDisputes());
         apiResponse.setMessage("Disputes fetched successfully");
@@ -42,6 +46,7 @@ public class DisputeController {
     }
 
     @GetMapping("/{disputeId}")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('USER')")
     ApiResponse<DisputeResponse> getDisputeById(@PathVariable int disputeId) {
         ApiResponse<DisputeResponse> apiResponse = new ApiResponse<>();
         apiResponse.setResult(disputeService.findDisputeById(disputeId));
@@ -50,6 +55,7 @@ public class DisputeController {
     }
 
     @DeleteMapping("/{disputeId}")
+    @PreAuthorize("hasRole('ADMIN')")
     ApiResponse<String> deleteDispute(@PathVariable int disputeId) {
         ApiResponse<String> apiResponse = new ApiResponse<>();
         apiResponse.setResult(disputeService.deleteDispute(disputeId));
