@@ -33,4 +33,5 @@ public class Bicycle {
     String forkType;
     String color;
     String frameMaterial;
+    int condition;
 }

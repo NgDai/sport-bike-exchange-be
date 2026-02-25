@@ -24,4 +24,5 @@ public class BicycleResponse {
     private String forkType;
     private String color;
     private String frameMaterial;
+    private int condition;
 }
