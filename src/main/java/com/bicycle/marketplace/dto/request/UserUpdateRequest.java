@@ -18,6 +18,7 @@ public class UserUpdateRequest {
     private String password;
 
     @Size(max = 100, message = "FULL_NAME_MAX_LENGTH")
+    @Pattern(regexp = "^[\\p{L}\\s.'\\-]*$", message = "FULL_NAME_NO_NUMBERS")
     private String fullName;
 
     @Email(message = "EMAIL_INVALID")

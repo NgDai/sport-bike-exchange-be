@@ -26,6 +26,7 @@ public class UserCreationRequest {
 
     @NotBlank(message = "FULL_NAME_REQUIRED")
     @Size(max = 100, message = "FULL_NAME_MAX_LENGTH")
+    @Pattern(regexp = "^[\\p{L}\\s.'\\-]+$", message = "FULL_NAME_NO_NUMBERS")
     private String fullName;
 
     @NotBlank(message = "EMAIL_REQUIRED")

@@ -16,6 +16,7 @@ public enum ErrorCode {
     USERNAME_INVALID_LENGTH(1012, "Username must be between 3 and 50 characters"),
     FULL_NAME_REQUIRED(1013, "Full name is required"),
     FULL_NAME_MAX_LENGTH(1014, "Full name must not exceed 100 characters"),
+    FULL_NAME_NO_NUMBERS(1027, "Full name must not contain numbers"),
     EMAIL_REQUIRED(1015, "Email is required"),
     EMAIL_INVALID(1016, "Email format is invalid"),
     PHONE_MAX_LENGTH(1017, "Phone must not exceed 20 characters"),
