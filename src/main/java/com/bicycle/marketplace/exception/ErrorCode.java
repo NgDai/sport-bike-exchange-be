@@ -20,7 +20,7 @@ public enum ErrorCode {
     EMAIL_REQUIRED(1015, "Email is required"),
     EMAIL_INVALID(1016, "Email format is invalid"),
     PHONE_MAX_LENGTH(1017, "Phone must not exceed 20 characters"),
-    USERNAME_INVALID_FORMAT(1022, "Username must contain only letters, numbers, underscore or hyphen"),
+    USERNAME_INVALID_FORMAT(1022, "Username must contain both letters and numbers (only letters, numbers, underscore or hyphen)"),
     PASSWORD_INVALID_FORMAT(1023, "Password must contain at least one letter and one number"),
     PHONE_INVALID_FORMAT(1024, "Phone number format is invalid"),
     PHONE_REQUIRED(1026, "Phone number is required"),
