@@ -5,7 +5,6 @@ import com.bicycle.marketplace.repository.IBicycleRepository;
 import com.bicycle.marketplace.repository.IBikeListingRepository;
 import com.bicycle.marketplace.repository.IBrandRepository;
 import com.bicycle.marketplace.repository.ICategoryRepository;
-import com.bicycle.marketplace.repository.IEventRepository;
 import com.bicycle.marketplace.repository.IUserRepository;
 import com.bicycle.marketplace.dto.request.PostingCreationRequest;
 import com.bicycle.marketplace.dto.request.PostingUpdateRequest;
@@ -13,7 +12,6 @@ import com.bicycle.marketplace.entities.Bicycle;
 import com.bicycle.marketplace.entities.BikeListing;
 import com.bicycle.marketplace.entities.Brand;
 import com.bicycle.marketplace.entities.Category;
-import com.bicycle.marketplace.entities.Events;
 import com.bicycle.marketplace.entities.Users;
 import com.bicycle.marketplace.exception.AppException;
 import com.bicycle.marketplace.exception.ErrorCode;
@@ -33,9 +31,6 @@ public class BikeListingService {
     private IUserRepository userRepository;
 
     @Autowired
-    private IEventRepository eventRepository;
-
-    @Autowired
     private IBicycleRepository bicycleRepository;
 
     @Autowired
@@ -48,17 +43,11 @@ public class BikeListingService {
         if (request.getSellerId() == null) {
             throw new AppException(ErrorCode.POSTING_SELLER_ID_REQUIRED);
         }
-        if (request.getEventId() == null) {
-            throw new AppException(ErrorCode.POSTING_EVENT_ID_REQUIRED);
-        }
         Users seller = userRepository.findById(request.getSellerId())
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
-        Events event = eventRepository.findById(request.getEventId())
-                .orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
 
         BikeListing listing = new BikeListing();
         listing.setSeller(seller);
-        listing.setEvent(event);
         listing.setCreatedAt(LocalDateTime.now());
         listing.setTitle(request.getTitle());
         listing.setBrand(request.getBrand());
@@ -91,11 +80,6 @@ public class BikeListingService {
             Users seller = userRepository.findById(request.getSellerId())
                     .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
             listing.setSeller(seller);
-        }
-        if (request.getEventId() != null) {
-            Events event = eventRepository.findById(request.getEventId())
-                    .orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
-            listing.setEvent(event);
         }
 
         if (request.getTitle() != null) listing.setTitle(request.getTitle());
