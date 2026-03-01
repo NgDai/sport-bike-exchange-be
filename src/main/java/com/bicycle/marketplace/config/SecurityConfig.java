@@ -32,7 +32,8 @@ public class SecurityConfig {
     private final String[] PUBLIC_USER_ENDPOINTS = {
             "/auth/login",
             "/auth/introspect",
-            "/users"
+            "/users",
+            "/auth/loginEmail"
     };
 
     @Value("${jwt.signer.key}")
