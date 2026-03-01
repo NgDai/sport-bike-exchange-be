@@ -62,4 +62,13 @@ public class ReservationController {
         apiResponse.setResult(reservationService.deleteReservation(reservationId));
         return apiResponse;
     }
+
+    @GetMapping("/status/{status}")
+    @PreAuthorize("hasRole('ADMIN')")
+    ApiResponse<List<Reservation>> getReservationsByStatus(@PathVariable String status) {
+        ApiResponse<List<Reservation>> apiResponse = new ApiResponse<>();
+        apiResponse.setResult(reservationService.findReservationsByStatus(status));
+        apiResponse.setMessage("Reservations fetched successfully");
+        return apiResponse;
+    }
 }

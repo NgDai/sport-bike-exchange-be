@@ -48,4 +48,8 @@ public class ReservationService {
         reservationRepository.delete(reservation);
         return "Reservation deleted successfully";
     }
+
+    public List<Reservation> findReservationsByStatus(String status) {
+        return reservationRepository.findAllByStatus(status);
+    }
 }
