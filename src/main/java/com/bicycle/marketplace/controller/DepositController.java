@@ -7,6 +7,7 @@ import com.bicycle.marketplace.dto.response.DepositResponse;
 import com.bicycle.marketplace.entities.Deposit;
 import com.bicycle.marketplace.services.DepositService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -53,6 +54,15 @@ public class DepositController {
     ApiResponse<String> deleteDeposit(@PathVariable int depositId) {
         ApiResponse<String> apiResponse = new ApiResponse<>();
         apiResponse.setResult(depositService.deleteDeposit(depositId));
+        return apiResponse;
+    }
+
+    @GetMapping("/status/{status}")
+    @PreAuthorize("hasRole('ADMIN')")
+    ApiResponse<List<Deposit>> getDepositsByStatus(@PathVariable String status) {
+        ApiResponse<List<Deposit>> apiResponse = new ApiResponse<>();
+        apiResponse.setResult(depositService.findDepositsByStatus(status));
+        apiResponse.setMessage("Deposits fetched successfully");
         return apiResponse;
     }
 }

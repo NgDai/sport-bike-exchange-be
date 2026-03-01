@@ -9,6 +9,7 @@ import com.bicycle.marketplace.exception.AppException;
 import com.bicycle.marketplace.exception.ErrorCode;
 import com.bicycle.marketplace.mapper.DepositMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -47,5 +48,10 @@ public class DepositService {
                 .orElseThrow(() -> new AppException(ErrorCode.DEPOSIT_NOT_FOUND));
         depositRepository.delete(deposit);
         return "Deposit deleted successfully";
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    public List<Deposit> findDepositsByStatus(String status) {
+        return depositRepository.findAllByStatus(status);
     }
 }

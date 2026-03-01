@@ -9,6 +9,7 @@ import com.bicycle.marketplace.exception.AppException;
 import com.bicycle.marketplace.exception.ErrorCode;
 import com.bicycle.marketplace.mapper.DisputeMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -47,5 +48,10 @@ public class DisputeService {
                 .orElseThrow(() -> new AppException(ErrorCode.DISPUTE_NOT_FOUND));
         disputeRepository.delete(dispute);
         return "Dispute deleted successfully";
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    public List<Dispute> findDisputesByStatus(String status) {
+        return disputeRepository.findAllByStatus(status);
     }
 }
