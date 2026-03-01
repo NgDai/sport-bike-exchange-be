@@ -16,8 +16,8 @@ import lombok.Setter;
 public class UserCreationRequest {
 
     @NotBlank(message = "USERNAME_REQUIRED")
-    @Size(min = 3, max = 50, message = "USERNAME_INVALID_LENGTH")
-    @Pattern(regexp = "^(?=.*[a-zA-Z])(?=.*[0-9])[a-zA-Z0-9_-]+$", message = "USERNAME_INVALID_FORMAT")
+    @Size(min = 6, max = 50, message = "USERNAME_INVALID_LENGTH")
+    @Pattern(regexp = "^[a-zA-Z]{6,15}[0-9]*$", message = "USERNAME_INVALID_FORMAT")
     private String username;
 
     @NotBlank(message = "PASSWORD_REQUIRED")
