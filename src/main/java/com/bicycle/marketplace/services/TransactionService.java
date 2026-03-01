@@ -48,4 +48,8 @@ public class TransactionService {
         transactionRepository.delete(transaction);
         return "Transaction deleted successfully";
     }
+
+    public List<Transaction> findTransactionsByStatus(String status) {
+        return transactionRepository.findAllByStatus(status);
+    }
 }

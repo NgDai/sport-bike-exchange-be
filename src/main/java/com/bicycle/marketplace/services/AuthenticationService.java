@@ -1,5 +1,6 @@
 package com.bicycle.marketplace.services;
 
+import com.bicycle.marketplace.dto.request.EmailAuthenticationRequest;
 import com.bicycle.marketplace.repository.IUserRepository;
 import com.bicycle.marketplace.dto.request.AuthenticationRequest;
 import com.bicycle.marketplace.dto.request.IntrospectRequest;
@@ -29,6 +30,7 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.StringJoiner;
+import java.util.UUID;
 
 @Slf4j
 @Service
@@ -81,6 +83,7 @@ public class AuthenticationService {
         JWTClaimsSet jwtClaimSet = new JWTClaimsSet.Builder()
                 .subject(user.getUsername())
                 .issuer("BicycleMarketplace")
+                .jwtID(UUID.randomUUID().toString())
                 .claim("FullName", user.getFullName())
                 .claim("scope", buildScope(user))
                 .claim("avatar", user.getAvatar()) // Nhúng avatar vào token
@@ -104,5 +107,22 @@ public class AuthenticationService {
             user.getRole().forEach(scope::add);
 
         return scope.toString();
+    }
+
+    public AuthenticationResponse loginWithEmail(EmailAuthenticationRequest request) {
+        var user = userRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+
+        boolean authenticated = request.getPassword().equals(user.getPassword());
+        if (!authenticated) {
+            throw new AppException(ErrorCode.USER_INVALID_AUTHENTICATION);
+        }
+
+        var token = generateToken(user);
+
+        return AuthenticationResponse.builder()
+                .token(token)
+                .build();
+
     }
 }

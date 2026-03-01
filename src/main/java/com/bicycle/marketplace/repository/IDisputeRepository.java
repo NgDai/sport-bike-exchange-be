@@ -4,6 +4,9 @@ import com.bicycle.marketplace.entities.Dispute;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 @Repository
 public interface IDisputeRepository extends JpaRepository<Dispute, Integer> {
+    List<Dispute> findAllByStatus(String status);
 }

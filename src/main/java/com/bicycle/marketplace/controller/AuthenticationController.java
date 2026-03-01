@@ -1,6 +1,7 @@
 package com.bicycle.marketplace.controller;
 
 import com.bicycle.marketplace.dto.request.AuthenticationRequest;
+import com.bicycle.marketplace.dto.request.EmailAuthenticationRequest;
 import com.bicycle.marketplace.dto.request.IntrospectRequest;
 import com.bicycle.marketplace.dto.response.ApiResponse;
 import com.bicycle.marketplace.dto.response.AuthenticationResponse;
@@ -36,6 +37,14 @@ public class AuthenticationController {
             throws ParseException, JOSEException {
         var result = authenticationService.introspect(request);
         return ApiResponse.<IntrospectResponse>builder()
+                .result(result)
+                .build();
+    }
+
+    @PostMapping("/loginEmail")
+    ApiResponse<AuthenticationResponse> authenticateEmail(@RequestBody @Valid EmailAuthenticationRequest request) {
+        var result = authenticationService.loginWithEmail(request);
+        return ApiResponse.<AuthenticationResponse>builder()
                 .result(result)
                 .build();
     }

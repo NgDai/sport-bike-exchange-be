@@ -68,4 +68,12 @@ public class EventController {
         apiResponse.setResult(eventService.deleteEvent(eventId));
         return apiResponse;
     }
+
+    @GetMapping("/status/{status}")
+    ApiResponse<List<Events>> getEventsByStatus(@PathVariable String status) {
+        ApiResponse<List<Events>> apiResponse = new ApiResponse<>();
+        apiResponse.setResult(eventService.getEventsByStatus(status));
+        apiResponse.setMessage("Events fetched successfully");
+        return apiResponse;
+    }
 }
