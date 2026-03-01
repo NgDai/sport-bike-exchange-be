@@ -9,6 +9,7 @@ import com.bicycle.marketplace.exception.AppException;
 import com.bicycle.marketplace.exception.ErrorCode;
 import com.bicycle.marketplace.mapper.CheckInMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -48,5 +49,10 @@ public class CheckInService {
                 .orElseThrow(() -> new AppException(ErrorCode.CHECKIN_NOT_FOUND));
         checkInRepository.delete(checkIn);
         return "Check-In deleted successfully";
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    public List<CheckIn> findCheckInsByStatus(String status) {
+        return checkInRepository.findByStatus(status);
     }
 }

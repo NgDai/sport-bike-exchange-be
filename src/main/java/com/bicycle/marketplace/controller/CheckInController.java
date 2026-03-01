@@ -7,6 +7,7 @@ import com.bicycle.marketplace.dto.response.CheckInResponse;
 import com.bicycle.marketplace.entities.CheckIn;
 import com.bicycle.marketplace.services.CheckInService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -53,6 +54,15 @@ public class CheckInController {
     ApiResponse<String> deleteCheckIn(@PathVariable int checkInId) {
         ApiResponse<String> apiResponse = new ApiResponse<>();
         apiResponse.setResult(checkInService.deleteCheckIn(checkInId));
+        return apiResponse;
+    }
+
+    @GetMapping("/status/{status}")
+    @PreAuthorize("hasRole('ADMIN')")
+    ApiResponse<List<CheckIn>> getCheckInsByStatus(@PathVariable String status) {
+        ApiResponse<List<CheckIn>> apiResponse = new ApiResponse<>();
+        apiResponse.setResult(checkInService.findCheckInsByStatus(status));
+        apiResponse.setMessage("Check-Ins fetched successfully");
         return apiResponse;
     }
 }
