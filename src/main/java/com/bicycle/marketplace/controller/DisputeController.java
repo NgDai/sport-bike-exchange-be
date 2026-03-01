@@ -61,4 +61,13 @@ public class DisputeController {
         apiResponse.setResult(disputeService.deleteDispute(disputeId));
         return apiResponse;
     }
+
+    @GetMapping("/status/{status}")
+    @PreAuthorize("hasRole('ADMIN')")
+    ApiResponse<List<Dispute>> findDisputesByStatus(@PathVariable String status) {
+        ApiResponse<List<Dispute>> apiResponse = new ApiResponse<>();
+        apiResponse.setResult(disputeService.findDisputesByStatus(status));
+        apiResponse.setMessage("Disputes fetched successfully");
+        return apiResponse;
+    }
 }
