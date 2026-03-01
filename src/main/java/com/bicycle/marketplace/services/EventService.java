@@ -53,4 +53,8 @@ public class EventService {
         Events event = eventRepository.findById(eventId).orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
         return eventMapper.toEventResponse(event);
     }
+
+    public List<Events> getEventsByStatus(String status) {
+        return eventRepository.findAllByStatus(status);
+    }
 }
