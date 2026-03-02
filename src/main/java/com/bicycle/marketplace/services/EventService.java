@@ -1,3 +1,4 @@
+// File: src/main/java/com/bicycle/marketplace/services/EventService.java
 package com.bicycle.marketplace.services;
 
 import com.bicycle.marketplace.repository.IEventRepository;
@@ -17,6 +18,7 @@ import java.util.List;
 public class EventService {
     @Autowired
     private IEventRepository eventRepository;
+
     @Autowired
     private EventMapper eventMapper;
 
@@ -27,9 +29,7 @@ public class EventService {
 
     public EventResponse updateEvent(int eventId, EventUpdateRequest request) {
         Events event = eventRepository.findById(eventId).orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
-
         eventMapper.updateEvent(event, request);
-
         return eventMapper.toEventResponse(eventRepository.save(event));
     }
 
@@ -45,8 +45,8 @@ public class EventService {
         return "Event deleted successfully";
     }
 
-    public List<Events> getAllEvents() {
-        return eventRepository.findAll();
+    public List<EventResponse> getAllEvents() {
+        return eventMapper.toEventResponseList(eventRepository.findAll());
     }
 
     public EventResponse getEventById(int eventId) {
@@ -54,7 +54,7 @@ public class EventService {
         return eventMapper.toEventResponse(event);
     }
 
-    public List<Events> getEventsByStatus(String status) {
-        return eventRepository.findAllByStatus(status);
+    public List<EventResponse> getEventsByStatus(String status) {
+        return eventMapper.toEventResponseList(eventRepository.findAllByStatus(status));
     }
 }
