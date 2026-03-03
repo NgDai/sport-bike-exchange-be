@@ -19,20 +19,21 @@ import org.springframework.stereotype.Service;
 @Service
 @RequiredArgsConstructor
 public class PostingService {
-    private IBikeListingRepository bikeListingRepository;
-    private PostingMapper postingMapper;
-    private IUserRepository userRepository;
-    private IBrandRepository brandRepository;
-    private ICategoryRepository categoryRepository;
+    private final IBikeListingRepository bikeListingRepository;
+    private final PostingMapper postingMapper;
+    private final IUserRepository userRepository;
+    private final IBrandRepository brandRepository;
+    private final ICategoryRepository categoryRepository;
 
     @Transactional
-    public BikeListing createPosting(CreatePostingRequest request){
+    public BikeListing createPosting(CreatePostingRequest request) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated()) {
             throw new AppException(ErrorCode.UNAUTHORIZED);
         }
         String username = authentication.getName();
-        Users user = userRepository.findByUsername(username).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+        Users user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 
         Brand brand = brandRepository.findByNameIgnoreCase(request.getBrandName())
                 .orElseThrow();
