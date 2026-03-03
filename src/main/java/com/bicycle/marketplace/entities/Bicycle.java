@@ -25,9 +25,9 @@ public class Bicycle {
     Category category;
     String bikeType;
     String wheelSize;
-    String numberOfGears;
+    int numberOfGears;
     String brakeType;
-    LocalDate yearManufacture;
+    int yearManufacture;
     String frameSize;
     String drivetrain;
     String forkType;

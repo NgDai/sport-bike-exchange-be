@@ -2,6 +2,7 @@ package com.bicycle.marketplace.services;
 
 import com.bicycle.marketplace.dto.request.CreatePostingRequest;
 import com.bicycle.marketplace.dto.request.UpdatePostingRequest;
+import com.bicycle.marketplace.dto.request.UpdatePostingStatusRequest;
 import com.bicycle.marketplace.dto.response.PostingResponse;
 import com.bicycle.marketplace.entities.*;
 import com.bicycle.marketplace.exception.AppException;
@@ -49,6 +50,7 @@ public class PostingService {
 
         BikeListing bikeListing = postingMapper.toBikeListing(request, bicycle);
         bikeListing.setSeller(user);
+        bikeListing.setStatus("Pending");
 
         return bikeListingRepository.save(bikeListing);
     }
@@ -78,5 +80,20 @@ public class PostingService {
                 .stream()
                 .map(postingMapper::toPostingResponse)
                 .collect(Collectors.toList());
+    }
+
+    @Transactional
+    public String deletePosting(int listingId) {
+        BikeListing bikeListing = bikeListingRepository.findById(listingId)
+                .orElseThrow(() -> new AppException(ErrorCode.BIKE_LISTING_NOT_FOUND));
+        bikeListingRepository.delete(bikeListing);
+        return "Bike listing deleted successfully";
+    }
+
+    public BikeListing updatePostingStatus(int listingId, UpdatePostingStatusRequest request) {
+        BikeListing bikeListing = bikeListingRepository.findById(listingId)
+                .orElseThrow(() -> new AppException(ErrorCode.BIKE_LISTING_NOT_FOUND));
+        bikeListing.setStatus(request.getStatus());
+        return bikeListingRepository.save(bikeListing);
     }
 }

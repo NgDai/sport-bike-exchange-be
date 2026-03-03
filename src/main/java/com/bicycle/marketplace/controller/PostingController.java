@@ -2,6 +2,7 @@ package com.bicycle.marketplace.controller;
 
 import com.bicycle.marketplace.dto.request.CreatePostingRequest;
 import com.bicycle.marketplace.dto.request.UpdatePostingRequest;
+import com.bicycle.marketplace.dto.request.UpdatePostingStatusRequest;
 import com.bicycle.marketplace.dto.response.ApiResponse;
 import com.bicycle.marketplace.dto.response.PostingResponse;
 import com.bicycle.marketplace.entities.BikeListing;
@@ -27,17 +28,17 @@ public class PostingController {
         return apiResponse;
     }
 
-    @PutMapping("/update/{id}")
-    ApiResponse<BikeListing> updatePosting(@RequestBody UpdatePostingRequest request, @PathVariable int id) {
+    @PutMapping("/update/{listingId}")
+    ApiResponse<BikeListing> updatePosting(@RequestBody UpdatePostingRequest request, @PathVariable int listingId) {
         ApiResponse<BikeListing> apiResponse = new ApiResponse<>();
-        apiResponse.setResult(postingService.updatePosting(request, id));
+        apiResponse.setResult(postingService.updatePosting(request, listingId));
         return apiResponse;
     }
 
-    @GetMapping("/{id}")
-    ApiResponse<PostingResponse> getPostingById(@PathVariable int id) {
+    @GetMapping("/{listingId}")
+    ApiResponse<PostingResponse> getPostingById(@PathVariable int listingId) {
         ApiResponse<PostingResponse> apiResponse = new ApiResponse<>();
-        apiResponse.setResult(postingService.getPostingById(id));
+        apiResponse.setResult(postingService.getPostingById(listingId));
         return apiResponse;
     }
 
@@ -47,4 +48,19 @@ public class PostingController {
         apiResponse.setResult(postingService.getAllPostings());
         return apiResponse;
     }
+
+    @DeleteMapping("/delete/{listingId}")
+    ApiResponse<Void> deletePosting(@PathVariable int listingId) {
+        ApiResponse<Void> apiResponse = new ApiResponse<>();
+        postingService.deletePosting(listingId);
+        return apiResponse;
+    }
+
+    @PutMapping("/updateStatus/{listingId}")
+    ApiResponse<BikeListing> updatePostingStatus(@PathVariable int listingId, @RequestBody UpdatePostingStatusRequest status) {
+        ApiResponse<BikeListing> apiResponse = new ApiResponse<>();
+        apiResponse.setResult(postingService.updatePostingStatus(listingId, status));
+        return apiResponse;
+    }
+
 }

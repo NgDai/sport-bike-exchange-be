@@ -6,7 +6,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Data
@@ -38,7 +37,7 @@ public class PostingResponse {
     String wheelSize;
     String numberOfGears;
     String brakeType;
-    LocalDate yearManufacture;
+    int yearManufacture;
     String frameSize;
     String drivetrain;
     String forkType;

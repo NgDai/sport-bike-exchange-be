@@ -26,7 +26,7 @@ public class CreatePostingRequest {
     String wheelSize;
     String numberOfGears;
     String brakeType;
-    LocalDate yearManufacture;
+    int yearManufacture;
     String frameSize;
     String drivetrain;
     String forkType;

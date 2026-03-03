@@ -5,8 +5,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.time.LocalDate;
-
 /**
  * DTO dùng khi nhập thông tin xe đạp cho bài đăng (BikeListing).
  * brandId, categoryId lấy từ API GET /brands và GET /categories.
@@ -22,7 +20,7 @@ public class BicycleInfoRequest {
     private String wheelSize;
     private String numberOfGears;
     private String brakeType;
-    private LocalDate yearManufacture;
+    private int yearManufacture;
     private String frameSize;
     private String drivetrain;
     private String forkType;
