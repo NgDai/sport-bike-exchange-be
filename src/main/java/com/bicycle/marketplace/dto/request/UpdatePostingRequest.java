@@ -1,5 +1,6 @@
-package com.bicycle.marketplace.dto.response;
+package com.bicycle.marketplace.dto.request;
 
+import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -7,33 +8,19 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
 @FieldDefaults(level = lombok.AccessLevel.PRIVATE)
-public class PostingResponse {
-    // BikeListing fields
-    int listingId;
-    String title;
-    String description;
-    String image_url;
-    double price;
-    String status;
-    LocalDateTime createdAt;
-    LocalDateTime updatedAt;
-
-    // Seller info
-    String sellerName;
-
-    // Bicycle basic info
-    int bikeId;
+@Builder
+public class UpdatePostingRequest {
     String brandName;
     String categoryName;
-
-    // Bicycle specs
+    @NotBlank
+    String title;
+    String description;
+    float price;
     String bikeType;
     String wheelSize;
     String numberOfGears;
