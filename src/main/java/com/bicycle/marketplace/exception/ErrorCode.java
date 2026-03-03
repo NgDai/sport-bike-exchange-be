@@ -42,7 +42,8 @@ public enum ErrorCode {
     CATEGORY_NOT_FOUND(1018, "Không tìm thấy danh mục"),
     EVENT_BICYCLE_NOT_FOUND(1019, "Không tìm thấy xe đạp trong sự kiện"),
     WISHLIST_NOT_FOUND(1020, "Không tìm thấy danh sách yêu thích"),
-    LISTING_NOT_PENDING(1021, "Chỉ bài đăng đang chờ mới có thể thêm hoặc cập nhật thông tin xe đạp")
+    LISTING_NOT_PENDING(1021, "Chỉ bài đăng đang chờ mới có thể thêm hoặc cập nhật thông tin xe đạp"),
+    UNAUTHORIZED(401, "Không có quyền truy cập")
     ;
 
     private int code;
