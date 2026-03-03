@@ -46,7 +46,7 @@ public class EventService {
         return eventMapper.toEventResponse(eventRepository.save(event));
     }
 
-    public EventResponse updateEventStatus(int eventId, EventCreationRequest request) {
+    public EventResponse updateEventStatus(int eventId, EventUpdateRequest request) {
         Events event = eventRepository.findById(eventId).orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
         event.setStatus(request.getStatus());
         return eventMapper.toEventResponse(eventRepository.save(event));

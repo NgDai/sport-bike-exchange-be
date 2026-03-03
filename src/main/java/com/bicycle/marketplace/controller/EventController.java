@@ -54,7 +54,7 @@ public class EventController {
 
     @PutMapping("/status/{eventId}")
     @PreAuthorize("hasRole('ADMIN')")
-    ApiResponse<EventResponse> updateEventStatus(@PathVariable int eventId, @RequestBody EventCreationRequest request) {
+    ApiResponse<EventResponse> updateEventStatus(@PathVariable int eventId, @RequestBody EventUpdateRequest request) {
         ApiResponse<EventResponse> apiResponse = new ApiResponse<>();
         apiResponse.setResult(eventService.updateEventStatus(eventId, request));
         apiResponse.setMessage("Event status updated successfully");
