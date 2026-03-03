@@ -1,4 +1,3 @@
-// File: src/main/java/com/bicycle/marketplace/entities/Events.java
 package com.bicycle.marketplace.entities;
 
 import jakarta.persistence.*;
@@ -41,8 +40,5 @@ public class Events {
     private LocalDate startDate;
     private LocalDate endDate;
 
-    private double sellerDepositRate;
-    private double buyerDepositRate;
-    private double platformFeeRate;
     private String status;
 }

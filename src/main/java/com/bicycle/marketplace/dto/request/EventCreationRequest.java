@@ -17,8 +17,5 @@ public class EventCreationRequest {
     private String address;
     private LocalDate startDate;
     private LocalDate endDate;
-    private double sellerDepositRate;
-    private double buyerDepositRate;
-    private double platformFeeRate;
     private String status;
 }

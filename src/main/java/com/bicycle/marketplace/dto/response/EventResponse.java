@@ -1,7 +1,5 @@
 package com.bicycle.marketplace.dto.response;
 
-import com.bicycle.marketplace.entities.Users;
-import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -25,8 +23,5 @@ public class EventResponse {
     private LocalDate updateDate;
     private LocalDate startDate;
     private LocalDate endDate;
-    private double sellerDepositRate;
-    private double buyerDepositRate;
-    private double platformFeeRate;
     private String status;
 }
