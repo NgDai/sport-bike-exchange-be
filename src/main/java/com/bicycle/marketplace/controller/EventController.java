@@ -1,10 +1,10 @@
+// File: src/main/java/com/bicycle/marketplace/controller/EventController.java
 package com.bicycle.marketplace.controller;
 
 import com.bicycle.marketplace.dto.request.EventCreationRequest;
 import com.bicycle.marketplace.dto.request.EventUpdateRequest;
 import com.bicycle.marketplace.dto.response.ApiResponse;
 import com.bicycle.marketplace.dto.response.EventResponse;
-import com.bicycle.marketplace.entities.Events;
 import com.bicycle.marketplace.services.EventService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -28,8 +28,8 @@ public class EventController {
     }
 
     @GetMapping
-    ApiResponse<List<Events>> getAllEvents() {
-        ApiResponse<List<Events>> apiResponse = new ApiResponse<>();
+    ApiResponse<List<EventResponse>> getAllEvents() {
+        ApiResponse<List<EventResponse>> apiResponse = new ApiResponse<>();
         apiResponse.setResult(eventService.getAllEvents());
         apiResponse.setMessage("Events fetched successfully");
         return apiResponse;
@@ -54,7 +54,7 @@ public class EventController {
 
     @PutMapping("/status/{eventId}")
     @PreAuthorize("hasRole('ADMIN')")
-    ApiResponse<EventResponse> updateEventStatus(@PathVariable int eventId, @RequestBody EventCreationRequest request) {
+    ApiResponse<EventResponse> updateEventStatus(@PathVariable int eventId, @RequestBody EventUpdateRequest request) {
         ApiResponse<EventResponse> apiResponse = new ApiResponse<>();
         apiResponse.setResult(eventService.updateEventStatus(eventId, request));
         apiResponse.setMessage("Event status updated successfully");
@@ -70,8 +70,8 @@ public class EventController {
     }
 
     @GetMapping("/status/{status}")
-    ApiResponse<List<Events>> getEventsByStatus(@PathVariable String status) {
-        ApiResponse<List<Events>> apiResponse = new ApiResponse<>();
+    ApiResponse<List<EventResponse>> getEventsByStatus(@PathVariable String status) {
+        ApiResponse<List<EventResponse>> apiResponse = new ApiResponse<>();
         apiResponse.setResult(eventService.getEventsByStatus(status));
         apiResponse.setMessage("Events fetched successfully");
         return apiResponse;

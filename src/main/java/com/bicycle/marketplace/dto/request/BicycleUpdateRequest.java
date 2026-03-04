@@ -5,9 +5,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.time.LocalDate;
-
-@Getter @Setter
+@Getter
+@Setter
 @AllArgsConstructor
 @NoArgsConstructor
 public class BicycleUpdateRequest {
@@ -15,7 +14,7 @@ public class BicycleUpdateRequest {
     private String wheelSize;
     private String numberOfGears;
     private String brakeType;
-    private LocalDate yearManufacture;
+    private int yearManufacture;
     private String frameSize;
     private String drivetrain;
     private String forkType;

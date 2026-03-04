@@ -1,59 +1,66 @@
 package com.bicycle.marketplace.controller;
 
-import com.bicycle.marketplace.dto.request.PostingCreationRequest;
-import com.bicycle.marketplace.dto.request.PostingUpdateRequest;
+import com.bicycle.marketplace.dto.request.CreatePostingRequest;
+import com.bicycle.marketplace.dto.request.UpdatePostingRequest;
+import com.bicycle.marketplace.dto.request.UpdatePostingStatusRequest;
 import com.bicycle.marketplace.dto.response.ApiResponse;
+import com.bicycle.marketplace.dto.response.PostingResponse;
 import com.bicycle.marketplace.entities.BikeListing;
-import com.bicycle.marketplace.services.BikeListingService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.access.prepost.PreAuthorize;
+import com.bicycle.marketplace.services.PostingService;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
-@RequestMapping("/postings")
+@RequestMapping("/post")
+@RequiredArgsConstructor
+@FieldDefaults(level = lombok.AccessLevel.PRIVATE, makeFinal = true)
 public class PostingController {
 
-    @Autowired
-    private BikeListingService bikeListingService;
+    PostingService postingService;
 
-    @PostMapping
-    @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
-    ApiResponse<BikeListing> createPosting(@RequestBody PostingCreationRequest request) {
+    @PostMapping("/create")
+    ApiResponse<BikeListing> createPosting(@RequestBody CreatePostingRequest request) {
         ApiResponse<BikeListing> apiResponse = new ApiResponse<>();
-        apiResponse.setResult(bikeListingService.createBikeListing(request));
+        apiResponse.setResult(postingService.createPosting(request));
         return apiResponse;
     }
 
-    @GetMapping
-    @PreAuthorize("hasRole('ADMIN')")
-    ApiResponse<java.util.List<BikeListing>> getAllPostings() {
-        ApiResponse<java.util.List<BikeListing>> apiResponse = new ApiResponse<>();
-        apiResponse.setResult(bikeListingService.getAllBikeListings());
+    @PutMapping("/update/{listingId}")
+    ApiResponse<BikeListing> updatePosting(@RequestBody UpdatePostingRequest request, @PathVariable int listingId) {
+        ApiResponse<BikeListing> apiResponse = new ApiResponse<>();
+        apiResponse.setResult(postingService.updatePosting(request, listingId));
         return apiResponse;
     }
 
     @GetMapping("/{listingId}")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('USER')")
-    ApiResponse<BikeListing> getPostingById(@PathVariable int listingId) {
-        ApiResponse<BikeListing> apiResponse = new ApiResponse<>();
-        apiResponse.setResult(bikeListingService.getBikeListingById(listingId));
+    ApiResponse<PostingResponse> getPostingById(@PathVariable int listingId) {
+        ApiResponse<PostingResponse> apiResponse = new ApiResponse<>();
+        apiResponse.setResult(postingService.getPostingById(listingId));
         return apiResponse;
     }
 
-    @PutMapping("/{listingId}")
-    @PreAuthorize("hasRole('ADMIN')")
-    ApiResponse<BikeListing> updatePosting(@PathVariable int listingId, @RequestBody PostingUpdateRequest request) {
-        ApiResponse<BikeListing> apiResponse = new ApiResponse<>();
-        apiResponse.setResult(bikeListingService.updateBikeListing(listingId, request));
+    @GetMapping("/all")
+    ApiResponse<List<PostingResponse>> getAllPostings() {
+        ApiResponse<List<PostingResponse>> apiResponse = new ApiResponse<>();
+        apiResponse.setResult(postingService.getAllPostings());
         return apiResponse;
     }
 
-    @DeleteMapping("/{listingId}")
-    @PreAuthorize("hasRole('ADMIN')")
-    ApiResponse<String> deletePosting(@PathVariable int listingId) {
-        bikeListingService.deleteBikeListing(listingId);
-        ApiResponse<String> apiResponse = new ApiResponse<>();
-        apiResponse.setResult("Posting deleted successfully");
+    @DeleteMapping("/delete/{listingId}")
+    ApiResponse<Void> deletePosting(@PathVariable int listingId) {
+        ApiResponse<Void> apiResponse = new ApiResponse<>();
+        postingService.deletePosting(listingId);
         return apiResponse;
     }
+
+    @PutMapping("/updateStatus/{listingId}")
+    ApiResponse<BikeListing> updatePostingStatus(@PathVariable int listingId, @RequestBody UpdatePostingStatusRequest status) {
+        ApiResponse<BikeListing> apiResponse = new ApiResponse<>();
+        apiResponse.setResult(postingService.updatePostingStatus(listingId, status));
+        return apiResponse;
+    }
+
 }
