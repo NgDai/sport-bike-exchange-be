@@ -33,4 +33,5 @@ public class CreatePostingRequest {
     String color;
     String frameMaterial;
     int condition;
+    String image_url;
 }
