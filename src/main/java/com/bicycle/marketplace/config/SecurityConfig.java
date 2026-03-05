@@ -33,7 +33,9 @@ public class SecurityConfig {
             "/auth/login",
             "/auth/introspect",
             "/users",
-            "/auth/loginEmail"
+            "/auth/loginEmail",
+            "/auth/request-magic-link",
+            "/auth/verify-magic-link",
     };
 
     @Value("${jwt.signer.key}")
@@ -47,9 +49,9 @@ public class SecurityConfig {
                 .authorizeHttpRequests(request -> request
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers(HttpMethod.POST, PUBLIC_USER_ENDPOINTS).permitAll()
+                        .requestMatchers(HttpMethod.GET, "/post/all", "/post/**").permitAll()
                         .anyRequest().authenticated());
 
-        // 4. Cấu hình Resource Server để giải mã JWT
         httpSecurity.oauth2ResourceServer(oauth2 -> oauth2
                 .jwt(jwtConfigurer -> jwtConfigurer
                         .decoder(jwtDecoder())
@@ -58,7 +60,6 @@ public class SecurityConfig {
         return httpSecurity.build();
     }
 
-    // 5. Cấu hình chi tiết CORS - Giải pháp dứt điểm cho lỗi bị chặn
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
