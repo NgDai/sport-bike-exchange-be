@@ -50,6 +50,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers(HttpMethod.POST, PUBLIC_USER_ENDPOINTS).permitAll()
                         .requestMatchers(HttpMethod.GET, "/post/all", "/post/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/*.html", "/static/**").permitAll()
                         .anyRequest().authenticated());
 
         httpSecurity.oauth2ResourceServer(oauth2 -> oauth2

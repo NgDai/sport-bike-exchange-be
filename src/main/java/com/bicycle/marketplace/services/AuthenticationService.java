@@ -142,15 +142,17 @@ public class AuthenticationService {
         String email = payload.getEmail();
         String name = (String) payload.get("name");
         String picture = (String) payload.get("picture");
+        String phone = (String) payload.get("phone_number");
         String googleId = payload.getSubject();
 
         Users user = userRepository.findByEmail(email).orElseGet(() -> {
             Users newUser = Users.builder()
                     .email(email)
-                    .username(email)
+                    //.username(email)
                     .fullName(name)
                     .avatar(picture)
                     .googleId(googleId)
+                    .phone(phone)
                     .status("Active")
                     .role(new java.util.HashSet<>(java.util.Set.of("USER")))
                     .build();

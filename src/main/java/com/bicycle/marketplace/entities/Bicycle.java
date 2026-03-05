@@ -34,4 +34,11 @@ public class Bicycle {
     String color;
     String frameMaterial;
     int condition;
+    Double weight;
+    String saddle; // Yên xe
+    String chainring; // Đĩa
+    String chain; // Xích xe
+    String handlebar; // Ghi đông
+    String rim; // Vành xe
+    String shockAbsorber; // Giảm xốc
 }
