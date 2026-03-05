@@ -52,7 +52,7 @@ public class AuthenticationService {
     protected String signerKey;
 
     @NonFinal
-    @Value("${google.client-id}")
+    @Value("${GOOGLE_CLIENT_ID}")
     protected String googleClientId;
 
     public IntrospectResponse introspect(IntrospectRequest request) throws ParseException, JOSEException {
