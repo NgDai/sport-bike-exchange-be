@@ -1,9 +1,11 @@
 package com.bicycle.marketplace.controller;
 
 import com.bicycle.marketplace.dto.request.ChangePasswordRequest;
+import com.bicycle.marketplace.dto.request.EmailPasswordRequest;
 import com.bicycle.marketplace.dto.request.UserCreationRequest;
 import com.bicycle.marketplace.dto.request.UserUpdateRequest;
 import com.bicycle.marketplace.dto.response.ApiResponse;
+import com.bicycle.marketplace.dto.response.EmailPasswordResponse;
 import com.bicycle.marketplace.dto.response.UserResponse;
 import com.bicycle.marketplace.entities.Users;
 import com.bicycle.marketplace.services.UserService;
@@ -89,6 +91,13 @@ public class UserController {
     ApiResponse<UserResponse> getMyInfo() {
         ApiResponse<UserResponse> apiResponse = new ApiResponse<>();
         apiResponse.setResult(userService.getMyInfo());
+        return apiResponse;
+    }
+
+    @PutMapping("/emailPassword")
+    ApiResponse<EmailPasswordResponse> changePasswordWithEmail(@RequestBody @Valid EmailPasswordRequest request) {
+        ApiResponse<EmailPasswordResponse> apiResponse = new ApiResponse<>();
+        apiResponse.setResult(userService.emailPassword(request));
         return apiResponse;
     }
 }
