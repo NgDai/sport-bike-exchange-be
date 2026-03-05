@@ -33,9 +33,7 @@ public class SecurityConfig {
             "/auth/login",
             "/auth/introspect",
             "/users",
-            "/auth/loginEmail",
-            "/auth/request-magic-link",
-            "/auth/verify-magic-link",
+            "/auth/loginEmail"
     };
 
     @Value("${jwt.signer.key}")

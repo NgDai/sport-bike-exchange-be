@@ -1,4 +1,3 @@
-// File: AuthenticationService.java
 package com.bicycle.marketplace.services;
 
 import com.bicycle.marketplace.dto.request.EmailAuthenticationRequest;
@@ -40,7 +39,6 @@ import java.util.UUID;
 @FieldDefaults(level = lombok.AccessLevel.PRIVATE, makeFinal = true)
 public class AuthenticationService {
     IUserRepository userRepository;
-    EmailService emailService;
 
     @NonFinal
     @Value("${jwt.signer.key}")
@@ -48,13 +46,9 @@ public class AuthenticationService {
 
     public IntrospectResponse introspect(IntrospectRequest request) throws ParseException, JOSEException {
         var token = request.getToken();
-
         JWSVerifier verifier = new MACVerifier(signerKey.getBytes());
-
         SignedJWT signedJWT = SignedJWT.parse(token);
-
         Date expirationTime = signedJWT.getJWTClaimsSet().getExpirationTime();
-
         var verified = signedJWT.verify(verifier);
 
         return IntrospectResponse.builder()
@@ -66,14 +60,12 @@ public class AuthenticationService {
         var user = userRepository.findByUsername(request.getUsername())
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 
-        PasswordEncoder passwordEncoder = new BCryptPasswordEncoder(5);
         boolean authenticated = request.getPassword().equals(user.getPassword());
         if (!authenticated) {
             throw new AppException(ErrorCode.USER_INVALID_AUTHENTICATION);
         }
 
         var token = generateToken(user);
-
         return AuthenticationResponse.builder()
                 .token(token)
                 .build();
@@ -89,59 +81,9 @@ public class AuthenticationService {
         }
 
         var token = generateToken(user);
-
         return AuthenticationResponse.builder()
                 .token(token)
                 .build();
-    }
-
-//    public String requestMagicLink(String email) {
-//        var user = userRepository.findByEmail(email)
-//                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
-//
-//        String magicToken = generateMagicToken(user);
-//
-//        // Chú ý port 5173 là mặc định của Vite (ReactJS)
-//        String magicLink = "http://localhost:5173/verify-magic-link?token=" + magicToken;
-//
-//        emailService.sendMagicLink(email, magicLink);
-//
-//        return "Đã gửi link đăng nhập đến email của bạn!";
-//    }
-
-    public AuthenticationResponse verifyMagicLink(String token) {
-        try {
-            JWSVerifier verifier = new MACVerifier(signerKey.getBytes());
-            SignedJWT signedJWT = SignedJWT.parse(token);
-
-            Date expirationTime = signedJWT.getJWTClaimsSet().getExpirationTime();
-            boolean verified = signedJWT.verify(verifier);
-
-            if (!(verified && expirationTime.after(new Date()))) {
-                throw new AppException(ErrorCode.USER_INVALID_AUTHENTICATION);
-            }
-
-            // Đảm bảo token này là loại magic-link
-            String type = signedJWT.getJWTClaimsSet().getStringClaim("type");
-            if (!"magic-link".equals(type)) {
-                throw new AppException(ErrorCode.USER_INVALID_AUTHENTICATION);
-            }
-
-            String email = signedJWT.getJWTClaimsSet().getSubject();
-
-            var user = userRepository.findByEmail(email)
-                    .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
-
-            // Tạo Access Token chính thức sau khi xác minh email thành công
-            String accessToken = generateToken(user);
-
-            return AuthenticationResponse.builder()
-                    .token(accessToken)
-                    .build();
-
-        } catch (ParseException | JOSEException e) {
-            throw new AppException(ErrorCode.USER_INVALID_AUTHENTICATION);
-        }
     }
 
     private String generateToken(Users user) {
@@ -167,31 +109,10 @@ public class AuthenticationService {
         }
     }
 
-//    private String generateMagicToken(Users user) {
-//        JWSHeader header = new JWSHeader(JWSAlgorithm.HS256);
-//        JWTClaimsSet jwtClaimSet = new JWTClaimsSet.Builder()
-//                .subject(user.getEmail()) // Dùng email làm chủ đề để tra cứu sau
-//                .issuer("BicycleMarketplace")
-//                .jwtID(UUID.randomUUID().toString())
-//                .claim("type", "magic-link") // Đánh dấu loại token
-//                .issueTime(new Date())
-//                .expirationTime(new Date(Instant.now().plus(15, ChronoUnit.MINUTES).toEpochMilli())) // Chỉ có hiệu lực 15 phút
-//                .build();
-//        JWSObject jwsObject = new JWSObject(header, new Payload(jwtClaimSet.toJSONObject()));
-//
-//        try {
-//            jwsObject.sign(new MACSigner(signerKey.getBytes()));
-//            return jwsObject.serialize();
-//        } catch (JOSEException e) {
-//            throw new RuntimeException(e);
-//        }
-//    }
-
     private String buildScope(Users user) {
         StringJoiner scope = new StringJoiner(" ");
         if(!CollectionUtils.isEmpty(user.getRole()))
             user.getRole().forEach(scope::add);
-
         return scope.toString();
     }
 }

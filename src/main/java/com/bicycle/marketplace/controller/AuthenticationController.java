@@ -1,4 +1,3 @@
-// File: AuthenticationController.java
 package com.bicycle.marketplace.controller;
 
 import com.bicycle.marketplace.dto.request.AuthenticationRequest;
@@ -49,20 +48,4 @@ public class AuthenticationController {
                 .result(result)
                 .build();
     }
-
-//    @PostMapping("/request-magic-link")
-//    ApiResponse<String> requestMagicLink(@RequestParam String email) {
-//        var result = authenticationService.requestMagicLink(email);
-//        return ApiResponse.<String>builder()
-//                .result(result)
-//                .build();
-//    }
-//
-//    @PostMapping("/verify-magic-link")
-//    ApiResponse<AuthenticationResponse> verifyMagicLink(@RequestParam String token) {
-//        var result = authenticationService.verifyMagicLink(token);
-//        return ApiResponse.<AuthenticationResponse>builder()
-//                .result(result)
-//                .build();
-//    }
 }
