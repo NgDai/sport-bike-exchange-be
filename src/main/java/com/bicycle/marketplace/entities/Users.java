@@ -26,6 +26,7 @@ public class Users {
     private String status;
     private String address;
     private Set<String> role;
+    private String googleId;
     @CreationTimestamp
     private LocalDate createdAt;
 }

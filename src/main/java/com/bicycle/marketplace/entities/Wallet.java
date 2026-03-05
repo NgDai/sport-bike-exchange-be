@@ -22,6 +22,4 @@ public class Wallet {
     @JoinColumn(name = "user_id")
     Users user;
     double balance;
-    @UpdateTimestamp
-    Date updatedAt;
 }

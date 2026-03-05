@@ -1,6 +1,7 @@
 package com.bicycle.marketplace.services;
 
 import com.bicycle.marketplace.dto.request.EmailAuthenticationRequest;
+import com.bicycle.marketplace.dto.request.GoogleAuthRequest;
 import com.bicycle.marketplace.repository.IUserRepository;
 import com.bicycle.marketplace.dto.request.AuthenticationRequest;
 import com.bicycle.marketplace.dto.request.IntrospectRequest;
@@ -9,6 +10,10 @@ import com.bicycle.marketplace.dto.response.IntrospectResponse;
 import com.bicycle.marketplace.entities.Users;
 import com.bicycle.marketplace.exception.AppException;
 import com.bicycle.marketplace.exception.ErrorCode;
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
+import com.google.api.client.http.javanet.NetHttpTransport;
+import com.google.api.client.json.gson.GsonFactory;
 import com.nimbusds.jose.*;
 import com.nimbusds.jose.crypto.MACSigner;
 import com.nimbusds.jose.crypto.MACVerifier;
@@ -28,6 +33,7 @@ import org.springframework.util.CollectionUtils;
 import java.text.ParseException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.Collections;
 import java.util.Date;
 import java.util.StringJoiner;
 import java.util.UUID;
@@ -43,6 +49,10 @@ public class AuthenticationService {
     @NonFinal
     @Value("${jwt.signer.key}")
     protected String signerKey;
+
+    @NonFinal
+    @Value("${google.client-id}")
+    protected String googleClientId;
 
     public IntrospectResponse introspect(IntrospectRequest request) throws ParseException, JOSEException {
         var token = request.getToken();
@@ -111,8 +121,45 @@ public class AuthenticationService {
 
     private String buildScope(Users user) {
         StringJoiner scope = new StringJoiner(" ");
-        if(!CollectionUtils.isEmpty(user.getRole()))
+        if (!CollectionUtils.isEmpty(user.getRole()))
             user.getRole().forEach(scope::add);
         return scope.toString();
+    }
+
+    public AuthenticationResponse loginWithGoogle(GoogleAuthRequest request) throws Exception {
+        GoogleIdTokenVerifier verifier = new GoogleIdTokenVerifier.Builder(
+                new NetHttpTransport(),
+                new GsonFactory())
+                .setAudience(Collections.singletonList(googleClientId))
+                .build();
+
+        GoogleIdToken idToken = verifier.verify(request.getIdToken());
+        if (idToken == null) {
+            throw new AppException(ErrorCode.INVALID_TOKEN);
+        }
+
+        GoogleIdToken.Payload payload = idToken.getPayload();
+        String email = payload.getEmail();
+        String name = (String) payload.get("name");
+        String picture = (String) payload.get("picture");
+        String googleId = payload.getSubject();
+
+        Users user = userRepository.findByEmail(email).orElseGet(() -> {
+            Users newUser = Users.builder()
+                    .email(email)
+                    .username(email)
+                    .fullName(name)
+                    .avatar(picture)
+                    .googleId(googleId)
+                    .status("Active")
+                    .role(new java.util.HashSet<>(java.util.Set.of("USER")))
+                    .build();
+            return userRepository.save(newUser);
+        });
+
+        // Trả về JWT nội bộ như flow đăng nhập thường
+        return AuthenticationResponse.builder()
+                .token(generateToken(user))
+                .build();
     }
 }
