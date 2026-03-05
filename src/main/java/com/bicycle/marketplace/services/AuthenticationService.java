@@ -95,19 +95,19 @@ public class AuthenticationService {
                 .build();
     }
 
-    public String requestMagicLink(String email) {
-        var user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
-
-        String magicToken = generateMagicToken(user);
-
-        // Chú ý port 5173 là mặc định của Vite (ReactJS)
-        String magicLink = "http://localhost:5173/verify-magic-link?token=" + magicToken;
-
-        emailService.sendMagicLink(email, magicLink);
-
-        return "Đã gửi link đăng nhập đến email của bạn!";
-    }
+//    public String requestMagicLink(String email) {
+//        var user = userRepository.findByEmail(email)
+//                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+//
+//        String magicToken = generateMagicToken(user);
+//
+//        // Chú ý port 5173 là mặc định của Vite (ReactJS)
+//        String magicLink = "http://localhost:5173/verify-magic-link?token=" + magicToken;
+//
+//        emailService.sendMagicLink(email, magicLink);
+//
+//        return "Đã gửi link đăng nhập đến email của bạn!";
+//    }
 
     public AuthenticationResponse verifyMagicLink(String token) {
         try {
@@ -167,25 +167,25 @@ public class AuthenticationService {
         }
     }
 
-    private String generateMagicToken(Users user) {
-        JWSHeader header = new JWSHeader(JWSAlgorithm.HS256);
-        JWTClaimsSet jwtClaimSet = new JWTClaimsSet.Builder()
-                .subject(user.getEmail()) // Dùng email làm chủ đề để tra cứu sau
-                .issuer("BicycleMarketplace")
-                .jwtID(UUID.randomUUID().toString())
-                .claim("type", "magic-link") // Đánh dấu loại token
-                .issueTime(new Date())
-                .expirationTime(new Date(Instant.now().plus(15, ChronoUnit.MINUTES).toEpochMilli())) // Chỉ có hiệu lực 15 phút
-                .build();
-        JWSObject jwsObject = new JWSObject(header, new Payload(jwtClaimSet.toJSONObject()));
-
-        try {
-            jwsObject.sign(new MACSigner(signerKey.getBytes()));
-            return jwsObject.serialize();
-        } catch (JOSEException e) {
-            throw new RuntimeException(e);
-        }
-    }
+//    private String generateMagicToken(Users user) {
+//        JWSHeader header = new JWSHeader(JWSAlgorithm.HS256);
+//        JWTClaimsSet jwtClaimSet = new JWTClaimsSet.Builder()
+//                .subject(user.getEmail()) // Dùng email làm chủ đề để tra cứu sau
+//                .issuer("BicycleMarketplace")
+//                .jwtID(UUID.randomUUID().toString())
+//                .claim("type", "magic-link") // Đánh dấu loại token
+//                .issueTime(new Date())
+//                .expirationTime(new Date(Instant.now().plus(15, ChronoUnit.MINUTES).toEpochMilli())) // Chỉ có hiệu lực 15 phút
+//                .build();
+//        JWSObject jwsObject = new JWSObject(header, new Payload(jwtClaimSet.toJSONObject()));
+//
+//        try {
+//            jwsObject.sign(new MACSigner(signerKey.getBytes()));
+//            return jwsObject.serialize();
+//        } catch (JOSEException e) {
+//            throw new RuntimeException(e);
+//        }
+//    }
 
     private String buildScope(Users user) {
         StringJoiner scope = new StringJoiner(" ");
