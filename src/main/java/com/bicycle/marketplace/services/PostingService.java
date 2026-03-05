@@ -75,6 +75,18 @@ public class PostingService {
     }
 
     @Transactional
+    public List<PostingResponse> getMyPostings() {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        Users user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+
+        return bikeListingRepository.findBySeller(user)
+                .stream()
+                .map(postingMapper::toPostingResponse)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional
     public List<PostingResponse> getAllPostings() {
         return bikeListingRepository.findAll()
                 .stream()
