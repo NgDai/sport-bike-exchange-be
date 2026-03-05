@@ -148,7 +148,7 @@ public class AuthenticationService {
         Users user = userRepository.findByEmail(email).orElseGet(() -> {
             Users newUser = Users.builder()
                     .email(email)
-                    //.username(email)
+                    .username(email) // dùng email làm username cho Google user
                     .fullName(name)
                     .avatar(picture)
                     .googleId(googleId)
