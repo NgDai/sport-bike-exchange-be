@@ -49,6 +49,13 @@ public class PostingController {
         return apiResponse;
     }
 
+    @GetMapping("/my-posts")
+    ApiResponse<List<PostingResponse>> getMyPostings() {
+        ApiResponse<List<PostingResponse>> apiResponse = new ApiResponse<>();
+        apiResponse.setResult(postingService.getMyPostings());
+        return apiResponse;
+    }
+
     @DeleteMapping("/delete/{listingId}")
     ApiResponse<Void> deletePosting(@PathVariable int listingId) {
         ApiResponse<Void> apiResponse = new ApiResponse<>();

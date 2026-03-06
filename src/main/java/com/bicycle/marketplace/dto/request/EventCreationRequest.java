@@ -1,3 +1,4 @@
+// File: EventCreationRequest.java
 package com.bicycle.marketplace.dto.request;
 
 import lombok.AllArgsConstructor;
@@ -6,7 +7,6 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDate;
-import java.time.LocalTime;
 
 @Getter @Setter
 @AllArgsConstructor
@@ -16,6 +16,8 @@ public class EventCreationRequest {
     private String bikeType;
     private String location;
     private String address;
+    private Double latitude;
+    private Double longitude;
     private LocalDate createDate;
     private LocalDate startDate;
     private LocalDate publicDate;

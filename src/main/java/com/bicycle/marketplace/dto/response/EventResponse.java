@@ -19,6 +19,8 @@ public class EventResponse {
     private String bikeType;
     private String location;
     private String address;
+    private Double latitude;
+    private Double longitude;
     private LocalDate createDate;
     private LocalDate startDate;
     private LocalDate publicDate;

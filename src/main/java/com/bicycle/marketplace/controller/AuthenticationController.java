@@ -2,6 +2,7 @@ package com.bicycle.marketplace.controller;
 
 import com.bicycle.marketplace.dto.request.AuthenticationRequest;
 import com.bicycle.marketplace.dto.request.EmailAuthenticationRequest;
+import com.bicycle.marketplace.dto.request.GoogleAuthRequest;
 import com.bicycle.marketplace.dto.request.IntrospectRequest;
 import com.bicycle.marketplace.dto.response.ApiResponse;
 import com.bicycle.marketplace.dto.response.AuthenticationResponse;
@@ -44,6 +45,14 @@ public class AuthenticationController {
     @PostMapping("/loginEmail")
     ApiResponse<AuthenticationResponse> authenticateEmail(@RequestBody @Valid EmailAuthenticationRequest request) {
         var result = authenticationService.loginWithEmail(request);
+        return ApiResponse.<AuthenticationResponse>builder()
+                .result(result)
+                .build();
+    }
+
+    @PostMapping("/google")
+    ApiResponse<AuthenticationResponse> loginWithGoogle(@RequestBody GoogleAuthRequest request) throws Exception {
+        var result = authenticationService.loginWithGoogle(request);
         return ApiResponse.<AuthenticationResponse>builder()
                 .result(result)
                 .build();

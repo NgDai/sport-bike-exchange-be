@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -33,7 +34,8 @@ public class SecurityConfig {
             "/auth/login",
             "/auth/introspect",
             "/users",
-            "/auth/loginEmail"
+            "/auth/loginEmail",
+            "/auth/google"
     };
 
     @Value("${jwt.signer.key}")
@@ -47,9 +49,10 @@ public class SecurityConfig {
                 .authorizeHttpRequests(request -> request
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers(HttpMethod.POST, PUBLIC_USER_ENDPOINTS).permitAll()
+                        .requestMatchers(HttpMethod.GET, "/post/all", "/post/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/*.html", "/static/**").permitAll()
                         .anyRequest().authenticated());
 
-        // 4. Cấu hình Resource Server để giải mã JWT
         httpSecurity.oauth2ResourceServer(oauth2 -> oauth2
                 .jwt(jwtConfigurer -> jwtConfigurer
                         .decoder(jwtDecoder())
@@ -58,7 +61,6 @@ public class SecurityConfig {
         return httpSecurity.build();
     }
 
-    // 5. Cấu hình chi tiết CORS - Giải pháp dứt điểm cho lỗi bị chặn
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();

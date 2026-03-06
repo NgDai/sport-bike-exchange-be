@@ -24,4 +24,14 @@ public class BicycleResponse {
     private String color;
     private String frameMaterial;
     private int condition;
+
+    // Thông số kỹ thuật bổ sung
+    private Double weight; // Cân nặng (kg)
+    private String saddle; // Yên xe
+    private String chainring; // Đĩa
+    private String fork; // Phuộc
+    private String chain; // Xích xe
+    private String handlebar; // Ghi đông
+    private String rim; // Vành xe
+    private String shockAbsorber; // Giảm xốc
 }

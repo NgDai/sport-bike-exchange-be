@@ -26,4 +26,14 @@ public class BicycleInfoRequest {
     private String forkType;
     private String color;
     private String frameMaterial;
+
+    // Thông số kỹ thuật bổ sung
+    private Double weight;
+    private String saddle;
+    private String chainring;
+    private String fork;
+    private String chain;
+    private String handlebar;
+    private String rim;
+    private String shockAbsorber;
 }

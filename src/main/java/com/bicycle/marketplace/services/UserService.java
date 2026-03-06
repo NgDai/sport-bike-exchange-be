@@ -1,8 +1,10 @@
 package com.bicycle.marketplace.services;
 
 import com.bicycle.marketplace.dto.request.ChangePasswordRequest;
+import com.bicycle.marketplace.dto.request.EmailPasswordRequest;
 import com.bicycle.marketplace.dto.request.UserCreationRequest;
 import com.bicycle.marketplace.dto.request.UserUpdateRequest;
+import com.bicycle.marketplace.dto.response.EmailPasswordResponse;
 import com.bicycle.marketplace.dto.response.UserResponse;
 import com.bicycle.marketplace.entities.Users;
 import com.bicycle.marketplace.enums.Role;
@@ -40,8 +42,7 @@ public class UserService {
         }
 
         Users user = userMapper.toUser(request);
-        user.setPassword(request.getPassword());
-        // user.setPassword(passwordEncoder.encode(request.getPassword()));
+        user.setPassword(passwordEncoder.encode(request.getPassword())); // encode BCrypt
 
         HashSet<String> roles = new HashSet<>();
         roles.add(Role.USER.name());
@@ -50,6 +51,7 @@ public class UserService {
         user.setRole(roles);
         return userRepository.save(user);
     }
+
     @PreAuthorize("hasRole('ADMIN')")
     public Users createInspector(UserCreationRequest request) {
         if (userRepository.existsByUsername(request.getUsername())) {
@@ -106,11 +108,11 @@ public class UserService {
         user.setPassword(request.getNewPassword());
 
         /*
-        if (!passwordEncoder.matches(request.getOldPassword(), user.getPassword())) {
-            throw new RuntimeException("Mật khẩu cũ không chính xác!");
-        }
-        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
-        */
+         * if (!passwordEncoder.matches(request.getOldPassword(), user.getPassword())) {
+         * throw new RuntimeException("Mật khẩu cũ không chính xác!");
+         * }
+         * user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+         */
 
         return userMapper.toUserResponse(userRepository.save(user));
     }
@@ -143,5 +145,19 @@ public class UserService {
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 
         return userMapper.toUserResponse(user);
+    }
+
+    public EmailPasswordResponse emailPassword(EmailPasswordRequest request) {
+        var context = SecurityContextHolder.getContext();
+        String name = context.getAuthentication().getName();
+
+        Users user = userRepository.findByUsername(name)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+
+        if (user.getPassword() == null) {
+            user.setPassword(request.getNewPassword());
+        }
+
+        return userMapper.toEmailResponse(userRepository.save(user));
     }
 }
