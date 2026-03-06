@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <title>Test Google Login</title>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 700px; margin: 40px auto; padding: 0 20px; background: #f5f5f5; }
+    h2 { color: #333; }
+    .card { background: white; padding: 24px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 20px; }
+    label { font-weight: bold; display: block; margin-bottom: 6px; color: #555; }
+    textarea { width: 100%; box-sizing: border-box; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px; font-family: monospace; resize: vertical; }
+    button { margin-top: 10px; padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; }
+    .btn-copy { background: #4285F4; color: white; }
+    .btn-send { background: #34A853; color: white; font-size: 15px; width: 100%; padding: 12px; margin-top: 14px; }
+    .btn-clear { background: #EA4335; color: white; }
+    pre { background: #1e1e1e; color: #d4d4d4; padding: 16px; border-radius: 8px; overflow-x: auto; font-size: 13px; white-space: pre-wrap; word-break: break-all; }
+    .status { padding: 10px 14px; border-radius: 6px; margin-top: 10px; font-weight: bold; display: none; }
+    .success { background: #e6f4ea; color: #276738; display: block; }
+    .error   { background: #fce8e6; color: #a50e0e; display: block; }
+    .step { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; color: #666; font-size: 14px; }
+    .step-num { background: #4285F4; color: white; border-radius: 50%; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold; flex-shrink: 0; }
+  </style>
+</head>
+<body>
+
+  <h2>🔑 Test Google Login — Backend</h2>
+  <p style="color:#666">Trang này giúp lấy Google ID Token và gửi thẳng lên backend để test.</p>
+
+  <!-- BƯỚC 1: Đăng nhập Google -->
+  <div class="card">
+    <div class="step"><div class="step-num">1</div><span>Đăng nhập bằng tài khoản Google</span></div>
+
+    <!-- Google Sign-In Button -->
+    <div id="g_id_onload"
+         data-client_id="339739206284-sse9cv3gs9u2d4vbohc60q0uf4mdg73j.apps.googleusercontent.com"
+         data-callback="handleCredentialResponse"
+         data-auto_prompt="false">
+    </div>
+    <div class="g_id_signin" data-type="standard" data-size="large" data-theme="outline" data-text="sign_in_with"></div>
+  </div>
+
+  <!-- BƯỚC 2: Xem ID Token -->
+  <div class="card">
+    <div class="step"><div class="step-num">2</div><span>Google ID Token nhận được</span></div>
+    <textarea id="idTokenBox" rows="5" placeholder="ID Token sẽ hiện ở đây sau khi đăng nhập Google..."></textarea>
+    <div>
+      <button class="btn-copy" onclick="copyToken()">📋 Copy Token</button>
+      <button class="btn-clear" onclick="clearAll()" style="margin-left:8px">🗑️ Clear</button>
+    </div>
+  </div>
+
+  <!-- BƯỚC 3: Cấu hình Backend URL -->
+  <div class="card">
+    <div class="step"><div class="step-num">3</div><span>Cấu hình URL Backend</span></div>
+    <label>Backend URL:</label>
+    <input id="backendUrl" type="text" value="http://localhost:8080/api/auth/google"
+           style="width:100%;box-sizing:border-box;padding:10px;border:1px solid #ddd;border-radius:6px;font-size:14px" />
+
+    <button class="btn-send" onclick="sendToBackend()">🚀 Gửi lên Backend & Test</button>
+  </div>
+
+  <!-- BƯỚC 4: Kết quả -->
+  <div class="card">
+    <div class="step"><div class="step-num">4</div><span>Response từ Backend</span></div>
+    <div id="statusMsg" class="status"></div>
+    <pre id="responseBox">Chờ response...</pre>
+
+    <div id="jwtSection" style="display:none; margin-top:14px">
+      <label>JWT nội bộ (dùng cho các API khác):</label>
+      <textarea id="jwtBox" rows="3"></textarea>
+      <button class="btn-copy" onclick="copyJwt()">📋 Copy JWT</button>
+    </div>
+  </div>
+
+  <script>
+    let receivedIdToken = '';
+
+    function handleCredentialResponse(response) {
+      receivedIdToken = response.credential;
+      document.getElementById('idTokenBox').value = receivedIdToken;
+
+      // Decode payload để hiển thị info
+      const parts = receivedIdToken.split('.');
+      if (parts.length === 3) {
+        try {
+          const payload = JSON.parse(atob(parts[1]));
+          console.log('Google user info:', payload);
+          document.getElementById('statusMsg').className = 'status success';
+          document.getElementById('statusMsg').textContent =
+            `✅ Đăng nhập Google thành công! Email: ${payload.email} | Tên: ${payload.name}`;
+        } catch(e) {}
+      }
+    }
+
+    async function sendToBackend() {
+      const idToken = document.getElementById('idTokenBox').value.trim();
+      const url = document.getElementById('backendUrl').value.trim();
+
+      if (!idToken) {
+        alert('⚠️ Chưa có ID Token! Hãy đăng nhập Google trước (Bước 1).');
+        return;
+      }
+
+      document.getElementById('responseBox').textContent = '⏳ Đang gửi request...';
+      document.getElementById('jwtSection').style.display = 'none';
+
+      try {
+        const res = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ idToken })
+        });
+
+        const data = await res.json();
+        document.getElementById('responseBox').textContent = JSON.stringify(data, null, 2);
+
+        if (res.ok && data.result?.token) {
+          document.getElementById('statusMsg').className = 'status success';
+          document.getElementById('statusMsg').textContent = '✅ Login thành công! Backend trả về JWT nội bộ.';
+          document.getElementById('jwtSection').style.display = 'block';
+          document.getElementById('jwtBox').value = data.result.token;
+        } else {
+          document.getElementById('statusMsg').className = 'status error';
+          document.getElementById('statusMsg').textContent = `❌ Lỗi ${res.status}: ${data.message || 'Unknown error'}`;
+        }
+      } catch (err) {
+        document.getElementById('statusMsg').className = 'status error';
+        document.getElementById('statusMsg').textContent = `❌ Không kết nối được backend: ${err.message}`;
+        document.getElementById('responseBox').textContent = err.toString();
+      }
+    }
+
+    function copyToken() {
+      const val = document.getElementById('idTokenBox').value;
+      if (!val) { alert('Chưa có token!'); return; }
+      navigator.clipboard.writeText(val).then(() => alert('✅ Đã copy ID Token!'));
+    }
+
+    function copyJwt() {
+      navigator.clipboard.writeText(document.getElementById('jwtBox').value)
+        .then(() => alert('✅ Đã copy JWT!'));
+    }
+
+    function clearAll() {
+      receivedIdToken = '';
+      document.getElementById('idTokenBox').value = '';
+      document.getElementById('responseBox').textContent = 'Chờ response...';
+      document.getElementById('statusMsg').className = 'status';
+      document.getElementById('jwtSection').style.display = 'none';
+    }
+  </script>
+
+</body>
+</html>
