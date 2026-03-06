@@ -45,7 +45,8 @@ public enum ErrorCode {
     LISTING_NOT_PENDING(1021, "Chỉ bài đăng đang chờ mới có thể thêm hoặc cập nhật thông tin xe đạp"),
     UNAUTHORIZED(401, "Không có quyền truy cập"),
     BIKE_LISTING_NOT_FOUND(1022, "Không tìm thấy bài đăng xe đạp"),
-    INVALID_TOKEN(1023, "Token không hợp lệ")
+    INVALID_TOKEN(1023, "Token không hợp lệ"),
+    WALLET_NOT_FOUND(1024, "Không tìm thấy ví của người dùng")
     ;
 
     private int code;

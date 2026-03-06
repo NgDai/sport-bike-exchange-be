@@ -7,11 +7,13 @@ import com.bicycle.marketplace.dto.request.UserUpdateRequest;
 import com.bicycle.marketplace.dto.response.EmailPasswordResponse;
 import com.bicycle.marketplace.dto.response.UserResponse;
 import com.bicycle.marketplace.entities.Users;
+import com.bicycle.marketplace.entities.Wallet;
 import com.bicycle.marketplace.enums.Role;
 import com.bicycle.marketplace.exception.AppException;
 import com.bicycle.marketplace.exception.ErrorCode;
 import com.bicycle.marketplace.mapper.UserMapper;
 import com.bicycle.marketplace.repository.IUserRepository;
+import com.bicycle.marketplace.repository.IWalletRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
@@ -32,6 +34,7 @@ public class UserService {
     IUserRepository userRepository;
     UserMapper userMapper;
     PasswordEncoder passwordEncoder;
+    IWalletRepository walletRepository;
 
     public Users createUser(UserCreationRequest request) {
         if (userRepository.existsByUsername(request.getUsername())) {
@@ -42,13 +45,19 @@ public class UserService {
         }
 
         Users user = userMapper.toUser(request);
-        user.setPassword(passwordEncoder.encode(request.getPassword())); // encode BCrypt
+        //user.setPassword(passwordEncoder.encode(request.getPassword())); // encode BCrypt
 
         HashSet<String> roles = new HashSet<>();
         roles.add(Role.USER.name());
 
         user.setStatus("Active");
         user.setRole(roles);
+
+        Wallet wallet = new Wallet();
+        wallet.setBalance(0.0);
+        wallet.setUser(user);
+        wallet.setUsername(user.getUsername());
+        walletRepository.save(wallet);
         return userRepository.save(user);
     }
 
@@ -61,7 +70,7 @@ public class UserService {
             throw new AppException(ErrorCode.EMAIL_ALREADY_EXISTS);
         }
         Users user = userMapper.toUser(request);
-        user.setPassword(passwordEncoder.encode(request.getPassword()));
+        //user.setPassword(passwordEncoder.encode(request.getPassword()));
 
         HashSet<String> roles = new HashSet<>();
         roles.add(Role.INSPECTOR.name());

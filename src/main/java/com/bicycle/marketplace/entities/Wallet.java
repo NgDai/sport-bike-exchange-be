@@ -21,5 +21,6 @@ public class Wallet {
     @OneToOne
     @JoinColumn(name = "user_id")
     Users user;
+    String username;
     double balance;
 }
