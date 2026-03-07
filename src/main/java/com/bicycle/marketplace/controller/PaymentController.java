@@ -42,7 +42,7 @@ public class PaymentController {
     }
 
     @GetMapping("/vnpay-payment")
-    public VNPayResponse handleVnPayReturn(HttpServletRequest request){
+    public VNPayResponse handleVnPayReturn(HttpServletRequest request) {
         int paymentStatus = vnPayService.orderReturn(request);
 
         VNPayResponse response = new VNPayResponse();
@@ -51,6 +51,14 @@ public class PaymentController {
         response.setPaymentTime(request.getParameter("vnp_PayDate"));
         response.setTransactionId(request.getParameter("vnp_TransactionNo"));
         response.setTotalPrice(request.getParameter("vnp_Amount"));
+
+        if (paymentStatus == 1) {
+            response.setMessage("Thanh toán thành công");
+        } else if (paymentStatus == 0) {
+            response.setMessage("Giao dịch không thành công hoặc đã hủy");
+        } else {
+            response.setMessage("Chữ ký không hợp lệ");
+        }
 
         return response;
     }
