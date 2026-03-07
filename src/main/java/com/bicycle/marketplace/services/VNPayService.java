@@ -22,20 +22,12 @@ import java.util.Map;
 @FieldDefaults(level = lombok.AccessLevel.PRIVATE, makeFinal = true)
 @Slf4j
 public class VNPayService {
-    public String createOrder(int total, String orderInfor, String urlReturn){
-        String vnp_Version = "2.1.0";
-        String vnp_Command = "pay";
-        String vnp_TxnRef = VNPayConfig.getRandomNumber(8);
-        //String vnp_IpAddr = VNPayConfig.getIpAddress("h");
-        String vnp_TmnCode = VNPayConfig.vnp_TmnCode;
-        String orderType = "order-type";
 
-        Map<String, String> vnp_Params = new HashMap<>();
-        vnp_Params.put("vnp_Version", vnp_Version);
-        vnp_Params.put("vnp_Command", vnp_Command);
-        vnp_Params.put("vnp_TmnCode", vnp_TmnCode);
-        vnp_Params.put("vnp_Amount", String.valueOf(total*100));
-        vnp_Params.put("vnp_CurrCode", "VND");
+    private static final String VNP_TRANSACTION_STATUS_SUCCESS = "00";
+    private static final String VNP_SECURE_HASH_PARAM = "vnp_SecureHash";
+    private static final String VNP_SECURE_HASH_TYPE_PARAM = "vnp_SecureHashType";
+    private static final String DEFAULT_CLIENT_IP = "127.0.0.1";
+    private static final String CHARSET_ASCII = StandardCharsets.US_ASCII.name();
 
         vnp_Params.put("vnp_TxnRef", vnp_TxnRef);
         vnp_Params.put("vnp_OrderInfo", orderInfor);
