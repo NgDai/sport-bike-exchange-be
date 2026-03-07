@@ -20,9 +20,22 @@ public class PaymentController {
     private VNPayService vnPayService;
 
     @PostMapping("/submitOrder")
-    public VNPayResponse submitOrder(@RequestBody VNPayRequest request, HttpServletRequest httpRequest){
-        String baseUrl = httpRequest.getScheme() + "://" + httpRequest.getServerName() + ":" + httpRequest.getServerPort();
-        String vnpayUrl = vnPayService.createOrder(request.getAmount(), request.getOrderInfo(), baseUrl);
+    public VNPayResponse submitOrder(
+            @RequestBody VNPayRequest request,
+            HttpServletRequest httpRequest
+    ) {
+        String baseUrl = httpRequest.getScheme()
+                + "://"
+                + httpRequest.getServerName()
+                + ":"
+                + httpRequest.getServerPort();
+        String clientIp = VNPayConfig.getIpAddress(httpRequest);
+        String vnpayUrl = vnPayService.createOrder(
+                request.getAmount(),
+                request.getOrderInfo(),
+                baseUrl,
+                clientIp
+        );
         VNPayResponse response = new VNPayResponse();
         response.setRedirectUrl(vnpayUrl);
         return response;
