@@ -153,7 +153,16 @@ public class UserService {
         Users user = userRepository.findByUsername(name)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 
-        return userMapper.toUserResponse(user);
+        // Map sang DTO
+        UserResponse response = userMapper.toUserResponse(user);
+
+        // KIỂM TRA VÀ GÁN GIÁ TRỊ CHO hasPassword
+        // Nếu password khác null và không bị rỗng, tức là đã có mật khẩu (tạo từ web)
+        // Nếu password là null (đăng nhập qua Google), nó sẽ là false
+        boolean hasPass = user.getPassword() != null && !user.getPassword().isEmpty();
+        response.setHasPassword(hasPass);
+
+        return response;
     }
 
     public EmailPasswordResponse emailPassword(EmailPasswordRequest request) {
