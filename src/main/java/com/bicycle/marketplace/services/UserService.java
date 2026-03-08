@@ -1,9 +1,6 @@
 package com.bicycle.marketplace.services;
 
-import com.bicycle.marketplace.dto.request.ChangePasswordRequest;
-import com.bicycle.marketplace.dto.request.EmailPasswordRequest;
-import com.bicycle.marketplace.dto.request.UserCreationRequest;
-import com.bicycle.marketplace.dto.request.UserUpdateRequest;
+import com.bicycle.marketplace.dto.request.*;
 import com.bicycle.marketplace.dto.response.EmailPasswordResponse;
 import com.bicycle.marketplace.dto.response.UserResponse;
 import com.bicycle.marketplace.entities.Users;
@@ -177,5 +174,15 @@ public class UserService {
         }
 
         return userMapper.toEmailResponse(userRepository.save(user));
+    }
+
+    public UserResponse changeRole(int userId, UserChangeRoleRequest request) {
+        Users user = userRepository.findById(userId)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+
+        HashSet<String> roles = request.getRole();
+        user.setRole(roles);
+
+        return userMapper.toUserResponse(userRepository.save(user));
     }
 }

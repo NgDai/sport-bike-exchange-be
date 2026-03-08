@@ -140,7 +140,6 @@
             <version>7.0.3</version>
             <scope>compile</scope>
         </dependency>
-        <!-- Google API Client để verify Google ID Token -->
         <dependency>
             <groupId>com.google.api-client</groupId>
             <artifactId>google-api-client</artifactId>
