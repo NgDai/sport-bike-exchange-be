@@ -12,11 +12,20 @@ import lombok.experimental.FieldDefaults;
 @Builder
 @FieldDefaults(level = lombok.AccessLevel.PRIVATE)
 public class VNPayResponse {
+
     private String redirectUrl;
+
     private Integer paymentStatus;
+
     private String orderInfo;
+
     private String paymentTime;
+
     private String transactionId;
+
     private String totalPrice;
+
+    /** Thông báo khi xử lý return (VD: "Thanh toán thành công", "Chữ ký không hợp lệ"). */
+    private String message;
 }
 
