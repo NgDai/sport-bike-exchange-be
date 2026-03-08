@@ -29,12 +29,40 @@ public class VNPayService {
     private static final String DEFAULT_CLIENT_IP = "127.0.0.1";
     private static final String CHARSET_ASCII = StandardCharsets.US_ASCII.name();
 
-        vnp_Params.put("vnp_TxnRef", vnp_TxnRef);
-        vnp_Params.put("vnp_OrderInfo", orderInfor);
-        vnp_Params.put("vnp_OrderType", orderType);
+    /**
+     * Builds the full VNPay payment URL (version 2.1.0).
+     * Hash input uses URL-encoded key=value per VNPay 2.1.0.
+     */
+    public String createOrder(
+            int amountVnd,
+            String orderInfo,
+            String baseUrl,
+            String clientIp
+    ) {
+        Map<String, String> params =
+                buildPaymentParams(amountVnd, orderInfo, baseUrl, clientIp);
+        String queryWithHash = buildQueryWithSecureHash(params, CHARSET_ASCII);
+        return VNPayConfig.vnp_PayUrl + "?" + queryWithHash;
+    }
 
-        String locate = "vn";
-        vnp_Params.put("vnp_Locale", locate);
+    /**
+     * Handles VNPay redirect to Return URL: validates signature and returns result code.
+     *
+     * @return 1 = success, 0 = failed/cancelled, -1 = invalid signature
+     */
+    public int orderReturn(HttpServletRequest request) {
+        Map<String, String> params = collectReturnParams(request);
+        String receivedHash = request.getParameter(VNP_SECURE_HASH_PARAM);
+        params.remove(VNP_SECURE_HASH_PARAM);
+        params.remove(VNP_SECURE_HASH_TYPE_PARAM);
+
+        if (!isSignatureValid(params, receivedHash, request.getQueryString())) {
+            log.warn("VNPay return: invalid signature");
+            return -1;
+        }
+        String txnStatus = request.getParameter("vnp_TransactionStatus");
+        return VNP_TRANSACTION_STATUS_SUCCESS.equals(txnStatus) ? 1 : 0;
+    }
 
         urlReturn += VNPayConfig.vnp_ReturnUrl;
         vnp_Params.put("vnp_ReturnUrl", urlReturn);
