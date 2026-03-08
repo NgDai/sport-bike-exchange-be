@@ -23,6 +23,7 @@ public class UserResponse {
     private String address;
     private String status;
     private Set<String> role;
+    private boolean hasPassword;
     @CreationTimestamp
     private LocalDate create_date;
 }
