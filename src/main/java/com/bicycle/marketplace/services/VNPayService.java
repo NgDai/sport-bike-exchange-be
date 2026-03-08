@@ -148,5 +148,19 @@ public class VNPayService {
         if (receivedHash == null) {
             return false;
         }
+        String encoded = VNPayConfig.hashAllFieldsEncoded(params);
+        String raw = VNPayConfig.hashAllFields(params);
+        String fromQuery = rawQueryString != null
+                ? VNPayConfig.hashQueryString(rawQueryString)
+                : "";
+        return equalsIgnoreCase(receivedHash, encoded)
+                || equalsIgnoreCase(receivedHash, raw)
+                || (fromQuery != null
+                        && !fromQuery.isEmpty()
+                        && equalsIgnoreCase(receivedHash, fromQuery));
+    }
+
+    private static boolean equalsIgnoreCase(String a, String b) {
+        return a != null && b != null && a.equalsIgnoreCase(b);
     }
 }
