@@ -64,14 +64,35 @@ public class VNPayService {
         return VNP_TRANSACTION_STATUS_SUCCESS.equals(txnStatus) ? 1 : 0;
     }
 
-        urlReturn += VNPayConfig.vnp_ReturnUrl;
-        vnp_Params.put("vnp_ReturnUrl", urlReturn);
-        //vnp_Params.put("vnp_IpAddr", vnp_IpAddr);
+    private Map<String, String> buildPaymentParams(
+            int amountVnd,
+            String orderInfo,
+            String baseUrl,
+            String clientIp
+    ) {
+        Map<String, String> params = new HashMap<>();
+        params.put("vnp_Version", "2.1.0");
+        params.put("vnp_Command", "pay");
+        params.put("vnp_TmnCode", VNPayConfig.vnp_TmnCode);
+        params.put("vnp_Amount", String.valueOf(amountVnd * 100));
+        params.put("vnp_CurrCode", "VND");
+        params.put("vnp_TxnRef", VNPayConfig.getRandomNumber(8));
+        params.put("vnp_OrderInfo", orderInfo != null ? orderInfo : "");
+        params.put("vnp_OrderType", "other");
+        params.put("vnp_Locale", "vn");
+        params.put("vnp_ReturnUrl", buildReturnUrl(baseUrl));
+        String ip = (clientIp != null && !clientIp.isEmpty())
+                ? clientIp
+                : DEFAULT_CLIENT_IP;
+        params.put("vnp_IpAddr", ip);
+        params.put("vnp_CreateDate", VNPayConfig.formatCreateDate());
+        params.put("vnp_ExpireDate", VNPayConfig.formatExpireDate());
+        return params;
+    }
 
-        Calendar cld = Calendar.getInstance(TimeZone.getTimeZone("Etc/GMT+7"));
-        SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMddHHmmss");
-        String vnp_CreateDate = formatter.format(cld.getTime());
-        vnp_Params.put("vnp_CreateDate", vnp_CreateDate);
+    private String buildReturnUrl(String baseUrl) {
+        return (baseUrl != null ? baseUrl.replaceAll("/+$", "") : "") + VNPayConfig.vnp_ReturnUrl;
+    }
 
         cld.add(Calendar.MINUTE, 15);
         String vnp_ExpireDate = formatter.format(cld.getTime());
