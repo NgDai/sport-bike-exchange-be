@@ -3,9 +3,10 @@ package com.bicycle.marketplace.controller;
 import com.bicycle.marketplace.dto.response.ApiResponse;
 import com.bicycle.marketplace.dto.response.WishlistResponse;
 import com.bicycle.marketplace.dto.response.WishlistToggleResponse;
-import com.bicycle.marketplace.entities.Wishlist;
 import com.bicycle.marketplace.services.WishlistService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -16,10 +17,17 @@ public class WishlistController {
     @Autowired
     private WishlistService wishlistService;
 
+    // Helper: lấy userId từ JWT token
+    private int getUserIdFromToken() {
+        var authentication = SecurityContextHolder.getContext().getAuthentication();
+        Jwt jwt = (Jwt) authentication.getPrincipal();
+        return ((Number) jwt.getClaim("userId")).intValue();
+    }
+
     // ✅ Lấy wishlist của user đang đăng nhập
     @GetMapping("/my")
-    ApiResponse<List<WishlistResponse>> getMyWishlist(Authentication auth) {
-        int userId = getUserIdFromToken(auth);
+    ApiResponse<List<WishlistResponse>> getMyWishlist() {
+        int userId = getUserIdFromToken();
         ApiResponse<List<WishlistResponse>> apiResponse = new ApiResponse<>();
         apiResponse.setResult(wishlistService.getWishlistByUserId(userId));
         return apiResponse;
@@ -27,9 +35,8 @@ public class WishlistController {
 
     // ✅ Thêm vào wishlist — userId lấy từ token
     @PostMapping("/add/{listingId}")
-    ApiResponse<WishlistToggleResponse> addToWishlist(
-            @PathVariable int listingId, Authentication auth) {
-        int userId = getUserIdFromToken(auth);
+    ApiResponse<WishlistToggleResponse> addToWishlist(@PathVariable int listingId) {
+        int userId = getUserIdFromToken();
         ApiResponse<WishlistToggleResponse> apiResponse = new ApiResponse<>();
         apiResponse.setResult(wishlistService.addToWishlist(userId, listingId));
         return apiResponse;
@@ -37,9 +44,8 @@ public class WishlistController {
 
     // ✅ Xóa khỏi wishlist — userId lấy từ token
     @DeleteMapping("/remove/{listingId}")
-    ApiResponse<WishlistToggleResponse> removeFromWishlist(
-            @PathVariable int listingId, Authentication auth) {
-        int userId = getUserIdFromToken(auth);
+    ApiResponse<WishlistToggleResponse> removeFromWishlist(@PathVariable int listingId) {
+        int userId = getUserIdFromToken();
         ApiResponse<WishlistToggleResponse> apiResponse = new ApiResponse<>();
         apiResponse.setResult(wishlistService.removeFromWishlist(userId, listingId));
         return apiResponse;
@@ -47,29 +53,20 @@ public class WishlistController {
 
     // ✅ Toggle thêm/xóa — endpoint quan trọng nhất cho FE
     @PostMapping("/toggle/{listingId}")
-    ApiResponse<WishlistToggleResponse> toggleWishlist(
-            @PathVariable int listingId, Authentication auth) {
-        int userId = getUserIdFromToken(auth);
+    ApiResponse<WishlistToggleResponse> toggleWishlist(@PathVariable int listingId) {
+        int userId = getUserIdFromToken();
         ApiResponse<WishlistToggleResponse> apiResponse = new ApiResponse<>();
         apiResponse.setResult(wishlistService.toggleWishlist(userId, listingId));
         return apiResponse;
     }
 
-    // ✅ Kiểm tra — có @PathVariable đúng
+    //  Kiểm tra
     @GetMapping("/check/{listingId}")
-    ApiResponse<Boolean> isInWishlist(
-            @PathVariable int listingId, Authentication auth) {
-        int userId = getUserIdFromToken(auth);
+    ApiResponse<Boolean> isInWishlist(@PathVariable int listingId) {
+        int userId = getUserIdFromToken();
         ApiResponse<Boolean> apiResponse = new ApiResponse<>();
         apiResponse.setResult(wishlistService.isInWishlist(userId, listingId));
         return apiResponse;
-    }
-
-    // Helper: lấy userId từ JWT token
-    private int getUserIdFromToken(Authentication auth) {
-        // Tùy cách bạn encode token, ví dụ:
-        // return Integer.parseInt(auth.getName());
-        // hoặc cast sang UserDetails custom
     }
 }
 //    @PostMapping("/add")
