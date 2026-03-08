@@ -12,7 +12,9 @@ import lombok.experimental.FieldDefaults;
 @Builder
 @FieldDefaults(level = lombok.AccessLevel.PRIVATE)
 public class VNPayRequest {
+
     private int amount;
+
     private String orderInfo;
 }
 
