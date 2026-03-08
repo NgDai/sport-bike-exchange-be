@@ -137,15 +137,16 @@ public class VNPayService {
             String value = request.getParameter(name);
             params.put(name, value != null ? value : "");
         }
-        String signValue = VNPayConfig.hashAllFields(fields);
-        if (signValue.equals(vnp_SecureHash)) {
-            if ("00".equals(request.getParameter("vnp_TransactionStatus"))) {
-                return 1;
-            } else {
-                return 0;
-            }
-        } else {
-            return -1;
+        return params;
+    }
+
+    private boolean isSignatureValid(
+            Map<String, String> params,
+            String receivedHash,
+            String rawQueryString
+    ) {
+        if (receivedHash == null) {
+            return false;
         }
     }
 }
