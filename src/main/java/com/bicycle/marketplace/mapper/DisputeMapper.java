@@ -10,7 +10,12 @@ import org.mapstruct.MappingTarget;
 
 @Mapper(componentModel = "spring")
 public interface DisputeMapper {
+    @Mapping(source = "transaction.transactionId", target = "transactionId")
+    @Mapping(source = "raisedBy.username", target = "raisedBy")
     DisputeResponse toDisputeResponse(Dispute dispute);
+
+    @Mapping(target = "transaction", ignore = true)
+    @Mapping(target = "raisedBy", ignore = true)
     Dispute toDispute(DisputeCreationRequest request);
     void updateDispute(@MappingTarget Dispute dispute, DisputeUpdateRequest request);
 }

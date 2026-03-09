@@ -13,7 +13,7 @@ import java.util.Date;
 public class DisputeResponse {
     private int disputeId;
     private int transactionId;
-    private int userId;
+    private String raisedBy;
     private String reason;
     private String status;
     private Date createAt;
