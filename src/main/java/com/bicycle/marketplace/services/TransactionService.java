@@ -138,6 +138,12 @@ public class TransactionService {
         return transactionRepository.findAll();
     }
 
+    public List<TransactionResponse> findAllTransactionResponses() {
+        return transactionRepository.findAll().stream()
+                .map(transactionMapper::toTransactionResponse)
+                .toList();
+    }
+
     public TransactionResponse findTransactionById(int transactionId) {
         Transaction transaction = transactionRepository.findById(transactionId)
                 .orElseThrow(() -> new AppException(ErrorCode.TRANSACTION_NOT_FOUND));
