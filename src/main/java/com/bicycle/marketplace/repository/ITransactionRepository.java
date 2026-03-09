@@ -10,4 +10,6 @@ import java.util.Optional;
 @Repository
 public interface ITransactionRepository extends JpaRepository<Transaction, Integer> {
     List<Transaction> findAllByStatus(String status);
+
+    Optional<Transaction> findByDeposit_DepositId(Integer depositId);
 }
