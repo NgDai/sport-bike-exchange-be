@@ -160,4 +160,10 @@ public class TransactionService {
     public List<Transaction> findTransactionsByStatus(String status) {
         return transactionRepository.findAllByStatus(status);
     }
+
+    public List<TransactionResponse> findTransactionResponsesByStatus(String status) {
+        return transactionRepository.findAllByStatus(status).stream()
+                .map(transactionMapper::toTransactionResponse)
+                .toList();
+    }
 }
