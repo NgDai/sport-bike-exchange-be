@@ -10,9 +10,13 @@ import lombok.Setter;
 @AllArgsConstructor
 @NoArgsConstructor
 public class TransactionUpdateRequest {
+    private Integer eventId;
+    private Integer listingId;
+    private Integer buyerId;
+    private Integer sellerId;
+    private Integer depositId;
+    private Integer reservationId;
     private String status;
-    private double amount;
-    private double actualPrice;
-    private Date createdAt;
-    private Date updateAt;
+    private Double amount;
+    private Double actualPrice;
 }
