@@ -1,5 +1,7 @@
 package com.bicycle.marketplace.services;
 
+import com.bicycle.marketplace.entities.Events;
+import com.bicycle.marketplace.entities.Users;
 import com.bicycle.marketplace.repository.ICheckInRepository;
 import com.bicycle.marketplace.dto.request.CheckInCreationRequest;
 import com.bicycle.marketplace.dto.request.CheckInUpdateRequest;
@@ -8,9 +10,13 @@ import com.bicycle.marketplace.entities.CheckIn;
 import com.bicycle.marketplace.exception.AppException;
 import com.bicycle.marketplace.exception.ErrorCode;
 import com.bicycle.marketplace.mapper.CheckInMapper;
+import com.bicycle.marketplace.repository.IEventRepository;
+import com.bicycle.marketplace.repository.IUserRepository;
 import com.google.zxing.WriterException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -25,12 +31,25 @@ public class CheckInService {
     private CheckInMapper checkInMapper;
     @Autowired
     private QRService qrService;
+    @Autowired
+    private IUserRepository userRepository;
+    @Autowired
+    private IEventRepository eventRepository;
 
-    public CheckInResponse createCheckIn(CheckInCreationRequest request) {
+    public CheckInResponse createCheckIn(int eventId, CheckInCreationRequest request) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new AppException(ErrorCode.UNAUTHORIZED);
+        }
+        String username = authentication.getName();
+        Users user = userRepository.findByUsername(username).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+        Events event = eventRepository.findById(eventId).orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
         CheckIn checkIn = new CheckIn();
         String token = UUID.randomUUID().toString();
-        checkIn.setRole(request.getRole());
+        checkIn.setUser(user);
+        checkIn.setEvent(event);
         checkIn.setToken(token);
+        checkIn.setRole(request.getRole());
         checkIn.setStatus(request.getStatus());
         checkIn.setCheckInTime(request.getCheckInTime());
 
@@ -41,6 +60,7 @@ public class CheckInService {
         CheckIn checkIn = checkInRepository.findById(checkInId)
                 .orElseThrow(() -> new AppException(ErrorCode.CHECKIN_NOT_FOUND));
         checkInMapper.updateCheckIn(checkIn, request);
+        checkIn.setToken(UUID.randomUUID().toString());
         return checkInMapper.toCheckInResponse(checkInRepository.save(checkIn));
     }
 
