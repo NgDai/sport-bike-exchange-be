@@ -19,8 +19,8 @@ public class TransactionController {
     private TransactionService transactionService;
 
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
-    ApiResponse<TransactionResponse> createTransaction(@RequestBody TransactionCreationRequest request) {
+    @PreAuthorize("isAuthenticated()")
+    ApiResponse<TransactionResponse> createTransaction(@RequestBody @Valid TransactionCreationRequest request) {
         ApiResponse<TransactionResponse> apiResponse = new ApiResponse<>();
         apiResponse.setResult(transactionService.createTransaction(request));
         apiResponse.setMessage("Transaction created successfully");
