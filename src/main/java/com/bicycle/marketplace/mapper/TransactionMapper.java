@@ -26,4 +26,10 @@ public class TransactionMapper {
         return r;
     }
 
+    public void updateTransaction(Transaction transaction, TransactionUpdateRequest request) {
+        if (request == null) return;
+        if (request.getStatus() != null) transaction.setStatus(request.getStatus());
+        if (request.getAmount() != null) transaction.setAmount(request.getAmount());
+        if (request.getActualPrice() != null) transaction.setActualPrice(request.getActualPrice());
+    }
 }
