@@ -10,8 +10,9 @@ import org.mapstruct.MappingTarget;
 
 @Mapper(componentModel = "spring")
 public interface CheckInMapper {
-    @Mapping(source = "user.username", target = "userId")
+    @Mapping(source = "user.userId", target = "userId")
     @Mapping(source = "event.eventId", target = "eventId")
+    @Mapping(source = "role", target = "role")
     CheckInResponse toCheckInResponse(CheckIn checkIn);
 
     @Mapping(target = "user", ignore = true)

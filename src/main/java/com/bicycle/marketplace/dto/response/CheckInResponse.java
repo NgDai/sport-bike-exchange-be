@@ -17,7 +17,7 @@ public class CheckInResponse {
     private int userId;
     private int eventId;
     private String token;
-    private String roleId;
+    private String role;
     private String status;
     private Date checkInTime;
 }
