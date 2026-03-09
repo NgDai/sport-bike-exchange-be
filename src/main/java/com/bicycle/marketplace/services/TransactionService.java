@@ -85,6 +85,7 @@ public class TransactionService {
         return transactionMapper.toTransactionResponse(transaction);
     }
 
+    @Transactional
     public TransactionResponse updateTransaction(int transactionId, TransactionUpdateRequest request) {
         Transaction transaction = transactionRepository.findById(transactionId)
                 .orElseThrow(() -> new AppException(ErrorCode.TRANSACTION_NOT_FOUND));
