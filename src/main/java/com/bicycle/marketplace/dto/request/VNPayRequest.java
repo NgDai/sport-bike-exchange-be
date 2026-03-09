@@ -16,5 +16,7 @@ public class VNPayRequest {
     private int amount;
 
     private String orderInfo;
+
+    String returnUrl;
 }
 
