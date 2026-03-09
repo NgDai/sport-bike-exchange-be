@@ -1,7 +1,5 @@
 package com.bicycle.marketplace.dto.response;
 
-import com.bicycle.marketplace.entities.*;
-import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
