@@ -89,8 +89,49 @@ public class TransactionService {
     public TransactionResponse updateTransaction(int transactionId, TransactionUpdateRequest request) {
         Transaction transaction = transactionRepository.findById(transactionId)
                 .orElseThrow(() -> new AppException(ErrorCode.TRANSACTION_NOT_FOUND));
-        transactionMapper.updateTransaction(transaction, request);
-        return transactionMapper.toTransactionResponse(transactionRepository.save(transaction));
+
+        if (request.getEventId() != null) {
+            Events event = eventRepository.findById(request.getEventId())
+                    .orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
+            transaction.setEvent(event);
+        }
+        if (request.getListingId() != null) {
+            BikeListing listing = bikeListingRepository.findById(request.getListingId())
+                    .orElseThrow(() -> new AppException(ErrorCode.BIKE_LISTING_NOT_FOUND));
+            transaction.setListing(listing);
+        }
+        if (request.getBuyerId() != null) {
+            Users buyer = userRepository.findById(request.getBuyerId())
+                    .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+            transaction.setBuyer(buyer);
+        }
+        if (request.getSellerId() != null) {
+            Users seller = userRepository.findById(request.getSellerId())
+                    .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+            transaction.setSeller(seller);
+        }
+        if (request.getDepositId() != null) {
+            Deposit deposit = depositRepository.findById(request.getDepositId())
+                    .orElseThrow(() -> new AppException(ErrorCode.DEPOSIT_NOT_FOUND));
+            transaction.setDeposit(deposit);
+        }
+        if (request.getReservationId() != null) {
+            Reservation reservation = reservationRepository.findById(request.getReservationId())
+                    .orElseThrow(() -> new AppException(ErrorCode.RESERVATION_NOT_FOUND));
+            transaction.setReservation(reservation);
+        }
+        if (request.getStatus() != null) {
+            transaction.setStatus(request.getStatus());
+        }
+        if (request.getAmount() != null) {
+            transaction.setAmount(request.getAmount());
+        }
+        if (request.getActualPrice() != null) {
+            transaction.setActualPrice(request.getActualPrice());
+        }
+
+        transaction = transactionRepository.save(transaction);
+        return transactionMapper.toTransactionResponse(transaction);
     }
 
     public List<Transaction> findAllTransactions() {
