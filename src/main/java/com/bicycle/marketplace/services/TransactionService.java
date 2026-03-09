@@ -32,6 +32,7 @@ public class TransactionService {
     @Autowired
     private IReservationRepository reservationRepository;
 
+    @Transactional
     public TransactionResponse createTransaction(TransactionCreationRequest request) {
         Transaction transaction = transactionMapper.toTransaction(request);
         return transactionMapper.toTransactionResponse(transactionRepository.save(transaction));
