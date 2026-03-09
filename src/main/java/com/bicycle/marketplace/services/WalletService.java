@@ -65,7 +65,6 @@ public class WalletService {
         Wallet wallet = walletRepository.findByUsername(name).orElseGet(() -> {
             Users user = userRepository.findByUsername(name)
                     .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
-
             Wallet newWallet = Wallet.builder()
                     .user(user)
                     .username(name)
@@ -116,7 +115,7 @@ public class WalletService {
 
         wallet.setBalance(wallet.getBalance() - request.getAmount());
         walletRepository.save(wallet);
-        walletTransactionService.createTransaction(wallet, request.getAmount(), "Withdrawal", "Withdrew funds from wallet");
+//        walletTransactionService.createTransaction(wallet, request.getAmount(), "Withdrawal", "Withdrew funds from wallet");
 
         return walletMapper.toWalletResponse(wallet);
     }

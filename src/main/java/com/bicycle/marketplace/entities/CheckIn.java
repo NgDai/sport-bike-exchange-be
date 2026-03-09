@@ -24,6 +24,7 @@ public class CheckIn {
     @JoinColumn(name = "event_id")
     Events event;
     String role;
+    String token;
     String status;
     Date checkInTime;
 }

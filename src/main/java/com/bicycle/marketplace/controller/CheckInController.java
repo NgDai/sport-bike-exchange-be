@@ -6,7 +6,9 @@ import com.bicycle.marketplace.dto.response.ApiResponse;
 import com.bicycle.marketplace.dto.response.CheckInResponse;
 import com.bicycle.marketplace.entities.CheckIn;
 import com.bicycle.marketplace.services.CheckInService;
+import com.bicycle.marketplace.services.QRService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,6 +19,8 @@ import java.util.List;
 public class CheckInController {
     @Autowired
     private CheckInService checkInService;
+    @Autowired
+    private QRService qrService;
 
     @PostMapping
     ApiResponse<CheckInResponse> createCheckIn(@RequestBody CheckInCreationRequest request){
@@ -63,6 +67,24 @@ public class CheckInController {
         ApiResponse<List<CheckIn>> apiResponse = new ApiResponse<>();
         apiResponse.setResult(checkInService.findCheckInsByStatus(status));
         apiResponse.setMessage("Check-Ins fetched successfully");
+        return apiResponse;
+    }
+
+    @PostMapping(value = "/qr/create/{checkInId}", produces = MediaType.IMAGE_PNG_VALUE)
+    public byte[] createCheckInQR(@PathVariable int checkInId) throws Exception {
+        return checkInService.createCheckInQRCode(checkInId);
+    }
+//    ApiResponse<byte[]> createCheckInQR(@PathVariable int checkInId) throws Exception {
+//        ApiResponse<byte[]> apiResponse = new ApiResponse<>();
+//        apiResponse.setResult(checkInService.createCheckInQRCode(checkInId));
+//        return apiResponse;
+//    }
+
+    @GetMapping("/qr/info/{token}")
+    ApiResponse<CheckIn> getInfoFromQR(@PathVariable String token) {
+        ApiResponse<CheckIn> apiResponse = new ApiResponse<>();
+        apiResponse.setResult(checkInService.getInfoFromQRCode(token));
+        apiResponse.setMessage("Check-In info fetched successfully");
         return apiResponse;
     }
 }

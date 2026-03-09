@@ -16,6 +16,7 @@ import java.util.Date;
 
 public class CheckInCreationRequest {
     private String role;
+    private String token;
     private String status;
     private Date checkInTime;
 }

@@ -8,11 +8,14 @@ import com.bicycle.marketplace.entities.CheckIn;
 import com.bicycle.marketplace.exception.AppException;
 import com.bicycle.marketplace.exception.ErrorCode;
 import com.bicycle.marketplace.mapper.CheckInMapper;
+import com.google.zxing.WriterException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 public class CheckInService {
@@ -20,9 +23,16 @@ public class CheckInService {
     private ICheckInRepository checkInRepository;
     @Autowired
     private CheckInMapper checkInMapper;
+    @Autowired
+    private QRService qrService;
 
     public CheckInResponse createCheckIn(CheckInCreationRequest request) {
-        CheckIn checkIn = checkInMapper.toCheckIn(request);
+        CheckIn checkIn = new CheckIn();
+        String token = UUID.randomUUID().toString();
+        checkIn.setRole(request.getRole());
+        checkIn.setToken(token);
+        checkIn.setStatus(request.getStatus());
+        checkIn.setCheckInTime(request.getCheckInTime());
 
         return checkInMapper.toCheckInResponse(checkInRepository.save(checkIn));
     }
@@ -54,5 +64,18 @@ public class CheckInService {
     @PreAuthorize("hasRole('ADMIN')")
     public List<CheckIn> findCheckInsByStatus(String status) {
         return checkInRepository.findByStatus(status);
+    }
+
+    public byte[] createCheckInQRCode(int checkInId) throws IOException, WriterException {
+        CheckIn checkIn = checkInRepository.findById(checkInId)
+                .orElseThrow(() -> new AppException(ErrorCode.CHECKIN_NOT_FOUND));
+        String token = checkIn.getToken();
+        String url = "http://localhost:8080/qrcode?token=" + token;
+        return qrService.generateQRCode(url);
+    }
+
+    public CheckIn getInfoFromQRCode(String token) {
+        return checkInRepository.findByToken(token)
+                .orElseThrow(() -> new AppException(ErrorCode.CHECKIN_NOT_FOUND));
     }
 }
