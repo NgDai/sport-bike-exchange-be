@@ -39,9 +39,9 @@ public class TransactionController {
 
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
-    ApiResponse<List<Transaction>> getAllTransactions() {
-        ApiResponse<List<Transaction>> apiResponse = new ApiResponse<>();
-        apiResponse.setResult(transactionService.findAllTransactions());
+    ApiResponse<List<TransactionResponse>> getAllTransactions() {
+        ApiResponse<List<TransactionResponse>> apiResponse = new ApiResponse<>();
+        apiResponse.setResult(transactionService.findAllTransactionResponses());
         apiResponse.setMessage("Transactions fetched successfully");
         return apiResponse;
     }
