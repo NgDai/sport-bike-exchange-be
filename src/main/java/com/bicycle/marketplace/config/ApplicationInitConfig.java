@@ -20,21 +20,21 @@ import java.util.HashSet;
 public class ApplicationInitConfig {
 
     private PasswordEncoder passwordEncoder;
+
     @Bean
     ApplicationRunner applicationRunner(IUserRepository userRepository) {
         return args -> {
-            if(userRepository.findByUsername("admin").isEmpty()){
-                var roles = new HashSet<String>();
-                roles.add(Role.ADMIN.name());
+            if (userRepository.findByUsername("admin").isEmpty()) {
                 Users user = Users.builder()
                         .username("admin")
-                        .role(roles)
-                        .password("1")  // In a real application, ensure to hash passwords
-                        //.passwordHash(passwordEncoder.encode("1"))
+                        .role(Role.ADMIN.name())
+                        .password("1") // In a real application, ensure to hash passwords
+                        // .passwordHash(passwordEncoder.encode("1"))
                         .fullName("Administrator")
                         .build();
                 userRepository.save(user);
-                log.warning("Default admin user created with username 'admin' and password '1'. Please change the password after first login.");
+                log.warning(
+                        "Default admin user created with username 'admin' and password '1'. Please change the password after first login.");
             }
         };
     }

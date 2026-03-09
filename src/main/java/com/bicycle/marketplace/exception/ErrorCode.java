@@ -46,7 +46,8 @@ public enum ErrorCode {
     UNAUTHORIZED(401, "Không có quyền truy cập"),
     BIKE_LISTING_NOT_FOUND(1022, "Không tìm thấy bài đăng xe đạp"),
     INVALID_TOKEN(1023, "Token không hợp lệ"),
-    WALLET_NOT_FOUND(1024, "Không tìm thấy ví của người dùng")
+    WALLET_NOT_FOUND(1024, "Không tìm thấy ví của người dùng"),
+    INSUFFICIENT_FUNDS(1025, "Số dư không đủ để thực hiện giao dịch")
     ;
 
     private int code;

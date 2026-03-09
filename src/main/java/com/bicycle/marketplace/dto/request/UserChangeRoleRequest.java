@@ -14,5 +14,5 @@ import java.util.HashSet;
 @FieldDefaults(level = lombok.AccessLevel.PRIVATE)
 @Builder
 public class UserChangeRoleRequest {
-    HashSet<String> role;
+    String role;
 }

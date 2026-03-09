@@ -29,4 +29,11 @@ public class WalletController {
         apiResponse.setResult(walletService.addFunds(amount));
         return apiResponse;
     }
+
+    @PutMapping("/withdraw")
+    public ApiResponse<WalletResponse> withdrawFund(@RequestBody WalletAddBalanceRequest amount) {
+        ApiResponse<WalletResponse> apiResponse = new ApiResponse<>();
+        apiResponse.setResult(walletService.withdrawFunds(amount));
+        return apiResponse;
+    }
 }

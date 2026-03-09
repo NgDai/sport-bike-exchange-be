@@ -33,6 +33,9 @@ public class WalletService {
     @Autowired
     WalletMapper walletMapper;
 
+    @Autowired
+    WalletTransactionService walletTransactionService;
+
 //    public WalletResponse viewWallet(){
 //        var context = SecurityContextHolder.getContext();
 //        String name = context.getAuthentication().getName();
@@ -66,12 +69,13 @@ public class WalletService {
             Wallet newWallet = Wallet.builder()
                     .user(user)
                     .username(name)
-                    .balance(0.0) // Số dư mặc định bằng 0
+                    .balance(0.0)
                     .build();
             return walletRepository.save(newWallet);
         });
 
         return walletMapper.toWalletResponse(wallet);
+
     }
 
     public WalletResponse addFunds(WalletAddBalanceRequest request){
@@ -94,6 +98,25 @@ public class WalletService {
         // Cộng tiền vào ví
         wallet.setBalance(wallet.getBalance() + request.getAmount());
         walletRepository.save(wallet);
+        walletTransactionService.createTransaction(wallet, request.getAmount(), "Deposit", "Added funds to wallet");
+
+        return walletMapper.toWalletResponse(wallet);
+    }
+
+    public WalletResponse withdrawFunds(WalletAddBalanceRequest request){
+        var context = SecurityContextHolder.getContext();
+        String name = context.getAuthentication().getName();
+
+        Wallet wallet = walletRepository.findByUsername(name)
+                .orElseThrow(() -> new AppException(ErrorCode.WALLET_NOT_FOUND));
+
+        if (wallet.getBalance() < request.getAmount()) {
+            throw new AppException(ErrorCode.INSUFFICIENT_FUNDS);
+        }
+
+        wallet.setBalance(wallet.getBalance() - request.getAmount());
+        walletRepository.save(wallet);
+        walletTransactionService.createTransaction(wallet, request.getAmount(), "Withdrawal", "Withdrew funds from wallet");
 
         return walletMapper.toWalletResponse(wallet);
     }

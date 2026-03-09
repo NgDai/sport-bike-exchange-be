@@ -42,13 +42,11 @@ public class UserService {
         }
 
         Users user = userMapper.toUser(request);
-        //user.setPassword(passwordEncoder.encode(request.getPassword())); // encode BCrypt
-
-        HashSet<String> roles = new HashSet<>();
-        roles.add(Role.USER.name());
+        // user.setPassword(passwordEncoder.encode(request.getPassword())); // encode
+        // BCrypt
 
         user.setStatus("Active");
-        user.setRole(roles);
+        user.setRole(Role.USER.name());
 
         Wallet wallet = new Wallet();
         wallet.setBalance(0.0);
@@ -67,12 +65,9 @@ public class UserService {
             throw new AppException(ErrorCode.EMAIL_ALREADY_EXISTS);
         }
         Users user = userMapper.toUser(request);
-        //user.setPassword(passwordEncoder.encode(request.getPassword()));
+        // user.setPassword(passwordEncoder.encode(request.getPassword()));
 
-        HashSet<String> roles = new HashSet<>();
-        roles.add(Role.INSPECTOR.name());
-
-        user.setRole(roles);
+        user.setRole(Role.INSPECTOR.name());
         user.setStatus("Active");
         return userRepository.save(user);
     }
@@ -180,8 +175,8 @@ public class UserService {
         Users user = userRepository.findById(userId)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 
-        HashSet<String> roles = request.getRole();
-        user.setRole(roles);
+        String role = request.getRole();
+        user.setRole(role);
 
         return userMapper.toUserResponse(userRepository.save(user));
     }

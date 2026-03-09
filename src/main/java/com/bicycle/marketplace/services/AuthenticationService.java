@@ -75,7 +75,8 @@ public class AuthenticationService {
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 
         boolean authenticated = request.getPassword().equals(user.getPassword());
-        //boolean authenticated = passwordEncoder.matches(request.getPassword(), user.getPassword());
+        // boolean authenticated = passwordEncoder.matches(request.getPassword(),
+        // user.getPassword());
         if (!authenticated) {
             throw new AppException(ErrorCode.USER_INVALID_AUTHENTICATION);
         }
@@ -90,7 +91,8 @@ public class AuthenticationService {
         var user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 
-        //boolean authenticated = passwordEncoder.matches(request.getPassword(), user.getPassword());
+        // boolean authenticated = passwordEncoder.matches(request.getPassword(),
+        // user.getPassword());
         boolean authenticated = request.getPassword().equals(user.getPassword());
         if (!authenticated) {
             throw new AppException(ErrorCode.USER_INVALID_AUTHENTICATION);
@@ -127,8 +129,8 @@ public class AuthenticationService {
 
     private String buildScope(Users user) {
         StringJoiner scope = new StringJoiner(" ");
-        if (!CollectionUtils.isEmpty(user.getRole()))
-            user.getRole().forEach(scope::add);
+        if (user.getRole() != null && !user.getRole().isEmpty())
+            scope.add(user.getRole());
         return scope.toString();
     }
 
@@ -160,7 +162,7 @@ public class AuthenticationService {
                     .googleId(googleId)
                     .phone(phone)
                     .status("Active")
-                    .role(new java.util.HashSet<>(java.util.Set.of("USER")))
+                    .role("USER")
                     .build();
             Users savedUser = userRepository.save(newUser);
             Wallet wallet = new Wallet();
