@@ -1,7 +1,9 @@
 package com.bicycle.marketplace.services;
 
 import com.bicycle.marketplace.dto.request.WalletAddBalanceRequest;
+import com.bicycle.marketplace.dto.response.ApiResponse;
 import com.bicycle.marketplace.dto.response.WalletResponse;
+import com.bicycle.marketplace.dto.response.WalletTransactionResponse;
 import com.bicycle.marketplace.entities.Users;
 import com.bicycle.marketplace.entities.Wallet;
 import com.bicycle.marketplace.exception.AppException;
@@ -9,6 +11,7 @@ import com.bicycle.marketplace.exception.ErrorCode;
 import com.bicycle.marketplace.mapper.WalletMapper;
 import com.bicycle.marketplace.repository.IUserRepository;
 import com.bicycle.marketplace.repository.IWalletRepository;
+import jakarta.transaction.Transactional;
 import lombok.Builder;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -36,28 +39,30 @@ public class WalletService {
     @Autowired
     WalletTransactionService walletTransactionService;
 
-//    public WalletResponse viewWallet(){
-//        var context = SecurityContextHolder.getContext();
-//        String name = context.getAuthentication().getName();
-//
-//        var wallet = walletRepository.findByUsername(name).orElseThrow(() -> new AppException(ErrorCode.WALLET_NOT_FOUND));
-//
-//        return walletMapper.toWalletResponse(wallet);
-//    }
-//
-//    public WalletResponse addFunds(WalletAddBalanceRequest request){
-//        var context = SecurityContextHolder.getContext();
-//        String name = context.getAuthentication().getName();
-//
-//        Wallet wallet = walletRepository.findByUsername(name).orElseThrow(() -> new AppException(ErrorCode.WALLET_NOT_FOUND));
-//
-//        wallet.setBalance(wallet.getBalance() + request.getAmount());
-//        walletRepository.save(wallet);
-//
-//        return walletMapper.toWalletResponse(wallet);
-//    }
+    // public WalletResponse viewWallet(){
+    // var context = SecurityContextHolder.getContext();
+    // String name = context.getAuthentication().getName();
+    //
+    // var wallet = walletRepository.findByUsername(name).orElseThrow(() -> new
+    // AppException(ErrorCode.WALLET_NOT_FOUND));
+    //
+    // return walletMapper.toWalletResponse(wallet);
+    // }
+    //
+    // public WalletResponse addFunds(WalletAddBalanceRequest request){
+    // var context = SecurityContextHolder.getContext();
+    // String name = context.getAuthentication().getName();
+    //
+    // Wallet wallet = walletRepository.findByUsername(name).orElseThrow(() -> new
+    // AppException(ErrorCode.WALLET_NOT_FOUND));
+    //
+    // wallet.setBalance(wallet.getBalance() + request.getAmount());
+    // walletRepository.save(wallet);
+    //
+    // return walletMapper.toWalletResponse(wallet);
+    // }
 
-    public WalletResponse viewWallet(){
+    public WalletResponse viewWallet() {
         var context = SecurityContextHolder.getContext();
         String name = context.getAuthentication().getName();
 
@@ -77,7 +82,8 @@ public class WalletService {
 
     }
 
-    public WalletResponse addFunds(WalletAddBalanceRequest request){
+    @Transactional
+    public WalletTransactionResponse addFunds(WalletAddBalanceRequest request) {
         var context = SecurityContextHolder.getContext();
         String name = context.getAuthentication().getName();
 
@@ -97,12 +103,14 @@ public class WalletService {
         // Cộng tiền vào ví
         wallet.setBalance(wallet.getBalance() + request.getAmount());
         walletRepository.save(wallet);
-        walletTransactionService.createTransaction(wallet, request.getAmount(), "Deposit", "Added funds to wallet");
 
-        return walletMapper.toWalletResponse(wallet);
+        // Tạo Transaction và trả về Response tương ứng
+        return walletTransactionService.createTransaction(wallet, request.getAmount(), "Deposit",
+                "Added funds to wallet");
     }
 
-    public WalletResponse withdrawFunds(WalletAddBalanceRequest request){
+    @Transactional
+    public WalletTransactionResponse withdrawFunds(WalletAddBalanceRequest request) {
         var context = SecurityContextHolder.getContext();
         String name = context.getAuthentication().getName();
 
@@ -115,8 +123,8 @@ public class WalletService {
 
         wallet.setBalance(wallet.getBalance() - request.getAmount());
         walletRepository.save(wallet);
-//        walletTransactionService.createTransaction(wallet, request.getAmount(), "Withdrawal", "Withdrew funds from wallet");
 
-        return walletMapper.toWalletResponse(wallet);
+        return walletTransactionService.createTransaction(wallet, request.getAmount(), "Withdrawal",
+                "Withdrew funds from wallet");
     }
 }

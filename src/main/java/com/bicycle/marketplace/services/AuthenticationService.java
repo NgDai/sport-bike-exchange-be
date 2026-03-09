@@ -2,7 +2,6 @@ package com.bicycle.marketplace.services;
 
 import com.bicycle.marketplace.dto.request.EmailAuthenticationRequest;
 import com.bicycle.marketplace.dto.request.GoogleAuthRequest;
-import com.bicycle.marketplace.entities.Wallet;
 import com.bicycle.marketplace.repository.IUserRepository;
 import com.bicycle.marketplace.dto.request.AuthenticationRequest;
 import com.bicycle.marketplace.dto.request.IntrospectRequest;
@@ -11,7 +10,6 @@ import com.bicycle.marketplace.dto.response.IntrospectResponse;
 import com.bicycle.marketplace.entities.Users;
 import com.bicycle.marketplace.exception.AppException;
 import com.bicycle.marketplace.exception.ErrorCode;
-import com.bicycle.marketplace.repository.IWalletRepository;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
 import com.google.api.client.http.javanet.NetHttpTransport;
@@ -48,7 +46,6 @@ import java.util.UUID;
 public class AuthenticationService {
     IUserRepository userRepository;
     PasswordEncoder passwordEncoder;
-    IWalletRepository walletRepository;
 
     @NonFinal
     @Value("${jwt.signer.key}")
@@ -165,11 +162,6 @@ public class AuthenticationService {
                     .role("USER")
                     .build();
             Users savedUser = userRepository.save(newUser);
-            Wallet wallet = new Wallet();
-            wallet.setBalance(0.0);
-            wallet.setUser(savedUser);
-            wallet.setUsername(savedUser.getUsername());
-            walletRepository.save(wallet);
             return savedUser;
         });
 

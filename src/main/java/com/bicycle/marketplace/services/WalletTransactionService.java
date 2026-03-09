@@ -1,7 +1,9 @@
 package com.bicycle.marketplace.services;
 
+import com.bicycle.marketplace.dto.response.WalletTransactionResponse;
 import com.bicycle.marketplace.entities.Wallet;
 import com.bicycle.marketplace.entities.WalletTransaction;
+import com.bicycle.marketplace.mapper.WalletTransactionMapper;
 import com.bicycle.marketplace.repository.IWalletTransactionRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -15,8 +17,9 @@ import org.springframework.stereotype.Service;
 public class WalletTransactionService {
 
     IWalletTransactionRepository walletTransactionRepository;
+    WalletTransactionMapper walletTransactionMapper;
 
-    public WalletTransaction createTransaction(
+    public WalletTransactionResponse createTransaction(
             Wallet wallet,
             double amount,
             String type,
@@ -28,7 +31,9 @@ public class WalletTransactionService {
         transaction.setAmount(amount);
         transaction.setType(type);
         transaction.setDescription(description);
+        walletTransactionRepository.save(transaction);
+        transaction.setBalance(wallet.getBalance());
 
-        return walletTransactionRepository.save(transaction);
+        return walletTransactionMapper.toWalletTransactionResponse(walletTransactionRepository.save(transaction));
     }
 }
