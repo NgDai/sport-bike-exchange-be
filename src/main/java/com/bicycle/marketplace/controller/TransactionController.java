@@ -65,9 +65,9 @@ public class TransactionController {
 
     @GetMapping("/status/{status}")
     @PreAuthorize("hasRole('ADMIN')")
-    ApiResponse<List<Transaction>> getTransactionsByStatus(@PathVariable String status) {
-        ApiResponse<List<Transaction>> apiResponse = new ApiResponse<>();
-        apiResponse.setResult(transactionService.findTransactionsByStatus(status));
+    ApiResponse<List<TransactionResponse>> getTransactionsByStatus(@PathVariable String status) {
+        ApiResponse<List<TransactionResponse>> apiResponse = new ApiResponse<>();
+        apiResponse.setResult(transactionService.findTransactionResponsesByStatus(status));
         apiResponse.setMessage("Transactions fetched successfully");
         return apiResponse;
     }
