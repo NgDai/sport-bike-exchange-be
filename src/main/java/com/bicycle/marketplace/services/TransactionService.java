@@ -21,6 +21,16 @@ public class TransactionService {
     private ITransactionRepository transactionRepository;
     @Autowired
     private TransactionMapper transactionMapper;
+    @Autowired
+    private IEventRepository eventRepository;
+    @Autowired
+    private IBikeListingRepository bikeListingRepository;
+    @Autowired
+    private IUserRepository userRepository;
+    @Autowired
+    private IDepositRepository depositRepository;
+    @Autowired
+    private IReservationRepository reservationRepository;
 
     public TransactionResponse createTransaction(TransactionCreationRequest request) {
         Transaction transaction = transactionMapper.toTransaction(request);
