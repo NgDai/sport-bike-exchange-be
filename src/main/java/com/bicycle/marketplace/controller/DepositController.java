@@ -50,6 +50,7 @@ public class DepositController {
         return apiResponse;
     }
 
+    //transaction is deleted first, then deposit will be deleted
     @DeleteMapping("/{depositId}")
     ApiResponse<String> deleteDeposit(@PathVariable int depositId) {
         ApiResponse<String> apiResponse = new ApiResponse<>();
