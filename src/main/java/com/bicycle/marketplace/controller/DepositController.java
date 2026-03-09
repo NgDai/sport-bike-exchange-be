@@ -18,10 +18,10 @@ public class DepositController {
     @Autowired
     private DepositService depositService;
 
-    @PostMapping
-    ApiResponse<DepositResponse> createDeposit(@RequestBody DepositCreationRequest request) {
+    @PostMapping("/{listingId}/create")
+    ApiResponse<DepositResponse> createDeposit(@PathVariable int listingId, @RequestBody DepositCreationRequest request) {
         ApiResponse<DepositResponse> apiResponse = new ApiResponse<>();
-        apiResponse.setResult(depositService.createDeposit(request));
+        apiResponse.setResult(depositService.createDeposit(listingId, request));
         apiResponse.setMessage("Deposit created successfully");
         return apiResponse;
     }
