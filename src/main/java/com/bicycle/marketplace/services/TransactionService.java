@@ -1,15 +1,16 @@
 package com.bicycle.marketplace.services;
 
-import com.bicycle.marketplace.repository.ITransactionRepository;
 import com.bicycle.marketplace.dto.request.TransactionCreationRequest;
 import com.bicycle.marketplace.dto.request.TransactionUpdateRequest;
 import com.bicycle.marketplace.dto.response.TransactionResponse;
-import com.bicycle.marketplace.entities.Transaction;
+import com.bicycle.marketplace.entities.*;
 import com.bicycle.marketplace.exception.AppException;
 import com.bicycle.marketplace.exception.ErrorCode;
 import com.bicycle.marketplace.mapper.TransactionMapper;
+import com.bicycle.marketplace.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
