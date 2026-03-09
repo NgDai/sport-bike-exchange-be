@@ -22,6 +22,6 @@ public class TransactionResponse {
     private double amount;
     private double actualPrice;
     private Date createdAt;
-    private Date updateAt;
+    private Date updatedAt;
     private String status;
 }
