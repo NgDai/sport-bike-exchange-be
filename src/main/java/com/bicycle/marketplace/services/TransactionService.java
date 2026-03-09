@@ -34,8 +34,55 @@ public class TransactionService {
 
     @Transactional
     public TransactionResponse createTransaction(TransactionCreationRequest request) {
-        Transaction transaction = transactionMapper.toTransaction(request);
-        return transactionMapper.toTransactionResponse(transactionRepository.save(transaction));
+        Events event = null;
+        if (request.getEventId() != null) {
+            event = eventRepository.findById(request.getEventId())
+                    .orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
+        }
+        BikeListing listing = null;
+        if (request.getListingId() != null) {
+            listing = bikeListingRepository.findById(request.getListingId())
+                    .orElseThrow(() -> new AppException(ErrorCode.BIKE_LISTING_NOT_FOUND));
+        }
+        Users buyer = null;
+        if (request.getBuyerId() != null) {
+            buyer = userRepository.findById(request.getBuyerId())
+                    .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+        }
+        Users seller = null;
+        if (request.getSellerId() != null) {
+            seller = userRepository.findById(request.getSellerId())
+                    .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+        }
+        Deposit deposit = null;
+        if (request.getDepositId() != null) {
+            deposit = depositRepository.findById(request.getDepositId())
+                    .orElseThrow(() -> new AppException(ErrorCode.DEPOSIT_NOT_FOUND));
+            // Một deposit chỉ được gắn với một transaction (unique constraint deposit_id)
+            transactionRepository.findByDeposit_DepositId(request.getDepositId())
+                    .ifPresent(existing -> {
+                        throw new AppException(ErrorCode.DEPOSIT_ALREADY_HAS_TRANSACTION);
+                    });
+        }
+        Reservation reservation = null;
+        if (request.getReservationId() != null) {
+            reservation = reservationRepository.findById(request.getReservationId())
+                    .orElseThrow(() -> new AppException(ErrorCode.RESERVATION_NOT_FOUND));
+        }
+
+        Transaction transaction = Transaction.builder()
+                .event(event)
+                .listing(listing)
+                .buyer(buyer)
+                .seller(seller)
+                .deposit(deposit)
+                .reservation(reservation)
+                .amount(request.getAmount())
+                .actualPrice(request.getActualPrice())
+                .status(request.getStatus() != null ? request.getStatus() : "PENDING")
+                .build();
+        transaction = transactionRepository.save(transaction);
+        return transactionMapper.toTransactionResponse(transaction);
     }
 
     public TransactionResponse updateTransaction(int transactionId, TransactionUpdateRequest request) {
