@@ -25,6 +25,4 @@ public class TransactionCreationRequest {
     private String status;
     private double amount;
     private double actualPrice;
-    private Date createdAt;
-    private Date updateAt;
 }
