@@ -51,6 +51,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, PUBLIC_USER_ENDPOINTS).permitAll()
                         .requestMatchers(HttpMethod.GET, "/post/all", "/post/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/*.html", "/static/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/payments/vnpay-wallet", "/payments/vnpay-payment")
+                        .permitAll()
                         .anyRequest().authenticated());
 
         httpSecurity.oauth2ResourceServer(oauth2 -> oauth2

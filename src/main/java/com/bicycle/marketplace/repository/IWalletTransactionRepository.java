@@ -8,5 +8,4 @@ import java.util.List;
 public interface IWalletTransactionRepository extends JpaRepository<WalletTransaction, Integer> {
 
     List<WalletTransaction> findByWallet_WalletId(int walletId);
-
 }
