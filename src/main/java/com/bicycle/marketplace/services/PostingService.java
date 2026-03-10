@@ -55,14 +55,44 @@ public class PostingService {
         return bikeListingRepository.save(bikeListing);
     }
 
+//    @Transactional
+//    public BikeListing updatePosting(UpdatePostingRequest request, int listingId) {
+//        BikeListing bikeListing = bikeListingRepository.findById(listingId)
+//                .orElseThrow(() -> new AppException(ErrorCode.BIKE_LISTING_NOT_FOUND));
+//
+//        Bicycle bicycle = bikeListing.getBicycle();
+//
+//        postingMapper.updateBicycleFromRequest(request, bicycle);
+//        postingMapper.updateBikeListingFromRequest(request, bikeListing);
+//
+//        bikeListing.setStatus("Pending");
+//
+//        return bikeListingRepository.save(bikeListing);
+//    }
+
+    @Transactional // Đã thêm Transactional để đảm bảo lưu đồng bộ
     public BikeListing updatePosting(UpdatePostingRequest request, int listingId) {
         BikeListing bikeListing = bikeListingRepository.findById(listingId)
                 .orElseThrow(() -> new AppException(ErrorCode.BIKE_LISTING_NOT_FOUND));
 
         Bicycle bicycle = bikeListing.getBicycle();
 
+        if (request.getBrandName() != null) {
+            Brand brand = brandRepository.findByNameIgnoreCase(request.getBrandName())
+                    .orElse(bicycle.getBrand());
+            bicycle.setBrand(brand);
+        }
+
+        if (request.getCategoryName() != null) {
+            Category category = categoryRepository.findByNameIgnoreCase(request.getCategoryName())
+                    .orElse(bicycle.getCategory());
+            bicycle.setCategory(category);
+        }
+
         postingMapper.updateBicycleFromRequest(request, bicycle);
         postingMapper.updateBikeListingFromRequest(request, bikeListing);
+
+        bikeListing.setStatus("Pending");
 
         return bikeListingRepository.save(bikeListing);
     }
