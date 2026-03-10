@@ -17,10 +17,13 @@ public class EventBicycleController {
     @Autowired
     private EventBicycleService eventBicycleService;
 
-    @PostMapping
-    ApiResponse<EventBicycleResponse> createEventBicycle(@RequestBody EventBicycleCreationRequest request) {
+    @PostMapping("/event/{eventId}/listing/{listingId}/create")
+    ApiResponse<EventBicycleResponse> createEventBicycle(
+            @PathVariable int eventId,
+            @PathVariable int listingId,
+            @RequestBody EventBicycleCreationRequest request) {
         ApiResponse<EventBicycleResponse> apiResponse = new ApiResponse<>();
-        apiResponse.setResult(eventBicycleService.createEventBicycle(request));
+        apiResponse.setResult(eventBicycleService.createEventBicycle(eventId, listingId, request));
         apiResponse.setMessage("Event Bicycle created successfully");
         return apiResponse;
     }
