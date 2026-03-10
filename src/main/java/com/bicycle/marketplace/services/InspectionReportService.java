@@ -1,5 +1,8 @@
 package com.bicycle.marketplace.services;
 
+import com.bicycle.marketplace.entities.Dispute;
+import com.bicycle.marketplace.entities.Users;
+import com.bicycle.marketplace.repository.IDisputeRepository;
 import com.bicycle.marketplace.repository.IInspectionReportRepository;
 import com.bicycle.marketplace.dto.request.InspectionReportCreationRequest;
 import com.bicycle.marketplace.dto.request.InspectionReportUpdateRequest;
@@ -8,8 +11,11 @@ import com.bicycle.marketplace.entities.InspectionReport;
 import com.bicycle.marketplace.exception.AppException;
 import com.bicycle.marketplace.exception.ErrorCode;
 import com.bicycle.marketplace.mapper.InspectionReportMapper;
+import com.bicycle.marketplace.repository.IUserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -20,10 +26,23 @@ public class InspectionReportService {
     private IInspectionReportRepository inspectionReportRepository;
     @Autowired
     private InspectionReportMapper inspectionReportMapper;
+    @Autowired
+    private IUserRepository userRepository;
+    @Autowired
+    private IDisputeRepository disputeRepository;
 
     @PreAuthorize("hasAnyRole('INSPECTOR', 'ADMIN')")
-    public InspectionReportResponse createInspectionReport(InspectionReportCreationRequest request) {
+    public InspectionReportResponse createInspectionReport(int disputeId, InspectionReportCreationRequest request) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new AppException(ErrorCode.UNAUTHORIZED);
+        }
+        String username = authentication.getName();
+        Users inspector = userRepository.findByUsername(username).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+        Dispute dispute = disputeRepository.findById(disputeId).orElseThrow(() -> new AppException(ErrorCode.DISPUTE_NOT_FOUND));
         InspectionReport inspectionReport = inspectionReportMapper.toInspectionReport(request);
+        inspectionReport.setInspector(inspector);
+        inspectionReport.setDispute(dispute);
         return inspectionReportMapper.toInspectorReportResponse(inspectionReportRepository.save(inspectionReport));
     }
 
