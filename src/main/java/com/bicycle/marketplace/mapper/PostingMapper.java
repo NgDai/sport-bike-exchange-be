@@ -33,5 +33,12 @@ public interface PostingMapper {
     @Mapping(source = "bicycle.color", target = "color")
     @Mapping(source = "bicycle.frameMaterial", target = "frameMaterial")
     @Mapping(source = "bicycle.condition", target = "condition")
+    @Mapping(source = "bicycle.weight", target = "weight")
+    @Mapping(source = "bicycle.saddle", target = "saddle")
+    @Mapping(source = "bicycle.chainring", target = "chainring")
+    @Mapping(source = "bicycle.chain", target = "chain")
+    @Mapping(source = "bicycle.handlebar", target = "handlebar")
+    @Mapping(source = "bicycle.rim", target = "rim")
+    @Mapping(source = "bicycle.shockAbsorber", target = "shockAbsorber")
     PostingResponse toPostingResponse(BikeListing bikeListing);
 }
