@@ -1,5 +1,8 @@
 package com.bicycle.marketplace.services;
 
+import com.bicycle.marketplace.entities.BikeListing;
+import com.bicycle.marketplace.entities.Users;
+import com.bicycle.marketplace.repository.IBikeListingRepository;
 import com.bicycle.marketplace.repository.IDepositRepository;
 import com.bicycle.marketplace.dto.request.DepositCreationRequest;
 import com.bicycle.marketplace.dto.request.DepositUpdateRequest;
@@ -8,8 +11,11 @@ import com.bicycle.marketplace.entities.Deposit;
 import com.bicycle.marketplace.exception.AppException;
 import com.bicycle.marketplace.exception.ErrorCode;
 import com.bicycle.marketplace.mapper.DepositMapper;
+import com.bicycle.marketplace.repository.IUserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -20,9 +26,23 @@ public class DepositService {
     private IDepositRepository depositRepository;
     @Autowired
     private DepositMapper depositMapper;
+    @Autowired
+    private IUserRepository userRepository;
+    @Autowired
+    private IBikeListingRepository bikeListingRepository;
 
-    public DepositResponse createDeposit(DepositCreationRequest request) {
+    public DepositResponse createDeposit(int listingId, DepositCreationRequest request) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new AppException(ErrorCode.UNAUTHORIZED);
+        }
+        String username = authentication.getName();
+        Users user = userRepository.findByUsername(username).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+        BikeListing listing = bikeListingRepository.findById(listingId)
+                .orElseThrow(() -> new AppException(ErrorCode.LISTING_NOT_FOUND));
         Deposit deposit = depositMapper.toDeposit(request);
+        deposit.setUser(user);
+        deposit.setListing(listing);
         return depositMapper.toDepositResponse(depositRepository.save(deposit));
     }
 

@@ -16,6 +16,7 @@ public interface CheckInMapper {
     CheckInResponse toCheckInResponse(CheckIn checkIn);
 
     @Mapping(target = "user", ignore = true)
+    @Mapping(target = "event", ignore = true)
     CheckIn toCheckIn(CheckInCreationRequest request);
 
     void updateCheckIn(@MappingTarget CheckIn checkIn, CheckInUpdateRequest request);
