@@ -65,6 +65,8 @@ public class PostingService {
         postingMapper.updateBicycleFromRequest(request, bicycle);
         postingMapper.updateBikeListingFromRequest(request, bikeListing);
 
+        bikeListing.setStatus("Pending");
+
         return bikeListingRepository.save(bikeListing);
     }
 
