@@ -13,5 +13,5 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = lombok.AccessLevel.PRIVATE)
 public class SystemConfigResponse {
     private String key;
-    private String value;
+    private double value;
 }

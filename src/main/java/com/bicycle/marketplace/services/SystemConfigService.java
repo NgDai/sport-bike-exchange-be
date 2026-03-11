@@ -9,6 +9,8 @@ import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 @FieldDefaults(level = lombok.AccessLevel.PRIVATE, makeFinal = true)
@@ -16,6 +18,19 @@ import org.springframework.stereotype.Service;
 public class SystemConfigService {
     SystemConfigRepository systemConfigRepository;
     SystemConfigMapper systemConfigMapper;
+
+    public SystemConfigResponse createConfig(String key, double value) {
+        SystemConfig config = SystemConfig.builder()
+                                .key(key)
+                                .value(value)
+                                .build();
+        return systemConfigMapper.toSystemConfig(systemConfigRepository.save(config));
+    }
+
+    public List<SystemConfigResponse> getAllConfigs() {
+        var configs = systemConfigRepository.findAll();
+        return systemConfigMapper.toSystemConfigList(configs);
+    }
 
     public SystemConfigResponse getConfigValue(String key) {
         SystemConfig config = systemConfigRepository.findByKey(key)
