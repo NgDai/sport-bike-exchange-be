@@ -40,6 +40,11 @@ public class PostingService {
         Users user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 
+        if (user.getPhone() == null || user.getPhone().trim().isEmpty() ||
+            user.getAddress() == null || user.getAddress().trim().isEmpty()) {
+            throw new AppException(ErrorCode.MISSING_USER_INFO);
+        }
+
         Brand brand = brandRepository.findByNameIgnoreCase(request.getBrandName())
                 .orElseThrow();
 

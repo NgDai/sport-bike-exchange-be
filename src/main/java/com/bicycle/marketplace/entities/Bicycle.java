@@ -33,7 +33,6 @@ public class Bicycle {
     String forkType;
     String color;
     String frameMaterial;
-    int condition;
     Double weight;
     String saddle; // Yên xe
     String chainring; // Đĩa

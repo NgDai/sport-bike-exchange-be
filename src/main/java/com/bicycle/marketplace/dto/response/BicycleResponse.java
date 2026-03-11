@@ -23,7 +23,6 @@ public class BicycleResponse {
     private String forkType;
     private String color;
     private String frameMaterial;
-    private int condition;
 
     // Thông số kỹ thuật bổ sung
     private Double weight; // Cân nặng (kg)

@@ -32,7 +32,6 @@ public interface PostingMapper {
     @Mapping(source = "bicycle.forkType", target = "forkType")
     @Mapping(source = "bicycle.color", target = "color")
     @Mapping(source = "bicycle.frameMaterial", target = "frameMaterial")
-    @Mapping(source = "bicycle.condition", target = "condition")
     @Mapping(source = "bicycle.weight", target = "weight")
     @Mapping(source = "bicycle.saddle", target = "saddle")
     @Mapping(source = "bicycle.chainring", target = "chainring")

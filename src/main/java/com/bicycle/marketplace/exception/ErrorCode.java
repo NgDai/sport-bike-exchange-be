@@ -48,7 +48,8 @@ public enum ErrorCode {
     INVALID_TOKEN(1023, "Token không hợp lệ"),
     WALLET_NOT_FOUND(1024, "Không tìm thấy ví của người dùng"),
     INSUFFICIENT_FUNDS(1025, "Số dư không đủ để thực hiện giao dịch"),
-    USER_INACTIVE(1030, "Tài khoản của bạn đã bị vô hiệu hóa");
+    USER_INACTIVE(1030, "Tài khoản của bạn đã bị vô hiệu hóa"),
+    MISSING_USER_INFO(1031, "Bạn cần cập nhật đầy đủ số điện thoại và địa chỉ trước khi đăng bán xe");
 
     private int code;
     private String message;

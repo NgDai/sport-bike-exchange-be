@@ -29,6 +29,7 @@ public class BikeListing {
     String description;
     String image_url;
     double price;
+    String condition;
     String status; // Available, Sold, Pending
     @CreationTimestamp
     LocalDateTime createdAt;
