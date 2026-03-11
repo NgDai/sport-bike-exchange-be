@@ -1,14 +1,18 @@
 package com.bicycle.marketplace.services;
 
+import com.bicycle.marketplace.dto.request.ReceiveFundsRequest;
+import com.bicycle.marketplace.dto.request.TransferFundsRequest;
 import com.bicycle.marketplace.dto.request.WalletAddBalanceRequest;
 import com.bicycle.marketplace.dto.response.ApiResponse;
 import com.bicycle.marketplace.dto.response.WalletResponse;
 import com.bicycle.marketplace.dto.response.WalletTransactionResponse;
+import com.bicycle.marketplace.entities.Transaction;
 import com.bicycle.marketplace.entities.Users;
 import com.bicycle.marketplace.entities.Wallet;
 import com.bicycle.marketplace.exception.AppException;
 import com.bicycle.marketplace.exception.ErrorCode;
 import com.bicycle.marketplace.mapper.WalletMapper;
+import com.bicycle.marketplace.repository.ITransactionRepository;
 import com.bicycle.marketplace.repository.IUserRepository;
 import com.bicycle.marketplace.repository.IWalletRepository;
 import jakarta.transaction.Transactional;
@@ -38,6 +42,9 @@ public class WalletService {
 
     @Autowired
     WalletTransactionService walletTransactionService;
+
+    @Autowired
+    ITransactionRepository transactionRepository;
 
     // public WalletResponse viewWallet(){
     // var context = SecurityContextHolder.getContext();
@@ -128,5 +135,63 @@ public class WalletService {
 
         return walletTransactionService.createTransaction(wallet, request.getAmount(), "Withdrawal",
                 "Withdrew funds from wallet");
+    }
+
+    @Transactional
+    public WalletTransactionResponse transferFunds(TransferFundsRequest request) {
+        var context = SecurityContextHolder.getContext();
+        String name = context.getAuthentication().getName();
+
+        Wallet senderWallet = walletRepository.findByUsername(name)
+                .orElseThrow(() -> new AppException(ErrorCode.WALLET_NOT_FOUND));
+
+        Wallet systemWallet = walletRepository.findByUsername("System")
+                .orElseThrow(() -> new AppException(ErrorCode.WALLET_NOT_FOUND));
+
+        if (senderWallet.getBalance() < request.getAmount()) {
+            throw new AppException(ErrorCode.INSUFFICIENT_FUNDS);
+        }
+
+        senderWallet.setBalance(senderWallet.getBalance() - request.getAmount());
+        systemWallet.setBalance(systemWallet.getBalance() + request.getAmount());
+
+        walletRepository.save(senderWallet);
+        walletRepository.save(systemWallet);
+
+        return walletTransactionService.createTransaction(senderWallet, request.getAmount(), request.getType(),
+                request.getDescription());
+    }
+
+    @Transactional
+    public WalletTransactionResponse receiveFunds(ReceiveFundsRequest request) {
+        var context = SecurityContextHolder.getContext();
+        String name = context.getAuthentication().getName();
+
+        Wallet receiverWallet = walletRepository.findByUsername(request.getUsername())
+                .orElseThrow(() -> new AppException(ErrorCode.WALLET_NOT_FOUND));
+
+        Wallet systemWallet = walletRepository.findByUsername("System")
+                .orElseThrow(() -> new AppException(ErrorCode.WALLET_NOT_FOUND));
+
+        if (systemWallet.getBalance() < request.getAmount()) {
+            throw new AppException(ErrorCode.INSUFFICIENT_FUNDS);
+        }
+
+        systemWallet.setBalance(systemWallet.getBalance() - request.getAmount());
+        receiverWallet.setBalance(receiverWallet.getBalance() + request.getAmount());
+
+        walletRepository.save(systemWallet);
+        walletRepository.save(receiverWallet);
+
+//        Transaction transaction = Transaction.builder()
+//                .amount(request.getAmount())
+//                .type(request.getType())
+//                .description(request.getDescription())
+//                .senderWallet(systemWallet)
+//                .receiverWallet(receiverWallet)
+//                .build();
+
+        return walletTransactionService.createTransaction(receiverWallet, request.getAmount(), request.getType(),
+                request.getDescription());
     }
 }

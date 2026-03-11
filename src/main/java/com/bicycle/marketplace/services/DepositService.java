@@ -12,6 +12,7 @@ import com.bicycle.marketplace.exception.AppException;
 import com.bicycle.marketplace.exception.ErrorCode;
 import com.bicycle.marketplace.mapper.DepositMapper;
 import com.bicycle.marketplace.repository.IUserRepository;
+import com.bicycle.marketplace.repository.IWalletRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -46,32 +47,32 @@ public class DepositService {
         return depositMapper.toDepositResponse(depositRepository.save(deposit));
     }
 
-    public DepositResponse updateDeposit(int depositId, DepositUpdateRequest request) {
-        Deposit deposit = depositRepository.findById(depositId)
-                .orElseThrow(() -> new AppException(ErrorCode.DEPOSIT_NOT_FOUND));
-        depositMapper.updateDeposit(deposit, request);
-        return depositMapper.toDepositResponse(depositRepository.save(deposit));
-    }
-
-    public List<Deposit> findAllDeposits() {
-        return depositRepository.findAll();
-    }
-
-    public DepositResponse findDepositById(int depositId) {
-        Deposit deposit = depositRepository.findById(depositId)
-                .orElseThrow(() -> new AppException(ErrorCode.DEPOSIT_NOT_FOUND));
-        return depositMapper.toDepositResponse(deposit);
-    }
-
-    public String deleteDeposit(int depositId) {
-        Deposit deposit = depositRepository.findById(depositId)
-                .orElseThrow(() -> new AppException(ErrorCode.DEPOSIT_NOT_FOUND));
-        depositRepository.delete(deposit);
-        return "Deposit deleted successfully";
-    }
-
-    @PreAuthorize("hasRole('ADMIN')")
-    public List<Deposit> findDepositsByStatus(String status) {
-        return depositRepository.findAllByStatus(status);
-    }
+//    public DepositResponse updateDeposit(int depositId, DepositUpdateRequest request) {
+//        Deposit deposit = depositRepository.findById(depositId)
+//                .orElseThrow(() -> new AppException(ErrorCode.DEPOSIT_NOT_FOUND));
+//        depositMapper.updateDeposit(deposit, request);
+//        return depositMapper.toDepositResponse(depositRepository.save(deposit));
+//    }
+//
+//    public List<Deposit> findAllDeposits() {
+//        return depositRepository.findAll();
+//    }
+//
+//    public DepositResponse findDepositById(int depositId) {
+//        Deposit deposit = depositRepository.findById(depositId)
+//                .orElseThrow(() -> new AppException(ErrorCode.DEPOSIT_NOT_FOUND));
+//        return depositMapper.toDepositResponse(deposit);
+//    }
+//
+//    public String deleteDeposit(int depositId) {
+//        Deposit deposit = depositRepository.findById(depositId)
+//                .orElseThrow(() -> new AppException(ErrorCode.DEPOSIT_NOT_FOUND));
+//        depositRepository.delete(deposit);
+//        return "Deposit deleted successfully";
+//    }
+//
+//    @PreAuthorize("hasRole('ADMIN')")
+//    public List<Deposit> findDepositsByStatus(String status) {
+//        return depositRepository.findAllByStatus(status);
+//    }
 }
