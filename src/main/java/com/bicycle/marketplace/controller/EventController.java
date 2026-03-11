@@ -5,7 +5,10 @@ import com.bicycle.marketplace.dto.request.EventCreationRequest;
 import com.bicycle.marketplace.dto.request.EventUpdateRequest;
 import com.bicycle.marketplace.dto.response.ApiResponse;
 import com.bicycle.marketplace.dto.response.EventResponse;
+import com.bicycle.marketplace.dto.response.EventInspectorResponse;
+import com.bicycle.marketplace.dto.request.AssignInspectorRequest;
 import com.bicycle.marketplace.services.EventService;
+import com.bicycle.marketplace.services.EventInspectorService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -17,6 +20,28 @@ import java.util.List;
 public class EventController {
     @Autowired
     private EventService eventService;
+
+    @Autowired
+    private EventInspectorService eventInspectorService;
+
+    @PostMapping("/{eventId}/inspectors")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ApiResponse<EventInspectorResponse> assignInspectorToEvent(
+            @PathVariable int eventId,
+            @RequestBody AssignInspectorRequest request) {
+        ApiResponse<EventInspectorResponse> apiResponse = new ApiResponse<>();
+        apiResponse.setResult(eventInspectorService.assignEventInspectorToEvent(eventId, request.getInspectorId()));
+        apiResponse.setMessage("Inspector assigned to event successfully");
+        return apiResponse;
+    }
+
+    @GetMapping("/inspectors")
+    public ApiResponse<EventInspectorResponse> getAllEventInspectors() {
+        ApiResponse<EventInspectorResponse> apiResponse = new ApiResponse<>();
+        apiResponse.setResult(eventInspectorService.getAllEventInspector());
+        apiResponse.setMessage("Event inspectors fetched successfully");
+        return apiResponse;
+    }
 
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
