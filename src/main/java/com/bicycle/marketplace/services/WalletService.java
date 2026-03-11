@@ -74,6 +74,7 @@ public class WalletService {
                     .user(user)
                     .username(name)
                     .balance(0.0)
+                    .type("User")
                     .build();
             return walletRepository.save(newWallet);
         });
@@ -96,6 +97,7 @@ public class WalletService {
                     .user(user)
                     .username(name)
                     .balance(0.0)
+                    .type("User")
                     .build();
             return walletRepository.save(newWallet);
         });
