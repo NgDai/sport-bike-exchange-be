@@ -23,6 +23,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
+import java.util.Arrays;
 import java.util.List;
 
 @Configuration
@@ -36,6 +37,11 @@ public class SecurityConfig {
             "/users",
             "/auth/loginEmail",
             "/auth/google"
+    };
+
+    private final String[] PUBLIC_CORS_DOMAIN = {
+            "http://localhost:5173",
+            "https://sport-bike-exchange-fe.vercel.app/"
     };
 
     @Value("${jwt.signer.key}")
@@ -66,8 +72,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("http://localhost:5173"));
-        configuration.setAllowedOrigins(List.of("https://sport-bike-exchange-fe.vercel.app"));
+        configuration.setAllowedOrigins(Arrays.asList(PUBLIC_CORS_DOMAIN));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);
