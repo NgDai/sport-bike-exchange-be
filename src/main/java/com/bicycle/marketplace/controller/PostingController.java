@@ -21,10 +21,24 @@ public class PostingController {
 
     PostingService postingService;
 
+    @GetMapping("/calculate-fee")
+    ApiResponse<Double> getListingFee(@RequestParam double price) {
+        ApiResponse<Double> apiResponse = new ApiResponse<>();
+        apiResponse.setResult(postingService.calculateListingFee(price));
+        return apiResponse;
+    }
+
     @PostMapping("/create")
     ApiResponse<CreatePostingResponse> createPosting(@RequestBody CreatePostingRequest request) {
         ApiResponse<CreatePostingResponse> apiResponse = new ApiResponse<>();
         apiResponse.setResult(postingService.createPosting(request));
+        return apiResponse;
+    }
+
+    @PutMapping("/confirm-payment/{listingId}")
+    ApiResponse<String> confirmPayment(@PathVariable int listingId) {
+        ApiResponse<String> apiResponse = new ApiResponse<>();
+        apiResponse.setResult(postingService.confirmPaymentAndPublish(listingId));
         return apiResponse;
     }
 
