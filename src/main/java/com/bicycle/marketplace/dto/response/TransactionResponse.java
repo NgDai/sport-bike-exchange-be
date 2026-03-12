@@ -13,12 +13,12 @@ import java.util.Date;
 @NoArgsConstructor
 public class TransactionResponse {
     private int transactionId;
-    private Integer buyerId;
-    private Integer depositId;
-    private Integer eventId;
-    private Integer reservationId;
-    private Integer sellerId;
-    private Integer listingId;
+    private int buyerId;
+    private int depositId;
+    private int eventId;
+    private int reservationId;
+    private int sellerId;
+    private int listingId;
     private double amount;
     private double actualPrice;
     private Date createdAt;
