@@ -5,15 +5,13 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.time.LocalDateTime;
-import java.util.Date;
-
-
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-
-public class CheckInCreationRequest {
-    private String token;
+public class ReceiveFundsRequest {
+    String username;
+    double amount;
+    String description;
+    String type;
 }

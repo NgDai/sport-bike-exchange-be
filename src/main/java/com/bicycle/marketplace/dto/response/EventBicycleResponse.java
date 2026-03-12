@@ -18,7 +18,12 @@ public class EventBicycleResponse {
     private int eventBikeId;
     private int eventId;
     private int listingId;
+    private int bikeId;
+    private int sellerId;
     private String sellerName;
-    private String type;
+    private String bikeType;
+    private Double price;
+    private String title;
+    private String status;
     private LocalDate createDate;
 }

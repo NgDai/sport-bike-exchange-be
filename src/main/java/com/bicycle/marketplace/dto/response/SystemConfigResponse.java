@@ -1,4 +1,4 @@
-package com.bicycle.marketplace.dto.request;
+package com.bicycle.marketplace.dto.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -11,11 +11,7 @@ import lombok.experimental.FieldDefaults;
 @AllArgsConstructor
 @Builder
 @FieldDefaults(level = lombok.AccessLevel.PRIVATE)
-public class VNPayRequest {
-
-    private long amount;
-
-    private String orderInfo;
-
-    String returnUrl;
+public class SystemConfigResponse {
+    private String key;
+    private double value;
 }

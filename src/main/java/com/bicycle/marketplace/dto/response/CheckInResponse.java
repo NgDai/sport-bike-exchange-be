@@ -14,10 +14,8 @@ import java.util.Date;
 @AllArgsConstructor
 public class CheckInResponse {
     private int checkInId;
-    private int userId;
+    private int buyerId;
+    private int sellerId;
     private int eventId;
     private String token;
-    private String roleId;
-    private String status;
-    private Date checkInTime;
 }

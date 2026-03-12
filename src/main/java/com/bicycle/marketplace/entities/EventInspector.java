@@ -5,7 +5,7 @@ import lombok.*;
 import lombok.experimental.FieldDefaults;
 import org.hibernate.annotations.CreationTimestamp;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @NoArgsConstructor
 @AllArgsConstructor
@@ -14,28 +14,23 @@ import java.time.LocalDate;
 @Entity
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class EventBicycle {
+public class EventInspector {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    int eventBikeId;
+    private int inspecId;
+
     @ManyToOne
     @JoinColumn(name = "event_id")
-    Events event;
-    @ManyToOne
-    @JoinColumn(name = "listing_id", nullable = true)
-    BikeListing listing;
-    @ManyToOne
-    @JoinColumn(name = "bike_id")
-    Bicycle bicycle;
+    private Events event;
+
     @ManyToOne
     @JoinColumn(name = "user_id")
-    Users seller;
-    String sellerName;
-    String bikeType;
-    @Column(nullable = true)
-    Double price;
-    String title;
-    String status;
+    private Users inspector;
+
+    private String status = "pending"; // pending, approved, rejected
+
     @CreationTimestamp
-    LocalDate createDate;
+    LocalDateTime createDate;
+
+
 }

@@ -18,51 +18,52 @@ public class DepositController {
     @Autowired
     private DepositService depositService;
 
-    @PostMapping
-    ApiResponse<DepositResponse> createDeposit(@RequestBody DepositCreationRequest request) {
+    @PostMapping("/{listingId}/create")
+    ApiResponse<DepositResponse> createDeposit(@PathVariable int listingId, @RequestBody DepositCreationRequest request) {
         ApiResponse<DepositResponse> apiResponse = new ApiResponse<>();
-        apiResponse.setResult(depositService.createDeposit(request));
+        apiResponse.setResult(depositService.createDeposit(listingId, request));
         apiResponse.setMessage("Deposit created successfully");
         return apiResponse;
     }
 
-    @PutMapping("/{depositId}")
-    ApiResponse<DepositResponse> updateDeposit(@PathVariable int depositId, @RequestBody DepositUpdateRequest request) {
-        ApiResponse<DepositResponse> apiResponse = new ApiResponse<>();
-        apiResponse.setResult(depositService.updateDeposit(depositId, request));
-        apiResponse.setMessage("Deposit updated successfully");
-        return apiResponse;
-    }
-
-    @GetMapping("/{depositId}")
-    ApiResponse<DepositResponse> getDepositById(@PathVariable int depositId) {
-        ApiResponse<DepositResponse> apiResponse = new ApiResponse<>();
-        apiResponse.setResult(depositService.findDepositById(depositId));
-        apiResponse.setMessage("Deposit fetched successfully");
-        return apiResponse;
-    }
-
-    @GetMapping
-    ApiResponse<List<Deposit>> getAllDeposits() {
-        ApiResponse<List<Deposit>> apiResponse = new ApiResponse<>();
-        apiResponse.setResult(depositService.findAllDeposits());
-        apiResponse.setMessage("Deposits fetched successfully");
-        return apiResponse;
-    }
-
-    @DeleteMapping("/{depositId}")
-    ApiResponse<String> deleteDeposit(@PathVariable int depositId) {
-        ApiResponse<String> apiResponse = new ApiResponse<>();
-        apiResponse.setResult(depositService.deleteDeposit(depositId));
-        return apiResponse;
-    }
-
-    @GetMapping("/status/{status}")
-    @PreAuthorize("hasRole('ADMIN')")
-    ApiResponse<List<Deposit>> getDepositsByStatus(@PathVariable String status) {
-        ApiResponse<List<Deposit>> apiResponse = new ApiResponse<>();
-        apiResponse.setResult(depositService.findDepositsByStatus(status));
-        apiResponse.setMessage("Deposits fetched successfully");
-        return apiResponse;
-    }
+//    @PutMapping("/{depositId}")
+//    ApiResponse<DepositResponse> updateDeposit(@PathVariable int depositId, @RequestBody DepositUpdateRequest request) {
+//        ApiResponse<DepositResponse> apiResponse = new ApiResponse<>();
+//        apiResponse.setResult(depositService.updateDeposit(depositId, request));
+//        apiResponse.setMessage("Deposit updated successfully");
+//        return apiResponse;
+//    }
+//
+//    @GetMapping("/{depositId}")
+//    ApiResponse<DepositResponse> getDepositById(@PathVariable int depositId) {
+//        ApiResponse<DepositResponse> apiResponse = new ApiResponse<>();
+//        apiResponse.setResult(depositService.findDepositById(depositId));
+//        apiResponse.setMessage("Deposit fetched successfully");
+//        return apiResponse;
+//    }
+//
+//    @GetMapping
+//    ApiResponse<List<Deposit>> getAllDeposits() {
+//        ApiResponse<List<Deposit>> apiResponse = new ApiResponse<>();
+//        apiResponse.setResult(depositService.findAllDeposits());
+//        apiResponse.setMessage("Deposits fetched successfully");
+//        return apiResponse;
+//    }
+//
+//    //transaction is deleted first, then deposit will be deleted
+//    @DeleteMapping("/{depositId}")
+//    ApiResponse<String> deleteDeposit(@PathVariable int depositId) {
+//        ApiResponse<String> apiResponse = new ApiResponse<>();
+//        apiResponse.setResult(depositService.deleteDeposit(depositId));
+//        return apiResponse;
+//    }
+//
+//    @GetMapping("/status/{status}")
+//    @PreAuthorize("hasRole('ADMIN')")
+//    ApiResponse<List<Deposit>> getDepositsByStatus(@PathVariable String status) {
+//        ApiResponse<List<Deposit>> apiResponse = new ApiResponse<>();
+//        apiResponse.setResult(depositService.findDepositsByStatus(status));
+//        apiResponse.setMessage("Deposits fetched successfully");
+//        return apiResponse;
+//    }
 }

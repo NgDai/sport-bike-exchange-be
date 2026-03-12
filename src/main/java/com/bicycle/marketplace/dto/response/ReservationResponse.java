@@ -12,7 +12,7 @@ import java.util.Date;
 @NoArgsConstructor
 public class ReservationResponse {
     private int reservationId;
-    private int bikeListingId;
+    private int listingId;
     private int buyerId;
     private String status;
     private Date reservedAt;

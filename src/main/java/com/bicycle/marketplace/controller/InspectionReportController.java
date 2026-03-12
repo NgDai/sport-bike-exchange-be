@@ -16,11 +16,11 @@ public class InspectionReportController {
     @Autowired
     private InspectionReportService inspectionReportService;
 
-    @PostMapping
+    @PostMapping("/{disputeId}/create")
     @PreAuthorize("hasRole('INSPECTOR') or hasRole('ADMIN')")
-    ApiResponse<InspectionReportResponse> createInspectionReport(@RequestBody InspectionReportCreationRequest request) {
+    ApiResponse<InspectionReportResponse> createInspectionReport(@PathVariable int disputeId, @RequestBody InspectionReportCreationRequest request) {
         ApiResponse<InspectionReportResponse> apiResponse = new ApiResponse<>();
-        apiResponse.setResult(inspectionReportService.createInspectionReport(request));
+        apiResponse.setResult(inspectionReportService.createInspectionReport(disputeId, request));
         apiResponse.setMessage("Inspection Report created successfully");
         return apiResponse;
     }

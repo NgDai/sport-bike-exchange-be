@@ -12,6 +12,8 @@ import com.bicycle.marketplace.exception.AppException;
 import com.bicycle.marketplace.exception.ErrorCode;
 import com.bicycle.marketplace.mapper.WishlistMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -28,6 +30,10 @@ public class WishlistService {
     private IBikeListingRepository bikeListingRepository;
 
     public WishlistToggleResponse addToWishlist(int userId, int listingId){
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new AppException(ErrorCode.UNAUTHORIZED);
+        }
         var existingWishlist = wishlistRepository.findByUser_UserIdAndListing_ListingId(userId, listingId);
         if (existingWishlist.isPresent()){
             return new WishlistToggleResponse(false, "Already in wishlist");
@@ -43,6 +49,10 @@ public class WishlistService {
     }
 
     public WishlistToggleResponse removeFromWishlist(int userId, int listingId){
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new AppException(ErrorCode.UNAUTHORIZED);
+        }
         var existingWishlist = wishlistRepository.findByUser_UserIdAndListing_ListingId(userId, listingId);
         if (existingWishlist.isEmpty()){
             return new WishlistToggleResponse(false, "Not in wishlist");
@@ -52,6 +62,10 @@ public class WishlistService {
     }
 
     public boolean isInWishlist(int userId, int listingId){
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new AppException(ErrorCode.UNAUTHORIZED);
+        }
         return wishlistRepository.findByUser_UserIdAndListing_ListingId(userId, listingId).isPresent();
     }
 

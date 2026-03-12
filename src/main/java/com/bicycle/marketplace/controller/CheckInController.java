@@ -22,10 +22,10 @@ public class CheckInController {
     @Autowired
     private QRService qrService;
 
-    @PostMapping
-    ApiResponse<CheckInResponse> createCheckIn(@RequestBody CheckInCreationRequest request){
+    @PostMapping("/{eventId}/create")
+    ApiResponse<CheckInResponse> createCheckIn(@PathVariable int eventId, @RequestBody CheckInCreationRequest request){
         ApiResponse<CheckInResponse> apiResponse = new ApiResponse<>();
-        apiResponse.setResult(checkInService.createCheckIn(request));
+        apiResponse.setResult(checkInService.createCheckIn(eventId, request));
         apiResponse.setMessage("Check-In created successfully");
         return apiResponse;
     }

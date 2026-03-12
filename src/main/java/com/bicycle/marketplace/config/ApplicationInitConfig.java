@@ -1,8 +1,10 @@
 package com.bicycle.marketplace.config;
 
+import com.bicycle.marketplace.entities.Wallet;
 import com.bicycle.marketplace.repository.IUserRepository;
 import com.bicycle.marketplace.entities.Users;
 import com.bicycle.marketplace.enums.Role;
+import com.bicycle.marketplace.repository.IWalletRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.java.Log;
@@ -22,7 +24,7 @@ public class ApplicationInitConfig {
     private PasswordEncoder passwordEncoder;
 
     @Bean
-    ApplicationRunner applicationRunner(IUserRepository userRepository) {
+    ApplicationRunner applicationRunner(IUserRepository userRepository, IWalletRepository walletRepository) {
         return args -> {
             if (userRepository.findByUsername("admin").isEmpty()) {
                 Users user = Users.builder()
@@ -35,6 +37,17 @@ public class ApplicationInitConfig {
                 userRepository.save(user);
                 log.warning(
                         "Default admin user created with username 'admin' and password '1'. Please change the password after first login.");
+            }
+
+            if (walletRepository.findByType("System").isEmpty()) {
+                Wallet wallet = Wallet.builder()
+                        .username("System")
+                        .balance(0.0)
+                        .type("System")
+                        .build();
+                walletRepository.save(wallet);
+                log.warning(
+                        "Default system wallet is created please do not change anything.");
             }
         };
     }

@@ -18,13 +18,14 @@ public class CheckIn {
     @GeneratedValue(strategy = jakarta.persistence.GenerationType.AUTO)
     int checkInId;
     @ManyToOne
-    @JoinColumn(name = "user_id")
-    Users user;
+    @JoinColumn(name = "buyer_id")
+    Users buyer;
+    @ManyToOne
+    @JoinColumn(name = "seller_id")
+    Users seller;
     @ManyToOne
     @JoinColumn(name = "event_id")
     Events event;
-    String role;
     String token;
     String status;
-    Date checkInTime;
 }

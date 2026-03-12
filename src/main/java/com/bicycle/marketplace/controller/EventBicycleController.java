@@ -1,12 +1,15 @@
 package com.bicycle.marketplace.controller;
 
+import com.bicycle.marketplace.dto.request.CreatePostingRequest;
 import com.bicycle.marketplace.dto.request.EventBicycleCreationRequest;
 import com.bicycle.marketplace.dto.request.EventBicycleUpdateRequest;
 import com.bicycle.marketplace.dto.response.ApiResponse;
 import com.bicycle.marketplace.dto.response.EventBicycleResponse;
+import com.bicycle.marketplace.entities.Bicycle;
 import com.bicycle.marketplace.entities.EventBicycle;
 import com.bicycle.marketplace.services.EventBicycleService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -17,24 +20,53 @@ public class EventBicycleController {
     @Autowired
     private EventBicycleService eventBicycleService;
 
-    @PostMapping
-    ApiResponse<EventBicycleResponse> createEventBicycle(@RequestBody EventBicycleCreationRequest request) {
+    @PostMapping("/event/{eventId}/listing/{listingId}/register")
+    public ApiResponse<EventBicycleResponse> createEventBicycle(
+            @PathVariable int eventId,
+            @PathVariable int listingId) {
         ApiResponse<EventBicycleResponse> apiResponse = new ApiResponse<>();
-        apiResponse.setResult(eventBicycleService.createEventBicycle(request));
+        apiResponse.setResult(eventBicycleService.registerBicycleToEvent(eventId, listingId));
         apiResponse.setMessage("Event Bicycle created successfully");
         return apiResponse;
     }
 
+    @PostMapping("/bicycle/create")
+    public ApiResponse<Bicycle> createBicycle(@RequestBody CreatePostingRequest request) {
+        ApiResponse<Bicycle> apiResponse = new ApiResponse<>();
+        apiResponse.setResult(eventBicycleService.createBicycle(request));
+        return apiResponse;
+    }
+
+    @PostMapping("/event/{eventId}/bicycle/{bicycleId}/register")
+    public ApiResponse<EventBicycleResponse> createEventBicycleWithoutPosting(
+            @PathVariable int eventId,
+            @PathVariable int bicycleId,
+            @RequestBody EventBicycleCreationRequest request) {
+        ApiResponse<EventBicycleResponse> apiResponse = new ApiResponse<>();
+        apiResponse.setResult(eventBicycleService.registerBicycleToEventWithoutPosting(eventId, bicycleId, request));
+        apiResponse.setMessage("Event Bicycle registered successfully.");
+        return apiResponse;
+    }
+
     @PutMapping("/{eventBikeId}")
-    ApiResponse<EventBicycleResponse> updateEventBicycle(@PathVariable int eventBikeId, @RequestBody EventBicycleUpdateRequest request) {
+    public ApiResponse<EventBicycleResponse> updateEventBicycle(@PathVariable int eventBikeId, @RequestBody EventBicycleUpdateRequest request) {
         ApiResponse<EventBicycleResponse> apiResponse = new ApiResponse<>();
         apiResponse.setResult(eventBicycleService.updateEventBicycle(eventBikeId, request));
         apiResponse.setMessage("Event Bicycle updated successfully");
         return apiResponse;
     }
 
+    @PutMapping("/{eventBikeId}/status")
+    @PreAuthorize("hasAnyRole('ADMIN', 'INSPECTOR')")
+    public ApiResponse<EventBicycleResponse> updateEventBicycleStatus(@PathVariable int eventBikeId) {
+        ApiResponse<EventBicycleResponse> apiResponse = new ApiResponse<>();
+        apiResponse.setResult(eventBicycleService.updateEventBicycleStatus(eventBikeId));
+        apiResponse.setMessage("Event Bicycle status updated successfully");
+        return apiResponse;
+    }
+
     @GetMapping("/{eventBikeId}")
-    ApiResponse<EventBicycleResponse> getEventBicycleById(@PathVariable int eventBikeId) {
+    public ApiResponse<EventBicycleResponse> getEventBicycleById(@PathVariable int eventBikeId) {
         ApiResponse<EventBicycleResponse> apiResponse = new ApiResponse<>();
         apiResponse.setResult(eventBicycleService.getEventBicycleById(eventBikeId));
         apiResponse.setMessage("Event Bicycle fetched successfully");
@@ -42,7 +74,7 @@ public class EventBicycleController {
     }
 
     @GetMapping
-    ApiResponse<List<EventBicycle>> getAllEventBicycles() {
+    public ApiResponse<List<EventBicycle>> getAllEventBicycles() {
         ApiResponse<List<EventBicycle>> apiResponse = new ApiResponse<>();
         apiResponse.setResult(eventBicycleService.getAllEventBicycles());
         apiResponse.setMessage("Event Bicycles fetched successfully");
@@ -50,10 +82,9 @@ public class EventBicycleController {
     }
 
     @DeleteMapping("/{eventBikeId}")
-    ApiResponse<String> deleteEventBicycle(@PathVariable int eventBikeId) {
+    public ApiResponse<String> deleteEventBicycle(@PathVariable int eventBikeId) {
         ApiResponse<String> apiResponse = new ApiResponse<>();
         apiResponse.setResult(eventBicycleService.deleteEventBicycle(eventBikeId));
         return apiResponse;
     }
-
 }

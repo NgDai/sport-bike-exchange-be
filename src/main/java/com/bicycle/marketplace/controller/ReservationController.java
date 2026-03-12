@@ -18,11 +18,11 @@ public class ReservationController {
     @Autowired
     private ReservationService reservationService;
 
-    @PostMapping
+    @PostMapping("/{listingId}/create")
     @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
-    ApiResponse<ReservationResponse> createReservation(@RequestBody ReservationCreationRequest request) {
+    ApiResponse<ReservationResponse> createReservation(@PathVariable int listingId, @RequestBody ReservationCreationRequest request) {
         ApiResponse<ReservationResponse> apiResponse = new ApiResponse<>();
-        apiResponse.setResult(reservationService.createReservation(request));
+        apiResponse.setResult(reservationService.createReservation(listingId, request));
         apiResponse.setMessage("Reservation created successfully");
         return apiResponse;
     }
@@ -34,6 +34,16 @@ public class ReservationController {
         ApiResponse<ReservationResponse> apiResponse = new ApiResponse<>();
         apiResponse.setResult(reservationService.updateReservation(reservationId, request));
         apiResponse.setMessage("Reservation updated successfully");
+        return apiResponse;
+    }
+
+    @PutMapping("/{reservationId}/status")
+    @PreAuthorize("hasRole('ADMIN')")
+    ApiResponse<ReservationResponse> updateReservationStatus(@PathVariable int reservationId,
+            @RequestBody ReservationUpdateRequest request) {
+        ApiResponse<ReservationResponse> apiResponse = new ApiResponse<>();
+        apiResponse.setResult(reservationService.updateReservationStatus(reservationId, request));
+        apiResponse.setMessage("Reservation status updated successfully");
         return apiResponse;
     }
 

@@ -9,13 +9,8 @@ import lombok.experimental.FieldDefaults;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
 @FieldDefaults(level = lombok.AccessLevel.PRIVATE)
-public class VNPayRequest {
-
-    private long amount;
-
-    private String orderInfo;
-
-    String returnUrl;
+@Builder
+public class AssignInspectorRequest {
+    int inspectorId;
 }

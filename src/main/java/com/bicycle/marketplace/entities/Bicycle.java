@@ -15,7 +15,7 @@ import java.time.LocalDate;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class Bicycle {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     int bikeId;
     @ManyToOne
     @JoinColumn(name = "brandId")
@@ -33,7 +33,6 @@ public class Bicycle {
     String forkType;
     String color;
     String frameMaterial;
-    int condition;
     Double weight;
     String saddle; // Yên xe
     String chainring; // Đĩa
