@@ -49,9 +49,9 @@ public class EventBicycleService {
         Events events = eventRepository.findById(eventId).orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
         BikeListing bikeListing = bikeListingRepository.findById(listingId).orElseThrow(() -> new AppException(ErrorCode.BIKE_LISTING_NOT_FOUND));
 
-//        if (bikeListing.getSeller() == null || bikeListing.getSeller().getUserId() != user.getUserId()) {
-//            throw new RuntimeException("Bạn không có quyền đăng ký xe này");
-//        }
+        if (bikeListing.getSeller() == null || bikeListing.getSeller().getUserId() != user.getUserId()) {
+            throw new RuntimeException("Bạn không có quyền đăng ký xe này");
+        }
 
         Bicycle bicycle = bikeListing.getBicycle();
 
@@ -66,7 +66,7 @@ public class EventBicycleService {
         eventBicycle.setEvent(events);
         eventBicycle.setListing(bikeListing);
         eventBicycle.setBicycle(bicycle);
-        eventBicycle.setSellerName(username);
+        eventBicycle.setSellerName(user.getFullName());
         eventBicycle.setStatus("Pending");
         eventBicycle.setPrice(bikeListing.getPrice());
         eventBicycle.setTitle(bikeListing.getTitle());
@@ -106,7 +106,7 @@ public class EventBicycleService {
         eventBicycle.setEvent(events);
         eventBicycle.setBicycle(bicycle);
         eventBicycle.setListing(null);
-        eventBicycle.setSellerName(username);
+        eventBicycle.setSellerName(user.getFullName());
         eventBicycle.setStatus("Pending");
         eventBicycle.setPrice(request.getPrice());
         eventBicycle.setTitle(request.getTitle());
