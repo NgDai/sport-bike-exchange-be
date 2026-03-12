@@ -22,10 +22,9 @@ public class EventBicycleController {
     @PostMapping("/event/{eventId}/listing/{listingId}/register")
     ApiResponse<EventBicycleResponse> createEventBicycle(
             @PathVariable int eventId,
-            @PathVariable int listingId,
-            @RequestBody EventBicycleCreationRequest request) {
+            @PathVariable int listingId) {
         ApiResponse<EventBicycleResponse> apiResponse = new ApiResponse<>();
-        apiResponse.setResult(eventBicycleService.registerBicycleToEvent(eventId, listingId, request));
+        apiResponse.setResult(eventBicycleService.registerBicycleToEvent(eventId, listingId));
         apiResponse.setMessage("Event Bicycle created successfully");
         return apiResponse;
     }
@@ -40,10 +39,9 @@ public class EventBicycleController {
     @PostMapping("/event/{eventId}/bicycle/{bicycleId}/register")
     ApiResponse<EventBicycleResponse> createEventBicycleWithoutPosting(
             @PathVariable int eventId,
-            @PathVariable int bicycleId,
-            @RequestBody EventBicycleCreationRequest request) {
+            @PathVariable int bicycleId) {
         ApiResponse<EventBicycleResponse> apiResponse = new ApiResponse<>();
-        apiResponse.setResult(eventBicycleService.registerBicycleToEventWithoutPosting(eventId, bicycleId, request));
+        apiResponse.setResult(eventBicycleService.registerBicycleToEventWithoutPosting(eventId, bicycleId));
         apiResponse.setMessage("Event Bicycle registered successfully.");
         return apiResponse;
     }

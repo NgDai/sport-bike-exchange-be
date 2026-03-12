@@ -15,6 +15,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Service
@@ -38,7 +39,7 @@ public class EventBicycleService {
     @Autowired
     private IBicycleRepository bicycleRepository;
 
-    public EventBicycleResponse registerBicycleToEvent(int eventId, int listingId, EventBicycleCreationRequest request) {
+    public EventBicycleResponse registerBicycleToEvent(int eventId, int listingId) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated()) {
             throw new AppException(ErrorCode.UNAUTHORIZED);
@@ -47,14 +48,17 @@ public class EventBicycleService {
         Users user = userRepository.findByUsername(username).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
         Events events = eventRepository.findById(eventId).orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
         BikeListing bikeListing = bikeListingRepository.findById(listingId).orElseThrow(() -> new AppException(ErrorCode.BIKE_LISTING_NOT_FOUND));
-
-        EventBicycle eventBicycle = eventBicycleMapper.toEventBicycle(request);
+        Bicycle bicycle = bikeListing.getBicycle();
+        EventBicycle eventBicycle = new EventBicycle();
         eventBicycle.setSeller(user);
         eventBicycle.setEvent(events);
         eventBicycle.setListing(bikeListing);
+        eventBicycle.setBicycle(bicycle);
         eventBicycle.setSellerName(username);
         eventBicycle.setStatus("Pending");
-        if(!request.getType().equalsIgnoreCase(events.getType())) {
+        eventBicycle.setType(events.getType());
+        eventBicycle.setCreateDate(LocalDate.now());
+        if(!bikeListing.getBicycle().getBikeType().equalsIgnoreCase(events.getType())) {
             throw new RuntimeException("Loại xe bạn không được đăng ký vào sự kiện này");
         }
         return eventBicycleMapper.toEventBicycleResponse(eventBicycleRepository.save(eventBicycle));
@@ -69,7 +73,7 @@ public class EventBicycleService {
         return bicycleRepository.save(bicycle);
     }
 
-    public EventBicycleResponse registerBicycleToEventWithoutPosting(int eventId, int bicycleId, EventBicycleCreationRequest request) {
+    public EventBicycleResponse registerBicycleToEventWithoutPosting(int eventId, int bicycleId) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated()) {
             throw new AppException(ErrorCode.UNAUTHORIZED);
@@ -85,9 +89,9 @@ public class EventBicycleService {
         eventBicycle.setListing(null);
         eventBicycle.setSellerName(username);
         eventBicycle.setStatus("Pending");
-        eventBicycle.setType(request.getType());
-        eventBicycle.setCreateDate(request.getCreateDate());
-        if(!request.getType().equalsIgnoreCase(events.getType())) {
+        eventBicycle.setType(events.getType());
+        eventBicycle.setCreateDate(LocalDate.now());
+        if(!bicycle.getBikeType().equalsIgnoreCase(events.getType())) {
             throw new RuntimeException("Loại xe bạn không được đăng ký vào sự kiện này");
         }
         return eventBicycleMapper.toEventBicycleResponse(eventBicycleRepository.save(eventBicycle));
