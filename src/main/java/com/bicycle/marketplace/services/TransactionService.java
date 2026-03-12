@@ -9,6 +9,7 @@ import com.bicycle.marketplace.exception.ErrorCode;
 import com.bicycle.marketplace.mapper.TransactionMapper;
 import com.bicycle.marketplace.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
