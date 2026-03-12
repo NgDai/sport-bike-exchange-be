@@ -26,6 +26,14 @@ public class DepositController {
         return apiResponse;
     }
 
+    @PostMapping("/{listingId}/create-vnpay")
+    ApiResponse<com.bicycle.marketplace.dto.response.CreateDepositResponse> createDepositViaVNPay(@PathVariable int listingId) {
+        ApiResponse<com.bicycle.marketplace.dto.response.CreateDepositResponse> apiResponse = new ApiResponse<>();
+        apiResponse.setResult(depositService.createDepositViaVNPay(listingId));
+        apiResponse.setMessage("Tạo giao dịch đặt cọc thành công");
+        return apiResponse;
+    }
+
 //    @PutMapping("/{depositId}")
 //    ApiResponse<DepositResponse> updateDeposit(@PathVariable int depositId, @RequestBody DepositUpdateRequest request) {
 //        ApiResponse<DepositResponse> apiResponse = new ApiResponse<>();

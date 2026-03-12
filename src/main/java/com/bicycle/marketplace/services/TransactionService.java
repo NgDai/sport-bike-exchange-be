@@ -38,9 +38,6 @@ public class TransactionService {
     private IDepositRepository depositRepository;
     @Autowired
     private IReservationRepository reservationRepository;
-    @Autowired
-    private TransactionAutoFillService transactionAutoFillService;
-
     @Transactional
     public TransactionResponse createTransaction(TransactionCreationRequest request) {
         Users buyer = null;
@@ -52,8 +49,7 @@ public class TransactionService {
             if (auth == null || auth.getName() == null || auth.getName().isBlank()) {
                 throw new AppException(ErrorCode.UNAUTHORIZED);
             }
-            String username = auth.getName();
-            buyer = userRepository.findByUsername(username)
+            buyer = userRepository.findByUsername(auth.getName())
                     .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
         }
 
@@ -87,64 +83,6 @@ public class TransactionService {
                     .orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
         }
 
-        final boolean needDeposit = (deposit == null);
-        final boolean needReservation = (reservation == null);
-        final boolean needListing = (listing == null);
-        final boolean needSeller = (seller == null);
-        final boolean needEvent = (event == null);
-        if (needDeposit || needReservation || needListing || needSeller || needEvent) {
-            try {
-                TransactionAutoFillService.AutoFillIds ids = transactionAutoFillService.tryAutoFill(
-                        needDeposit, needReservation, needListing, needSeller, needEvent, buyer.getUserId());
-                if (ids != null) {
-                    if (ids.depositId != null) deposit = depositRepository.findById(ids.depositId).orElse(null);
-                    if (ids.reservationId != null) reservation = reservationRepository.findById(ids.reservationId).orElse(null);
-                    if (ids.listingId != null) listing = bikeListingRepository.findById(ids.listingId).orElse(null);
-                    if (ids.sellerId != null) seller = userRepository.findById(ids.sellerId).orElse(null);
-                    if (ids.eventId != null) event = eventRepository.findById(ids.eventId).orElse(null);
-                }
-            } catch (Exception e) {
-                log.debug("Auto-fill skipped or failed: {}", e.getMessage());
-            }
-        }
-
-        if (deposit == null) {
-            var depositOpt = depositRepository.findByUser_UserIdOrderByCreatedAtDesc(buyer.getUserId()).stream()
-                    .filter(d -> transactionRepository.findByDeposit_DepositId(d.getDepositId()).isEmpty())
-                    .findFirst();
-            if (depositOpt.isPresent()) deposit = depositOpt.get();
-        }
-        if (event == null) {
-            try {
-                var eventOpt = eventRepository.findAllByOrderByCreateDateDesc().stream().findFirst();
-                if (eventOpt.isPresent()) event = eventOpt.get();
-            } catch (Exception ignored) { }
-            if (event == null) {
-                var eventOpt = eventRepository.findAll().stream().findFirst();
-                if (eventOpt.isPresent()) event = eventOpt.get();
-            }
-        }
-        if (reservation == null) {
-            var reservationOpt = reservationRepository.findByBuyer_UserIdOrderByReservedAtDesc(buyer.getUserId()).stream()
-                    .filter(r -> transactionRepository.findByReservation_ReservationId(r.getReservationId()).isEmpty())
-                    .findFirst();
-            if (reservationOpt.isPresent()) reservation = reservationOpt.get();
-        }
-
-        if (listing == null && reservation != null && reservation.getListing() != null) {
-            listing = reservation.getListing();
-        }
-        if (listing == null && deposit != null && deposit.getListing() != null) {
-            listing = deposit.getListing();
-        }
-        if (listing == null) {
-            var listingOpt = bikeListingRepository.findAll().stream().findFirst();
-            if (listingOpt.isPresent()) listing = listingOpt.get();
-        }
-        if (listing != null && seller == null && listing.getSeller() != null) {
-            seller = listing.getSeller();
-        }
-
         String status = "PENDING";
         if (deposit != null && deposit.getStatus() != null && !deposit.getStatus().isBlank()) {
             status = deposit.getStatus();
@@ -175,21 +113,7 @@ public class TransactionService {
         try {
             transaction = transactionRepository.saveAndFlush(transaction);
         } catch (DataIntegrityViolationException e) {
-            String msg = e.getCause() != null ? e.getCause().getMessage() : (e.getMessage() != null ? e.getMessage() : "");
-            log.warn("Transaction save failed (constraint): {}", msg);
-            if (msg != null && msg.contains("reservation_id") && msg.contains("already exists")) {
-                throw new AppException(ErrorCode.RESERVATION_ALREADY_HAS_TRANSACTION);
-            }
-            if (msg != null && msg.contains("duplicate key") && msg.contains("reservation_id")) {
-                throw new AppException(ErrorCode.RESERVATION_ALREADY_HAS_TRANSACTION);
-            }
-            throw new AppException(ErrorCode.TRANSACTION_SAVE_FAILED);
-        } catch (PersistenceException | JpaSystemException e) {
-            String msg = e.getCause() != null ? e.getCause().getMessage() : (e.getMessage() != null ? e.getMessage() : "");
-            log.warn("Transaction save failed (persistence): {}", msg);
-            if (msg != null && (msg.contains("reservation_id") && msg.contains("already exists") || (msg.contains("duplicate key") && msg.contains("reservation_id")))) {
-                throw new AppException(ErrorCode.RESERVATION_ALREADY_HAS_TRANSACTION);
-            }
+            log.warn("Transaction save failed (constraint): {}", e.getMessage());
             throw new AppException(ErrorCode.TRANSACTION_SAVE_FAILED);
         } catch (Exception e) {
             log.warn("Transaction save failed: {}", e.getMessage(), e);
@@ -207,9 +131,30 @@ public class TransactionService {
     }
 
     private static String buildTransactionDescription(String type, double amount, Deposit deposit, BikeListing listing) {
-        if (deposit != null) return "Nạp tiền / Deposit";
-        if (listing != null) return "Giao dịch liên quan bài đăng xe #" + (listing.getListingId());
-        return "Giao dịch " + type + " - " + String.format("%.0f", amount);
+        String formattedAmount = String.format("%,.0f", amount);
+        switch (type) {
+            case "Deposit":
+                if (listing != null) {
+                    return "Đặt cọc " + formattedAmount + " VND cho bài đăng #" + listing.getListingId();
+                }
+                return "Đặt cọc " + formattedAmount + " VND";
+            case "ListingFee":
+                if (listing != null) {
+                    return "Thanh toán phí đăng bài " + formattedAmount + " VND cho bài đăng #" + listing.getListingId();
+                }
+                return "Thanh toán phí đăng bài " + formattedAmount + " VND";
+            case "Sale":
+                if (listing != null) {
+                    return "Mua xe từ bài đăng #" + listing.getListingId() + " - " + formattedAmount + " VND";
+                }
+                return "Giao dịch mua bán xe " + formattedAmount + " VND";
+            case "Reservation":
+                return "Đặt chỗ mua xe " + formattedAmount + " VND";
+            case "Fee":
+                return "Phí hệ thống " + formattedAmount + " VND";
+            default:
+                return "Giao dịch " + type + " - " + formattedAmount + " VND";
+        }
     }
 
     private TransactionResponse toTransactionResponseSafe(Transaction t) {
