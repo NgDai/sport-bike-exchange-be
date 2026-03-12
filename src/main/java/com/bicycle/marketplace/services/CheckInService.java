@@ -90,7 +90,7 @@ public class CheckInService {
         CheckIn checkIn = checkInRepository.findById(checkInId)
                 .orElseThrow(() -> new AppException(ErrorCode.CHECKIN_NOT_FOUND));
         String token = checkIn.getToken();
-        String url = "http://localhost:8080/qrcode?token=" + token;
+        String url = "http://localhost:8080/api/checkin/qr/info/" + token;
         return qrService.generateQRCode(url);
     }
 
