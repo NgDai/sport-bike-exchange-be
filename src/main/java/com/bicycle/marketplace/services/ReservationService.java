@@ -48,6 +48,10 @@ public class ReservationService {
     }
 
     public ReservationResponse updateReservation(int reservationId, ReservationUpdateRequest request) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new AppException(ErrorCode.UNAUTHORIZED);
+        }
         Reservation reservation = reservationRepository.findById(reservationId)
                 .orElseThrow(() -> new AppException(ErrorCode.RESERVATION_NOT_FOUND));
         reservationMapper.updateReservation(reservation, request);
@@ -55,6 +59,10 @@ public class ReservationService {
     }
 
     public ReservationResponse updateReservationStatus(int reservationId, ReservationUpdateRequest request) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new AppException(ErrorCode.UNAUTHORIZED);
+        }
         Reservation reservation = reservationRepository.findById(reservationId)
                 .orElseThrow(() -> new AppException(ErrorCode.RESERVATION_NOT_FOUND));
         reservation.setStatus(request.getStatus());
@@ -72,6 +80,10 @@ public class ReservationService {
     }
 
     public String deleteReservation(int reservationId) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new AppException(ErrorCode.UNAUTHORIZED);
+        }
         Reservation reservation = reservationRepository.findById(reservationId)
                 .orElseThrow(() -> new AppException(ErrorCode.RESERVATION_NOT_FOUND));
         reservationRepository.delete(reservation);

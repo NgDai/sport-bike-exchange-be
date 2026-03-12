@@ -21,5 +21,6 @@ public class EventBicycleResponse {
     private int sellerId;
     private String sellerName;
     private String type;
+    private String status;
     private LocalDate createDate;
 }

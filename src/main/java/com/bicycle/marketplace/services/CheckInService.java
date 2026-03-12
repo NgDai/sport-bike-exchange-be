@@ -57,6 +57,10 @@ public class CheckInService {
     }
 
     public CheckInResponse updateCheckIn(int checkInId, CheckInUpdateRequest request) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new AppException(ErrorCode.UNAUTHORIZED);
+        }
         CheckIn checkIn = checkInRepository.findById(checkInId)
                 .orElseThrow(() -> new AppException(ErrorCode.CHECKIN_NOT_FOUND));
         checkInMapper.updateCheckIn(checkIn, request);
@@ -75,6 +79,10 @@ public class CheckInService {
     }
 
     public String deleteCheckIn(int checkInId) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new AppException(ErrorCode.UNAUTHORIZED);
+        }
         CheckIn checkIn = checkInRepository.findById(checkInId)
                 .orElseThrow(() -> new AppException(ErrorCode.CHECKIN_NOT_FOUND));
         checkInRepository.delete(checkIn);

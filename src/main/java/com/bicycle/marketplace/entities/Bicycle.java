@@ -16,7 +16,7 @@ import java.time.LocalDate;
 public class Bicycle {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    int bikeId;
+    int bicycleId;
     @ManyToOne
     @JoinColumn(name = "brandId")
     Brand brand;

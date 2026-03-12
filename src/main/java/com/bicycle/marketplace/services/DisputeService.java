@@ -47,6 +47,10 @@ public class DisputeService {
     }
 
     public DisputeResponse updateDispute(int disputeId, DisputeUpdateRequest request) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new AppException(ErrorCode.UNAUTHORIZED);
+        }
         Dispute dispute = disputeRepository.findById(disputeId)
                 .orElseThrow(() -> new AppException(ErrorCode.DISPUTE_NOT_FOUND));
         disputeMapper.updateDispute(dispute, request);
@@ -64,6 +68,10 @@ public class DisputeService {
     }
 
     public String deleteDispute(int disputeId) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new AppException(ErrorCode.UNAUTHORIZED);
+        }
         Dispute dispute = disputeRepository.findById(disputeId)
                 .orElseThrow(() -> new AppException(ErrorCode.DISPUTE_NOT_FOUND));
         disputeRepository.delete(dispute);

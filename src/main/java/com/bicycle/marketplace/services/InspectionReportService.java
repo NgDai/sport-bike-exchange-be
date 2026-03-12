@@ -49,6 +49,10 @@ public class InspectionReportService {
     @PreAuthorize("hasAnyRole('INSPECTOR', 'ADMIN')")
     public InspectionReportResponse updateInspectionReport(int inspectionReportId,
             InspectionReportUpdateRequest request) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new AppException(ErrorCode.UNAUTHORIZED);
+        }
         InspectionReport inspectionReport = inspectionReportRepository.findById(inspectionReportId)
                 .orElseThrow(() -> new AppException(ErrorCode.INSPECTIONREPORT_NOT_FOUND));
         inspectionReportMapper.updateInspectionReport(inspectionReport, request);
@@ -67,6 +71,10 @@ public class InspectionReportService {
 
     @PreAuthorize("hasAnyRole('INSPECTOR', 'ADMIN')")
     public String deleteInspectionReport(int inspectionReportId) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new AppException(ErrorCode.UNAUTHORIZED);
+        }
         InspectionReport inspectionReport = inspectionReportRepository.findById(inspectionReportId)
                 .orElseThrow(() -> new AppException(ErrorCode.INSPECTIONREPORT_NOT_FOUND));
         inspectionReportRepository.delete(inspectionReport);

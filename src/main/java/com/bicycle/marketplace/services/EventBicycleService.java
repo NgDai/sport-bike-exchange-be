@@ -3,8 +3,7 @@ package com.bicycle.marketplace.services;
 import com.bicycle.marketplace.entities.BikeListing;
 import com.bicycle.marketplace.entities.Events;
 import com.bicycle.marketplace.entities.Users;
-import com.bicycle.marketplace.repository.IBikeListingRepository;
-import com.bicycle.marketplace.repository.IEventBicycleRepository;
+import com.bicycle.marketplace.repository.*;
 import com.bicycle.marketplace.dto.request.EventBicycleCreationRequest;
 import com.bicycle.marketplace.dto.request.EventBicycleUpdateRequest;
 import com.bicycle.marketplace.dto.response.EventBicycleResponse;
@@ -12,8 +11,6 @@ import com.bicycle.marketplace.entities.EventBicycle;
 import com.bicycle.marketplace.exception.AppException;
 import com.bicycle.marketplace.exception.ErrorCode;
 import com.bicycle.marketplace.mapper.EventBicycleMapper;
-import com.bicycle.marketplace.repository.IEventRepository;
-import com.bicycle.marketplace.repository.IUserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -33,8 +30,10 @@ public class EventBicycleService {
     private IEventRepository eventRepository;
     @Autowired
     private IBikeListingRepository bikeListingRepository;
+    @Autowired
+    private IBicycleRepository bicycleRepository;
 
-    public EventBicycleResponse createEventBicycle(int eventId, int listingId, EventBicycleCreationRequest request) {
+    public EventBicycleResponse registerBicycleToEvent(int eventId, int listingId, EventBicycleCreationRequest request) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated()) {
             throw new AppException(ErrorCode.UNAUTHORIZED);
@@ -48,12 +47,30 @@ public class EventBicycleService {
         eventBicycle.setEvent(events);
         eventBicycle.setListing(bikeListing);
         eventBicycle.setSellerName(username);
+        eventBicycle.setStatus("Pending");
         return eventBicycleMapper.toEventBicycleResponse(eventBicycleRepository.save(eventBicycle));
     }
 
+    public EventBicycleResponse registerBicycleToEventWithoutPosting(int eventId, int bicycleId, EventBicycleCreationRequest request) {}
+
     public EventBicycleResponse updateEventBicycle(int eventBikeId, EventBicycleUpdateRequest request) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new AppException(ErrorCode.UNAUTHORIZED);
+        }
         EventBicycle eventBicycle = eventBicycleRepository.findById(eventBikeId).orElseThrow(() -> new AppException(ErrorCode.EVENT_BICYCLE_NOT_FOUND));
         eventBicycleMapper.updateEventBicycle(eventBicycle, request);
+        eventBicycle.setStatus("Pending");
+        return eventBicycleMapper.toEventBicycleResponse(eventBicycleRepository.save(eventBicycle));
+    }
+
+    public EventBicycleResponse updateEventBicycleStatus(int eventBikeId) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new AppException(ErrorCode.UNAUTHORIZED);
+        }
+        EventBicycle eventBicycle = eventBicycleRepository.findById(eventBikeId).orElseThrow(() -> new AppException(ErrorCode.EVENT_BICYCLE_NOT_FOUND));
+        eventBicycle.setStatus("Available");
         return eventBicycleMapper.toEventBicycleResponse(eventBicycleRepository.save(eventBicycle));
     }
 
@@ -67,6 +84,10 @@ public class EventBicycleService {
     }
 
     public String deleteEventBicycle(int eventBikeId) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new AppException(ErrorCode.UNAUTHORIZED);
+        }
         EventBicycle eventBicycle = eventBicycleRepository.findById(eventBikeId).orElseThrow(() -> new AppException(ErrorCode.EVENT_BICYCLE_NOT_FOUND));
         eventBicycleRepository.delete(eventBicycle);
         return "Event Bicycle deleted successfully";

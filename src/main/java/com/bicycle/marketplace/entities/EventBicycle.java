@@ -29,6 +29,7 @@ public class EventBicycle {
     Users seller;
     String sellerName;
     String type;
+    String status;
     @CreationTimestamp
     LocalDate createDate;
 }
