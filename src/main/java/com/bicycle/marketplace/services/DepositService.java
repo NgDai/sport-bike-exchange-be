@@ -34,6 +34,11 @@ public class DepositService {
     @Autowired
     private TransactionService transactionService;
 
+    /**
+     * Tạo đặt cọc: lưu vào bảng deposit, sau đó tạo và lưu transaction (status PENDING).
+     * Khi request có listingId thì luôn tạo transaction gắn với deposit; reservationId tùy chọn (đặt chỗ).
+     */
+    @Transactional
     public DepositResponse createDeposit(DepositCreationRequest request) {
         Deposit deposit = depositMapper.toDeposit(request);
         return depositMapper.toDepositResponse(depositRepository.save(deposit));
