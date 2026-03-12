@@ -31,7 +31,10 @@ public class EventBicycle {
     @JoinColumn(name = "user_id")
     Users seller;
     String sellerName;
-    String type;
+    String bikeType;
+    @Column(nullable = true)
+    Double price;
+    String title;
     String status;
     @CreationTimestamp
     LocalDate createDate;
