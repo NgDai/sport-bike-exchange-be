@@ -31,12 +31,18 @@ import java.util.List;
 @EnableMethodSecurity
 public class SecurityConfig {
 
+    // Paths without /api (context-path stripped) and with /api (full path - some setups)
     private final String[] PUBLIC_USER_ENDPOINTS = {
             "/auth/login",
             "/auth/introspect",
             "/users",
             "/auth/loginEmail",
-            "/auth/google"
+            "/auth/google",
+            "/api/auth/login",
+            "/api/auth/introspect",
+            "/api/users",
+            "/api/auth/loginEmail",
+            "/api/auth/google"
     };
 
     private final String[] PUBLIC_CORS_DOMAIN = {
@@ -56,6 +62,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers(HttpMethod.POST, PUBLIC_USER_ENDPOINTS).permitAll()
                         .requestMatchers(HttpMethod.GET, "/post/all", "/post/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/payments/vnpay-payment").permitAll()
                         .requestMatchers(HttpMethod.GET, "/*.html", "/static/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/payments/vnpay-wallet", "/payments/vnpay-payment")
                         .permitAll()
@@ -86,6 +93,7 @@ public class SecurityConfig {
     @Bean
     JwtAuthenticationConverter jwtAuthenticationConverter() {
         JwtGrantedAuthoritiesConverter jwtGrantedAuthoritiesConverter = new JwtGrantedAuthoritiesConverter();
+        jwtGrantedAuthoritiesConverter.setAuthoritiesClaimName("scope"); // claim trong JWT chứa role (vd: "USER", "ADMIN")
         jwtGrantedAuthoritiesConverter.setAuthorityPrefix("ROLE_");
 
         JwtAuthenticationConverter jwtAuthenticationConverter = new JwtAuthenticationConverter();

@@ -11,4 +11,7 @@ import java.util.Optional;
 @Repository
 public interface IEventRepository extends JpaRepository<Events, Integer> {
     List<Events> findAllByStatus(String status);
+
+    /** Lấy danh sách event mới nhất trước (để auto-fill transaction lấy được event_id từ DB). */
+    List<Events> findAllByOrderByCreateDateDesc();
 }

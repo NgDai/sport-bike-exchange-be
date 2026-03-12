@@ -12,7 +12,7 @@ public class WalletTransactionResponse {
     int transactionId;
     int userId;
     double amount;
-    String transactionType; // "CREDIT" or "DEBIT"
+    String transactionType;
     String description;
     double balance;
 }
