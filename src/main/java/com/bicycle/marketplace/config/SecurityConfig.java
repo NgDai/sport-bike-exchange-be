@@ -64,6 +64,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/post/all", "/post/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/payments/vnpay-payment").permitAll()
                         .requestMatchers(HttpMethod.GET, "/*.html", "/static/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/events/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/payments/vnpay-wallet", "/payments/vnpay-payment")
                         .permitAll()
                         .anyRequest().authenticated());

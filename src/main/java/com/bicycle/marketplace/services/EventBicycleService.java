@@ -1,6 +1,7 @@
 package com.bicycle.marketplace.services;
 
 import com.bicycle.marketplace.dto.request.CreatePostingRequest;
+import com.bicycle.marketplace.dto.request.EventBicycleCreationRequest;
 import com.bicycle.marketplace.entities.*;
 import com.bicycle.marketplace.mapper.PostingMapper;
 import com.bicycle.marketplace.repository.*;
@@ -14,6 +15,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Service
@@ -64,9 +66,12 @@ public class EventBicycleService {
         eventBicycle.setEvent(events);
         eventBicycle.setListing(bikeListing);
         eventBicycle.setBicycle(bicycle);
-        eventBicycle.setSellerName(username);
+        eventBicycle.setSellerName(user.getFullName());
         eventBicycle.setStatus("Pending");
-        eventBicycle.setType(events.getType());
+        eventBicycle.setPrice(bikeListing.getPrice());
+        eventBicycle.setTitle(bikeListing.getTitle());
+        eventBicycle.setBikeType(bikeListing.getBicycle().getBikeType());
+        eventBicycle.setCreateDate(LocalDate.now());
 
         return eventBicycleMapper.toEventBicycleResponse(eventBicycleRepository.save(eventBicycle));
     }
@@ -80,7 +85,7 @@ public class EventBicycleService {
         return bicycleRepository.save(bicycle);
     }
 
-    public EventBicycleResponse registerBicycleToEventWithoutPosting(int eventId, int bicycleId) {
+    public EventBicycleResponse registerBicycleToEventWithoutPosting(int eventId, int bicycleId, EventBicycleCreationRequest request) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated()) {
             throw new AppException(ErrorCode.UNAUTHORIZED);
@@ -101,9 +106,12 @@ public class EventBicycleService {
         eventBicycle.setEvent(events);
         eventBicycle.setBicycle(bicycle);
         eventBicycle.setListing(null);
-        eventBicycle.setSellerName(username);
+        eventBicycle.setSellerName(user.getFullName());
         eventBicycle.setStatus("Pending");
-        eventBicycle.setType(events.getType());
+        eventBicycle.setPrice(request.getPrice());
+        eventBicycle.setTitle(request.getTitle());
+        eventBicycle.setBikeType(bicycle.getBikeType());
+        eventBicycle.setCreateDate(LocalDate.now());
 
         return eventBicycleMapper.toEventBicycleResponse(eventBicycleRepository.save(eventBicycle));
     }
@@ -117,6 +125,7 @@ public class EventBicycleService {
 
         eventBicycleMapper.updateEventBicycle(eventBicycle, request);
         eventBicycle.setStatus("Pending");
+        eventBicycle.setCreateDate(LocalDate.now());
         return eventBicycleMapper.toEventBicycleResponse(eventBicycleRepository.save(eventBicycle));
     }
 

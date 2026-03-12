@@ -29,7 +29,6 @@ public class Events {
     private String bikeType;
     private String location;
     private String address;
-    private String type;
     @Column(name = "latitude")
     private Double latitude;
 

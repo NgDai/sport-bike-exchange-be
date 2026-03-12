@@ -46,12 +46,12 @@ public class CheckInService {
         Events event = eventRepository.findById(eventId).orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
         CheckIn checkIn = new CheckIn();
         String token = UUID.randomUUID().toString();
-        checkIn.setUser(user);
-        checkIn.setEvent(event);
-        checkIn.setToken(token);
-        checkIn.setRole(request.getRole());
-        checkIn.setStatus(request.getStatus());
-        checkIn.setCheckInTime(request.getCheckInTime());
+//        checkIn.setUser(user);
+//        checkIn.setEvent(event);
+//        checkIn.setToken(token);
+//        checkIn.setRole(request.getRole());
+//        checkIn.setStatus(request.getStatus());
+//        checkIn.setCheckInTime(request.getCheckInTime());
 
         return checkInMapper.toCheckInResponse(checkInRepository.save(checkIn));
     }

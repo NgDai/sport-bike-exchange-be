@@ -24,6 +24,10 @@ public class Reservation {
     @JoinColumn(name = "buyer_id")
     Users buyer;
     String status;
+    @OneToOne
+    @JoinColumn(name = "deposit_id")
+    Deposit deposit;
+    Double depositAmount;
     @CreationTimestamp
     Date reservedAt;
 }
