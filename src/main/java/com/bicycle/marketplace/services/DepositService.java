@@ -27,6 +27,12 @@ public class DepositService {
     private IDepositRepository depositRepository;
     @Autowired
     private DepositMapper depositMapper;
+    @Autowired
+    private IUserRepository userRepository;
+    @Autowired
+    private IBikeListingRepository bikeListingRepository;
+    @Autowired
+    private TransactionService transactionService;
 
     public DepositResponse createDeposit(DepositCreationRequest request) {
         Deposit deposit = depositMapper.toDeposit(request);
