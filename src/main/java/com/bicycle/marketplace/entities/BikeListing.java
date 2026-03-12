@@ -17,7 +17,7 @@ import java.time.LocalDateTime;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class BikeListing {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     int listingId;
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "bicycle_id")

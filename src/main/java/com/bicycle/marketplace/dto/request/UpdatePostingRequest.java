@@ -31,7 +31,7 @@ public class UpdatePostingRequest {
     String forkType;
     String color;
     String frameMaterial;
-    int condition;
+    String condition;
     Double weight;
     String saddle;
     String chainring;
