@@ -306,7 +306,7 @@ public class TransactionService {
         boolean isBuyer = transaction.getBuyer() != null && transaction.getBuyer().getUserId() == currentUser.getUserId();
         boolean isSeller = transaction.getSeller() != null && transaction.getSeller().getUserId() == currentUser.getUserId();
         if (!isAdmin && !isBuyer && !isSeller) {
-            throw new AppException(ErrorCode.USER_NOT_AUTHORIZED);
+            throw new AppException(ErrorCode.UNAUTHORIZED);
         }
         return toTransactionResponseSafe(transaction);
     }
