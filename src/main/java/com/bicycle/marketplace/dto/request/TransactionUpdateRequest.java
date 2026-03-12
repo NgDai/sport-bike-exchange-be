@@ -16,7 +16,7 @@ public class TransactionUpdateRequest {
     private Integer sellerId;
     private Integer depositId;
     private Integer reservationId;
-    private String status;
     private Double amount;
     private Double actualPrice;
+    private Double fee;
 }
