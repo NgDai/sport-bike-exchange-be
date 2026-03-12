@@ -6,6 +6,7 @@ import com.bicycle.marketplace.dto.request.DepositUpdateRequest;
 import com.bicycle.marketplace.dto.response.DepositResponse;
 import com.bicycle.marketplace.entities.BikeListing;
 import com.bicycle.marketplace.entities.Deposit;
+import com.bicycle.marketplace.entities.Users;
 import com.bicycle.marketplace.exception.AppException;
 import com.bicycle.marketplace.exception.ErrorCode;
 import com.bicycle.marketplace.mapper.DepositMapper;
