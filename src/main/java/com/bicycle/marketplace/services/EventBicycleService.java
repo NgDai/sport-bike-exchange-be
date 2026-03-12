@@ -70,7 +70,7 @@ public class EventBicycleService {
         eventBicycle.setStatus("Pending");
         eventBicycle.setPrice(bikeListing.getPrice());
         eventBicycle.setTitle(bikeListing.getTitle());
-        eventBicycle.setBikeType(events.getBikeType());
+        eventBicycle.setBikeType(bikeListing.getBicycle().getBikeType());
         eventBicycle.setCreateDate(LocalDate.now());
 
         return eventBicycleMapper.toEventBicycleResponse(eventBicycleRepository.save(eventBicycle));
@@ -110,7 +110,7 @@ public class EventBicycleService {
         eventBicycle.setStatus("Pending");
         eventBicycle.setPrice(request.getPrice());
         eventBicycle.setTitle(request.getTitle());
-        eventBicycle.setBikeType(events.getBikeType());
+        eventBicycle.setBikeType(bicycle.getBikeType());
         eventBicycle.setCreateDate(LocalDate.now());
 
         return eventBicycleMapper.toEventBicycleResponse(eventBicycleRepository.save(eventBicycle));
