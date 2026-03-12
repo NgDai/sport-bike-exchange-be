@@ -57,6 +57,21 @@ public class DepositService {
             if (seller == null) {
                 throw new AppException(ErrorCode.USER_NOT_FOUND);
             }
+            double actualPrice = request.getActualPrice() != null ? request.getActualPrice() : listing.getPrice();
+            TransactionCreationRequest txnRequest = new TransactionCreationRequest();
+            txnRequest.setDepositId(deposit.getDepositId());
+            txnRequest.setReservationId(request.getReservationId());
+            txnRequest.setListingId(request.getListingId());
+            txnRequest.setBuyerId(buyer.getUserId());
+            txnRequest.setSellerId(seller.getUserId());
+            txnRequest.setAmount(deposit.getAmount());
+            txnRequest.setActualPrice(actualPrice);
+            txnRequest.setEventId(null);
+            txnRequest.setFee(null);
+            transactionService.createTransaction(txnRequest);
+        }
+
+        return depositMapper.toDepositResponse(deposit);
     }
 
     public DepositResponse updateDeposit(int depositId, DepositUpdateRequest request) {
