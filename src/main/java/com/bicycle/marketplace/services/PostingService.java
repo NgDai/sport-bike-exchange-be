@@ -93,7 +93,7 @@ public class PostingService {
 
             String paymentUrl = vnPayService.createOrder(
                     amountNeeded,
-                    "Nap tien de dang bai #" + savedListing.getListingId(),
+                    username + "|fee|" + savedListing.getListingId(),
                     customReturnUrl,
                     null
             );
@@ -105,8 +105,12 @@ public class PostingService {
                     .build();
         }
 
+        Wallet systemWallet = walletRepository.findByUsername("System")
+                .orElseThrow(() -> new AppException(ErrorCode.WALLET_NOT_FOUND));
+
         // 5. Nếu VÍ ĐỦ TIỀN -> Trừ tiền và đăng
         wallet.setBalance(wallet.getBalance() - listingFee);
+        systemWallet.setBalance(systemWallet.getBalance() + listingFee);
         walletRepository.save(wallet);
 
         if (listingFee > 0) {

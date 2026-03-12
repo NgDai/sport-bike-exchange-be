@@ -31,167 +31,205 @@ import org.springframework.stereotype.Service;
 @Builder
 @Slf4j
 public class WalletService {
-    @Autowired
-    IWalletRepository walletRepository;
+        @Autowired
+        IWalletRepository walletRepository;
 
-    @Autowired
-    IUserRepository userRepository;
+        @Autowired
+        IUserRepository userRepository;
 
-    @Autowired
-    WalletMapper walletMapper;
+        @Autowired
+        WalletMapper walletMapper;
 
-    @Autowired
-    WalletTransactionService walletTransactionService;
+        @Autowired
+        WalletTransactionService walletTransactionService;
 
-    @Autowired
-    ITransactionRepository transactionRepository;
+        @Autowired
+        ITransactionRepository transactionRepository;
 
-    // public WalletResponse viewWallet(){
-    // var context = SecurityContextHolder.getContext();
-    // String name = context.getAuthentication().getName();
-    //
-    // var wallet = walletRepository.findByUsername(name).orElseThrow(() -> new
-    // AppException(ErrorCode.WALLET_NOT_FOUND));
-    //
-    // return walletMapper.toWalletResponse(wallet);
-    // }
-    //
-    // public WalletResponse addFunds(WalletAddBalanceRequest request){
-    // var context = SecurityContextHolder.getContext();
-    // String name = context.getAuthentication().getName();
-    //
-    // Wallet wallet = walletRepository.findByUsername(name).orElseThrow(() -> new
-    // AppException(ErrorCode.WALLET_NOT_FOUND));
-    //
-    // wallet.setBalance(wallet.getBalance() + request.getAmount());
-    // walletRepository.save(wallet);
-    //
-    // return walletMapper.toWalletResponse(wallet);
-    // }
+        // public WalletResponse viewWallet(){
+        // var context = SecurityContextHolder.getContext();
+        // String name = context.getAuthentication().getName();
+        //
+        // var wallet = walletRepository.findByUsername(name).orElseThrow(() -> new
+        // AppException(ErrorCode.WALLET_NOT_FOUND));
+        //
+        // return walletMapper.toWalletResponse(wallet);
+        // }
+        //
+        // public WalletResponse addFunds(WalletAddBalanceRequest request){
+        // var context = SecurityContextHolder.getContext();
+        // String name = context.getAuthentication().getName();
+        //
+        // Wallet wallet = walletRepository.findByUsername(name).orElseThrow(() -> new
+        // AppException(ErrorCode.WALLET_NOT_FOUND));
+        //
+        // wallet.setBalance(wallet.getBalance() + request.getAmount());
+        // walletRepository.save(wallet);
+        //
+        // return walletMapper.toWalletResponse(wallet);
+        // }
 
-    public WalletResponse viewWallet() {
-        var context = SecurityContextHolder.getContext();
-        String name = context.getAuthentication().getName();
+        public WalletResponse viewWallet() {
+                var context = SecurityContextHolder.getContext();
+                String name = context.getAuthentication().getName();
 
-        // TỰ ĐỘNG TẠO VÍ NẾU CHƯA CÓ
-        Wallet wallet = walletRepository.findByUsername(name).orElseGet(() -> {
-            Users user = userRepository.findByUsername(name)
-                    .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
-            Wallet newWallet = Wallet.builder()
-                    .user(user)
-                    .username(name)
-                    .balance(0.0)
-                    .type("User")
-                    .build();
-            return walletRepository.save(newWallet);
-        });
+                // TỰ ĐỘNG TẠO VÍ NẾU CHƯA CÓ
+                Wallet wallet = walletRepository.findByUsername(name).orElseGet(() -> {
+                        Users user = userRepository.findByUsername(name)
+                                        .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+                        Wallet newWallet = Wallet.builder()
+                                        .user(user)
+                                        .username(name)
+                                        .balance(0.0)
+                                        .type("User")
+                                        .build();
+                        return walletRepository.save(newWallet);
+                });
 
-        return walletMapper.toWalletResponse(wallet);
+                return walletMapper.toWalletResponse(wallet);
 
-    }
-
-    @Transactional
-    public WalletTransactionResponse addFunds(WalletAddBalanceRequest request) {
-        var context = SecurityContextHolder.getContext();
-        String name = context.getAuthentication().getName();
-
-        // TỰ ĐỘNG TẠO VÍ NẾU CHƯA CÓ KHI NẠP TIỀN
-        Wallet wallet = walletRepository.findByUsername(name).orElseGet(() -> {
-            Users user = userRepository.findByUsername(name)
-                    .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
-
-            Wallet newWallet = Wallet.builder()
-                    .user(user)
-                    .username(name)
-                    .balance(0.0)
-                    .type("User")
-                    .build();
-            return walletRepository.save(newWallet);
-        });
-
-        // Cộng tiền vào ví
-        wallet.setBalance(wallet.getBalance() + request.getAmount());
-        walletRepository.save(wallet);
-
-        // Tạo Transaction và trả về Response tương ứng
-        return walletTransactionService.createTransaction(wallet, request.getAmount(), "Deposit",
-                "Added funds to wallet");
-    }
-
-    @Transactional
-    public WalletTransactionResponse withdrawFunds(WalletAddBalanceRequest request) {
-        var context = SecurityContextHolder.getContext();
-        String name = context.getAuthentication().getName();
-
-        Wallet wallet = walletRepository.findByUsername(name)
-                .orElseThrow(() -> new AppException(ErrorCode.WALLET_NOT_FOUND));
-
-        if (wallet.getBalance() < request.getAmount()) {
-            throw new AppException(ErrorCode.INSUFFICIENT_FUNDS);
         }
 
-        wallet.setBalance(wallet.getBalance() - request.getAmount());
-        walletRepository.save(wallet);
+        @Transactional
+        public WalletTransactionResponse addFunds(WalletAddBalanceRequest request) {
+                var context = SecurityContextHolder.getContext();
+                String name = context.getAuthentication().getName();
 
-        return walletTransactionService.createTransaction(wallet, request.getAmount(), "Withdrawal",
-                "Withdrew funds from wallet");
-    }
+                // TỰ ĐỘNG TẠO VÍ NẾU CHƯA CÓ KHI NẠP TIỀN
+                Wallet wallet = walletRepository.findByUsername(name).orElseGet(() -> {
+                        Users user = userRepository.findByUsername(name)
+                                        .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 
-    @Transactional
-    public WalletTransactionResponse transferFunds(TransferFundsRequest request) {
-        var context = SecurityContextHolder.getContext();
-        String name = context.getAuthentication().getName();
+                        Wallet newWallet = Wallet.builder()
+                                        .user(user)
+                                        .username(name)
+                                        .balance(0.0)
+                                        .type("User")
+                                        .build();
+                        return walletRepository.save(newWallet);
+                });
 
-        Wallet senderWallet = walletRepository.findByUsername(name)
-                .orElseThrow(() -> new AppException(ErrorCode.WALLET_NOT_FOUND));
+                // Cộng tiền vào ví
+                wallet.setBalance(wallet.getBalance() + request.getAmount());
+                walletRepository.save(wallet);
 
-        Wallet systemWallet = walletRepository.findByUsername("System")
-                .orElseThrow(() -> new AppException(ErrorCode.WALLET_NOT_FOUND));
-
-        if (senderWallet.getBalance() < request.getAmount()) {
-            throw new AppException(ErrorCode.INSUFFICIENT_FUNDS);
+                // Tạo Transaction và trả về Response tương ứng
+                return walletTransactionService.createTransaction(wallet, request.getAmount(), "Deposit",
+                                "Added funds to wallet");
         }
 
-        senderWallet.setBalance(senderWallet.getBalance() - request.getAmount());
-        systemWallet.setBalance(systemWallet.getBalance() + request.getAmount());
+        /**
+         * Nạp tiền vào ví USER dựa theo username (không cần SecurityContextHolder).
+         * Dùng khi VNPay callback — lúc đó không có JWT session.
+         */
+        @Transactional
+        public WalletTransactionResponse addFundsToUserWallet(double amount, String username) {
+                Wallet wallet = walletRepository.findByUsername(username).orElseGet(() -> {
+                        Users user = userRepository.findByUsername(username)
+                                        .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+                        Wallet newWallet = Wallet.builder()
+                                        .user(user)
+                                        .username(username)
+                                        .balance(0.0)
+                                        .type("User")
+                                        .build();
+                        return walletRepository.save(newWallet);
+                });
 
-        walletRepository.save(senderWallet);
-        walletRepository.save(systemWallet);
+                wallet.setBalance(wallet.getBalance() + amount);
+                walletRepository.save(wallet);
 
-        return walletTransactionService.createTransaction(senderWallet, request.getAmount(), request.getType(),
-                request.getDescription());
-    }
-
-    @Transactional
-    public WalletTransactionResponse receiveFunds(ReceiveFundsRequest request) {
-        var context = SecurityContextHolder.getContext();
-        String name = context.getAuthentication().getName();
-
-        Wallet receiverWallet = walletRepository.findByUsername(request.getUsername())
-                .orElseThrow(() -> new AppException(ErrorCode.WALLET_NOT_FOUND));
-
-        Wallet systemWallet = walletRepository.findByUsername("System")
-                .orElseThrow(() -> new AppException(ErrorCode.WALLET_NOT_FOUND));
-
-        if (systemWallet.getBalance() < request.getAmount()) {
-            throw new AppException(ErrorCode.INSUFFICIENT_FUNDS);
+                return walletTransactionService.createTransaction(wallet, amount, "Deposit",
+                                "Nạp tiền qua VNPay");
         }
 
-        systemWallet.setBalance(systemWallet.getBalance() - request.getAmount());
-        receiverWallet.setBalance(receiverWallet.getBalance() + request.getAmount());
+        @Transactional
+        public WalletTransactionResponse withdrawFunds(WalletAddBalanceRequest request) {
+                var context = SecurityContextHolder.getContext();
+                String name = context.getAuthentication().getName();
 
-        walletRepository.save(systemWallet);
-        walletRepository.save(receiverWallet);
+                Wallet wallet = walletRepository.findByUsername(name)
+                                .orElseThrow(() -> new AppException(ErrorCode.WALLET_NOT_FOUND));
 
-//        Transaction transaction = Transaction.builder()
-//                .amount(request.getAmount())
-//                .type(request.getType())
-//                .description(request.getDescription())
-//                .senderWallet(systemWallet)
-//                .receiverWallet(receiverWallet)
-//                .build();
+                if (wallet.getBalance() < request.getAmount()) {
+                        throw new AppException(ErrorCode.INSUFFICIENT_FUNDS);
+                }
 
-        return walletTransactionService.createTransaction(receiverWallet, request.getAmount(), request.getType(),
-                request.getDescription());
-    }
+                wallet.setBalance(wallet.getBalance() - request.getAmount());
+                walletRepository.save(wallet);
+
+                return walletTransactionService.createTransaction(wallet, request.getAmount(), "Withdrawal",
+                                "Withdrew funds from wallet");
+        }
+
+        @Transactional
+        public WalletTransactionResponse transferFunds(TransferFundsRequest request) {
+                var context = SecurityContextHolder.getContext();
+                String name = context.getAuthentication().getName();
+
+                Wallet senderWallet = walletRepository.findByUsername(name)
+                                .orElseThrow(() -> new AppException(ErrorCode.WALLET_NOT_FOUND));
+
+                Wallet systemWallet = walletRepository.findByUsername("System")
+                                .orElseThrow(() -> new AppException(ErrorCode.WALLET_NOT_FOUND));
+
+                if (senderWallet.getBalance() < request.getAmount()) {
+                        throw new AppException(ErrorCode.INSUFFICIENT_FUNDS);
+                }
+
+                senderWallet.setBalance(senderWallet.getBalance() - request.getAmount());
+                systemWallet.setBalance(systemWallet.getBalance() + request.getAmount());
+
+                walletRepository.save(senderWallet);
+                walletRepository.save(systemWallet);
+
+                return walletTransactionService.createTransaction(senderWallet, request.getAmount(), request.getType(),
+                                request.getDescription());
+        }
+
+        @Transactional
+        public WalletTransactionResponse addFundsToSystemWallet(double amount, String username) {
+                Wallet systemWallet = walletRepository.findByUsername("System")
+                                .orElseThrow(() -> new AppException(ErrorCode.WALLET_NOT_FOUND));
+
+                systemWallet.setBalance(systemWallet.getBalance() + amount);
+                walletRepository.save(systemWallet);
+
+                String description = "Phí đăng bài từ user: " + username;
+                return walletTransactionService.createTransaction(systemWallet, amount, "Fee", description);
+        }
+
+        @Transactional
+        public WalletTransactionResponse receiveFunds(ReceiveFundsRequest request) {
+                var context = SecurityContextHolder.getContext();
+                String name = context.getAuthentication().getName();
+
+                Wallet receiverWallet = walletRepository.findByUsername(request.getUsername())
+                                .orElseThrow(() -> new AppException(ErrorCode.WALLET_NOT_FOUND));
+
+                Wallet systemWallet = walletRepository.findByUsername("System")
+                                .orElseThrow(() -> new AppException(ErrorCode.WALLET_NOT_FOUND));
+
+                if (systemWallet.getBalance() < request.getAmount()) {
+                        throw new AppException(ErrorCode.INSUFFICIENT_FUNDS);
+                }
+
+                systemWallet.setBalance(systemWallet.getBalance() - request.getAmount());
+                receiverWallet.setBalance(receiverWallet.getBalance() + request.getAmount());
+
+                walletRepository.save(systemWallet);
+                walletRepository.save(receiverWallet);
+
+                // Transaction transaction = Transaction.builder()
+                // .amount(request.getAmount())
+                // .type(request.getType())
+                // .description(request.getDescription())
+                // .senderWallet(systemWallet)
+                // .receiverWallet(receiverWallet)
+                // .build();
+
+                return walletTransactionService.createTransaction(receiverWallet, request.getAmount(),
+                                request.getType(),
+                                request.getDescription());
+        }
 }

@@ -36,7 +36,8 @@ public class PostingController {
     }
 
     @PutMapping("/confirm-payment/{listingId}")
-    ApiResponse<String> confirmPayment(@PathVariable int listingId) {
+    ApiResponse<String> confirmPayment(
+            @PathVariable int listingId) {
         ApiResponse<String> apiResponse = new ApiResponse<>();
         apiResponse.setResult(postingService.confirmPaymentAndPublish(listingId));
         return apiResponse;
