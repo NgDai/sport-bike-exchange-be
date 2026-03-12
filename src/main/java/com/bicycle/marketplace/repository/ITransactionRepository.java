@@ -12,4 +12,6 @@ public interface ITransactionRepository extends JpaRepository<Transaction, Integ
     List<Transaction> findAllByStatus(String status);
 
     Optional<Transaction> findByDeposit_DepositId(Integer depositId);
+
+    Optional<Transaction> findByReservation_ReservationId(Integer reservationId);
 }
