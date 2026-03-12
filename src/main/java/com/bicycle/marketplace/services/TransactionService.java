@@ -80,7 +80,6 @@ public class TransactionService {
                 .reservation(reservation)
                 .amount(request.getAmount())
                 .actualPrice(request.getActualPrice())
-                .status(request.getStatus() != null ? request.getStatus() : "PENDING")
                 .build();
         transaction = transactionRepository.save(transaction);
         return transactionMapper.toTransactionResponse(transaction);
