@@ -21,6 +21,9 @@ public class TransactionResponse {
     private int listingId;
     private double amount;
     private double actualPrice;
+    private double fee;
+    private String description;
+    private String type;
     private Date createdAt;
     private Date updatedAt;
     private String status;
