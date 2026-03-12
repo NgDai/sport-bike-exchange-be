@@ -46,7 +46,7 @@ public class TransactionController {
         return apiResponse;
     }
 
-    @GetMapping("/{transactionId}")
+    @GetMapping("/status/{status}")
     @PreAuthorize("hasRole('ADMIN')")
     ApiResponse<TransactionResponse> getTransactionById(@PathVariable int transactionId) {
         ApiResponse<TransactionResponse> apiResponse = new ApiResponse<>();
