@@ -4,7 +4,6 @@ import com.bicycle.marketplace.dto.request.CreatePostingRequest;
 import com.bicycle.marketplace.entities.*;
 import com.bicycle.marketplace.mapper.PostingMapper;
 import com.bicycle.marketplace.repository.*;
-import com.bicycle.marketplace.dto.request.EventBicycleCreationRequest;
 import com.bicycle.marketplace.dto.request.EventBicycleUpdateRequest;
 import com.bicycle.marketplace.dto.response.EventBicycleResponse;
 import com.bicycle.marketplace.exception.AppException;
@@ -15,7 +14,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
 import java.util.List;
 
 @Service
@@ -48,7 +46,19 @@ public class EventBicycleService {
         Users user = userRepository.findByUsername(username).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
         Events events = eventRepository.findById(eventId).orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
         BikeListing bikeListing = bikeListingRepository.findById(listingId).orElseThrow(() -> new AppException(ErrorCode.BIKE_LISTING_NOT_FOUND));
+
+        if (bikeListing.getSeller() == null || bikeListing.getSeller().getUserId() != user.getUserId()) {
+            throw new RuntimeException("Bạn không có quyền đăng ký xe này");
+        }
+
         Bicycle bicycle = bikeListing.getBicycle();
+
+        if (events.getBikeType() != null && !events.getBikeType().equalsIgnoreCase("ALL")) {
+            if (bicycle == null || !events.getBikeType().equalsIgnoreCase(bicycle.getBikeType())) {
+                throw new RuntimeException("Loại xe bạn không được đăng ký vào sự kiện này");
+            }
+        }
+
         EventBicycle eventBicycle = new EventBicycle();
         eventBicycle.setSeller(user);
         eventBicycle.setEvent(events);
@@ -57,10 +67,7 @@ public class EventBicycleService {
         eventBicycle.setSellerName(username);
         eventBicycle.setStatus("Pending");
         eventBicycle.setType(events.getType());
-        eventBicycle.setCreateDate(LocalDate.now());
-        if(!bikeListing.getBicycle().getBikeType().equalsIgnoreCase(events.getType())) {
-            throw new RuntimeException("Loại xe bạn không được đăng ký vào sự kiện này");
-        }
+
         return eventBicycleMapper.toEventBicycleResponse(eventBicycleRepository.save(eventBicycle));
     }
 
@@ -82,6 +89,13 @@ public class EventBicycleService {
         Users user = userRepository.findByUsername(username).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
         Events events = eventRepository.findById(eventId).orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
         Bicycle bicycle = bicycleRepository.findById(bicycleId).orElseThrow(() -> new AppException(ErrorCode.BICYCLE_NOT_FOUND));
+
+        if (events.getBikeType() != null && !events.getBikeType().equalsIgnoreCase("ALL")) {
+            if (!events.getBikeType().equalsIgnoreCase(bicycle.getBikeType())) {
+                throw new RuntimeException("Loại xe bạn không được đăng ký vào sự kiện này");
+            }
+        }
+
         EventBicycle eventBicycle = new EventBicycle();
         eventBicycle.setSeller(user);
         eventBicycle.setEvent(events);
@@ -90,10 +104,7 @@ public class EventBicycleService {
         eventBicycle.setSellerName(username);
         eventBicycle.setStatus("Pending");
         eventBicycle.setType(events.getType());
-        eventBicycle.setCreateDate(LocalDate.now());
-        if(!bicycle.getBikeType().equalsIgnoreCase(events.getType())) {
-            throw new RuntimeException("Loại xe bạn không được đăng ký vào sự kiện này");
-        }
+
         return eventBicycleMapper.toEventBicycleResponse(eventBicycleRepository.save(eventBicycle));
     }
 
@@ -103,6 +114,7 @@ public class EventBicycleService {
             throw new AppException(ErrorCode.UNAUTHORIZED);
         }
         EventBicycle eventBicycle = eventBicycleRepository.findById(eventBikeId).orElseThrow(() -> new AppException(ErrorCode.EVENT_BICYCLE_NOT_FOUND));
+
         eventBicycleMapper.updateEventBicycle(eventBicycle, request);
         eventBicycle.setStatus("Pending");
         return eventBicycleMapper.toEventBicycleResponse(eventBicycleRepository.save(eventBicycle));
