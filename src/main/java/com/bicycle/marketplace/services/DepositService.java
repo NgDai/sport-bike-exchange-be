@@ -4,6 +4,7 @@ import com.bicycle.marketplace.dto.request.DepositCreationRequest;
 import com.bicycle.marketplace.dto.request.TransactionCreationRequest;
 import com.bicycle.marketplace.dto.request.DepositUpdateRequest;
 import com.bicycle.marketplace.dto.response.DepositResponse;
+import com.bicycle.marketplace.entities.BikeListing;
 import com.bicycle.marketplace.entities.Deposit;
 import com.bicycle.marketplace.exception.AppException;
 import com.bicycle.marketplace.exception.ErrorCode;
