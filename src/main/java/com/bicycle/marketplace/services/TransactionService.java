@@ -131,7 +131,9 @@ public class TransactionService {
         if (request.getActualPrice() != null) {
             transaction.setActualPrice(request.getActualPrice());
         }
-
+        if (request.getFee() != null) {
+            transaction.setFee(request.getFee());
+        }
         transaction = transactionRepository.save(transaction);
         return transactionMapper.toTransactionResponse(transaction);
     }
