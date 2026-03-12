@@ -59,7 +59,7 @@ public class TransactionController {
     @PreAuthorize("isAuthenticated()")
     ApiResponse<TransactionResponse> getTransactionById(@PathVariable int transactionId) {
         ApiResponse<TransactionResponse> apiResponse = new ApiResponse<>();
-        apiResponse.setResult(transactionService.findTransactionById(transactionId));
+        apiResponse.setResult(transactionService.findTransactionByIdForCurrentUser(transactionId));
         apiResponse.setMessage("Transaction fetched successfully");
         return apiResponse;
     }
