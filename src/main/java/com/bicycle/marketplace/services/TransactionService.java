@@ -154,6 +154,24 @@ public class TransactionService {
         return transactionMapper.toTransactionResponse(transaction);
     }
 
+    /**
+     * Lấy giao dịch theo id nếu user hiện tại là ADMIN hoặc buyer hoặc seller của giao dịch.
+     */
+    public TransactionResponse findTransactionByIdForCurrentUser(int transactionId) {
+        Transaction transaction = transactionRepository.findById(transactionId)
+                .orElseThrow(() -> new AppException(ErrorCode.TRANSACTION_NOT_FOUND));
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        Users currentUser = userRepository.findByUsername(username)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+        boolean isAdmin = "ADMIN".equalsIgnoreCase(currentUser.getRole());
+        boolean isBuyer = transaction.getBuyer() != null && transaction.getBuyer().getUserId() == currentUser.getUserId();
+        boolean isSeller = transaction.getSeller() != null && transaction.getSeller().getUserId() == currentUser.getUserId();
+        if (!isAdmin && !isBuyer && !isSeller) {
+            throw new AppException(ErrorCode.USER_NOT_AUTHORIZED);
+        }
+        return transactionMapper.toTransactionResponse(transaction);
+    }
+
     public String deleteTransaction(int transactionId) {
         Transaction transaction = transactionRepository.findById(transactionId)
                 .orElseThrow(() -> new AppException(ErrorCode.TRANSACTION_NOT_FOUND));
