@@ -71,13 +71,4 @@ public class TransactionController {
         apiResponse.setResult(transactionService.deleteTransaction(transactionId));
         return apiResponse;
     }
-
-    @GetMapping("/status/{status}")
-    @PreAuthorize("hasRole('ADMIN')")
-    ApiResponse<List<TransactionResponse>> getTransactionsByStatus(@PathVariable String status) {
-        ApiResponse<List<TransactionResponse>> apiResponse = new ApiResponse<>();
-        apiResponse.setResult(transactionService.findTransactionResponsesByStatus(status));
-        apiResponse.setMessage("Transactions fetched successfully");
-        return apiResponse;
-    }
 }
