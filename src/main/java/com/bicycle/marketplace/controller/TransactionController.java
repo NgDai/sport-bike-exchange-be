@@ -4,8 +4,8 @@ import com.bicycle.marketplace.dto.request.TransactionCreationRequest;
 import com.bicycle.marketplace.dto.request.TransactionUpdateRequest;
 import com.bicycle.marketplace.dto.response.ApiResponse;
 import com.bicycle.marketplace.dto.response.TransactionResponse;
-import com.bicycle.marketplace.entities.Transaction;
 import com.bicycle.marketplace.services.TransactionService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -19,8 +19,8 @@ public class TransactionController {
     private TransactionService transactionService;
 
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
-    ApiResponse<TransactionResponse> createTransaction(@RequestBody TransactionCreationRequest request) {
+    @PreAuthorize("isAuthenticated()")
+    ApiResponse<TransactionResponse> createTransaction(@RequestBody @Valid TransactionCreationRequest request) {
         ApiResponse<TransactionResponse> apiResponse = new ApiResponse<>();
         apiResponse.setResult(transactionService.createTransaction(request));
         apiResponse.setMessage("Transaction created successfully");
@@ -39,18 +39,27 @@ public class TransactionController {
 
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
-    ApiResponse<List<Transaction>> getAllTransactions() {
-        ApiResponse<List<Transaction>> apiResponse = new ApiResponse<>();
-        apiResponse.setResult(transactionService.findAllTransactions());
+    ApiResponse<List<TransactionResponse>> getAllTransactions() {
+        ApiResponse<List<TransactionResponse>> apiResponse = new ApiResponse<>();
+        apiResponse.setResult(transactionService.findAllTransactionResponses());
+        apiResponse.setMessage("Transactions fetched successfully");
+        return apiResponse;
+    }
+
+    @GetMapping("/status/{status}")
+    @PreAuthorize("hasRole('ADMIN')")
+    ApiResponse<List<TransactionResponse>> getTransactionsByStatus(@PathVariable String status) {
+        ApiResponse<List<TransactionResponse>> apiResponse = new ApiResponse<>();
+        apiResponse.setResult(transactionService.findTransactionResponsesByStatus(status));
         apiResponse.setMessage("Transactions fetched successfully");
         return apiResponse;
     }
 
     @GetMapping("/{transactionId}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("isAuthenticated()")
     ApiResponse<TransactionResponse> getTransactionById(@PathVariable int transactionId) {
         ApiResponse<TransactionResponse> apiResponse = new ApiResponse<>();
-        apiResponse.setResult(transactionService.findTransactionById(transactionId));
+        apiResponse.setResult(transactionService.findTransactionByIdForCurrentUser(transactionId));
         apiResponse.setMessage("Transaction fetched successfully");
         return apiResponse;
     }
@@ -60,15 +69,6 @@ public class TransactionController {
     ApiResponse<String> deleteTransaction(@PathVariable int transactionId) {
         ApiResponse<String> apiResponse = new ApiResponse<>();
         apiResponse.setResult(transactionService.deleteTransaction(transactionId));
-        return apiResponse;
-    }
-
-    @GetMapping("/status/{status}")
-    @PreAuthorize("hasRole('ADMIN')")
-    ApiResponse<List<Transaction>> getTransactionsByStatus(@PathVariable String status) {
-        ApiResponse<List<Transaction>> apiResponse = new ApiResponse<>();
-        apiResponse.setResult(transactionService.findTransactionsByStatus(status));
-        apiResponse.setMessage("Transactions fetched successfully");
         return apiResponse;
     }
 }

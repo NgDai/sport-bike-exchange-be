@@ -1,17 +1,14 @@
 package com.bicycle.marketplace.dto.response;
 
-import com.bicycle.marketplace.entities.*;
-import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
 
 import java.util.Date;
 
-@Getter @Setter
+@Getter
+@Setter
 @AllArgsConstructor
 @NoArgsConstructor
 public class TransactionResponse {
@@ -24,7 +21,10 @@ public class TransactionResponse {
     private int listingId;
     private double amount;
     private double actualPrice;
+    private double fee;
+    private String description;
+    private String type;
     private Date createdAt;
-    private Date updateAt;
+    private Date updatedAt;
     private String status;
 }

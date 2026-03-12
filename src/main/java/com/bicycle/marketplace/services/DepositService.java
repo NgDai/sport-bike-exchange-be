@@ -1,13 +1,15 @@
 package com.bicycle.marketplace.services;
-
 import com.bicycle.marketplace.entities.BikeListing;
 import com.bicycle.marketplace.entities.Users;
 import com.bicycle.marketplace.repository.IBikeListingRepository;
 import com.bicycle.marketplace.repository.IDepositRepository;
 import com.bicycle.marketplace.dto.request.DepositCreationRequest;
+import com.bicycle.marketplace.dto.request.TransactionCreationRequest;
 import com.bicycle.marketplace.dto.request.DepositUpdateRequest;
 import com.bicycle.marketplace.dto.response.DepositResponse;
+import com.bicycle.marketplace.entities.BikeListing;
 import com.bicycle.marketplace.entities.Deposit;
+import com.bicycle.marketplace.entities.Users;
 import com.bicycle.marketplace.exception.AppException;
 import com.bicycle.marketplace.exception.ErrorCode;
 import com.bicycle.marketplace.mapper.DepositMapper;
@@ -18,6 +20,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
