@@ -41,7 +41,22 @@ public class DepositService {
     @Transactional
     public DepositResponse createDeposit(DepositCreationRequest request) {
         Deposit deposit = depositMapper.toDeposit(request);
-        return depositMapper.toDepositResponse(depositRepository.save(deposit));
+        Users buyer = userRepository.findByUsername(SecurityContextHolder.getContext().getAuthentication().getName())
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+        if (request.getListingId() != null) {
+            BikeListing listing = bikeListingRepository.findById(request.getListingId())
+                    .orElseThrow(() -> new AppException(ErrorCode.BIKE_LISTING_NOT_FOUND));
+            deposit.setUser(buyer);
+            deposit.setListing(listing);
+        }
+        deposit = depositRepository.save(deposit);
+
+        if (request.getListingId() != null) {
+            BikeListing listing = deposit.getListing();
+            Users seller = listing.getSeller();
+            if (seller == null) {
+                throw new AppException(ErrorCode.USER_NOT_FOUND);
+            }
     }
 
     public DepositResponse updateDeposit(int depositId, DepositUpdateRequest request) {
