@@ -51,7 +51,7 @@ public class EventBicycleService {
         return eventBicycleMapper.toEventBicycleResponse(eventBicycleRepository.save(eventBicycle));
     }
 
-    public EventBicycleResponse registerBicycleToEventWithoutPosting(int eventId, int bicycleId, EventBicycleCreationRequest request) {}
+//    public EventBicycleResponse registerBicycleToEventWithoutPosting(int eventId, int bicycleId, EventBicycleCreationRequest request) {}
 
     public EventBicycleResponse updateEventBicycle(int eventBikeId, EventBicycleUpdateRequest request) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
