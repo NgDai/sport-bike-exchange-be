@@ -14,6 +14,7 @@ import com.bicycle.marketplace.repository.IBikeListingRepository;
 import com.bicycle.marketplace.repository.IReservationRepository;
 import com.bicycle.marketplace.repository.ITransactionRepository;
 import com.bicycle.marketplace.repository.IUserRepository;
+import lombok.extern.slf4j.XSlf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -23,6 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 
 @Service
+@XSlf4j
 public class ReservationService {
     @Autowired
     private IReservationRepository reservationRepository;
@@ -41,8 +43,10 @@ public class ReservationService {
             throw new AppException(ErrorCode.UNAUTHORIZED);
         }
         String username = authentication.getName();
-        Users buyer = userRepository.findByUsername(username).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
-        BikeListing bikeListing = bikeListingRepository.findById(bikeListingId).orElseThrow(() -> new AppException(ErrorCode.BIKE_LISTING_NOT_FOUND));
+        Users buyer = userRepository.findByUsername(username)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+        BikeListing bikeListing = bikeListingRepository.findById(bikeListingId)
+                .orElseThrow(() -> new AppException(ErrorCode.BIKE_LISTING_NOT_FOUND));
 
         Reservation reservation = new Reservation();
         reservation.setBuyer(buyer);
@@ -121,7 +125,8 @@ public class ReservationService {
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 
         // Hàm này đã có sẵn trong IReservationRepository của bạn
-        List<Reservation> reservations = reservationRepository.findByBuyer_UserIdOrderByReservedAtDesc(user.getUserId());
+        List<Reservation> reservations = reservationRepository
+                .findByBuyer_UserIdOrderByReservedAtDesc(user.getUserId());
 
         return reservations.stream()
                 .map(reservationMapper::toReservationResponse)
@@ -157,5 +162,25 @@ public class ReservationService {
         return reservationRepository.findAll().stream()
                 .map(reservationMapper::toReservationResponse)
                 .toList();
+    }
+
+    public ReservationResponse cancelReservation(int reservationId) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new AppException(ErrorCode.UNAUTHORIZED);
+        }
+        Reservation reservation = reservationRepository.findById(reservationId)
+                .orElseThrow(() -> new AppException(ErrorCode.RESERVATION_NOT_FOUND));
+        BikeListing listing = bikeListingRepository.findById(reservation.getListing().getListingId())
+                .orElseThrow(() -> new AppException(ErrorCode.BIKE_LISTING_NOT_FOUND));
+        if (reservation.getStatus().equalsIgnoreCase("Deposited")) {
+            reservation.setStatus("Cancelled");
+            listing.setStatus("Available");
+        } else {
+            throw new RuntimeException("Chỉ có thể hủy reservation đang ở trạng thái 'Deposited'");
+        }
+
+        bikeListingRepository.save(listing);
+        return reservationMapper.toReservationResponse(reservationRepository.save(reservation));
     }
 }
