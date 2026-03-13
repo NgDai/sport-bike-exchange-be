@@ -3,19 +3,17 @@ package com.bicycle.marketplace.controller;
 import com.bicycle.marketplace.dto.response.ApiResponse;
 import com.bicycle.marketplace.entities.BicycleLibrary;
 import com.bicycle.marketplace.services.BicycleLibraryService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
 @RequestMapping("/bicycle-library")
+@RequiredArgsConstructor
 public class BicycleLibraryController {
 
     private final BicycleLibraryService bicycleLibraryService;
-
-    public BicycleLibraryController(BicycleLibraryService bicycleLibraryService) {
-        this.bicycleLibraryService = bicycleLibraryService;
-    }
 
     @GetMapping
     ApiResponse<List<BicycleLibrary>> getLibrary(

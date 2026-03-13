@@ -11,5 +11,4 @@ import java.util.Optional;
 @Repository
 public interface IEventRepository extends JpaRepository<Events, Integer> {
     List<Events> findAllByStatus(String status);
-    List<Events> findAllByOrderByCreateDateDesc();
 }

@@ -52,11 +52,8 @@ public enum ErrorCode {
     INVALID_TOKEN(1023, "Token không hợp lệ"),
     WALLET_NOT_FOUND(1024, "Không tìm thấy ví của người dùng"),
     INSUFFICIENT_FUNDS(1025, "Số dư không đủ để thực hiện giao dịch"),
-    DEPOSIT_ALREADY_HAS_TRANSACTION(1028, "Đặt cọc này đã có giao dịch, không thể tạo trùng"),
-    USER_NOT_AUTHORIZED(1029, "Bạn không có quyền thực hiện thao tác này"),
-    INVALID_REQUEST(1030, "Yêu cầu không hợp lệ"),
-    TRANSACTION_SAVE_FAILED(1031, "Không thể lưu giao dịch. Kiểm tra dữ liệu hoặc chạy script docs/TRANSACTION_TABLE_NULLABLE_FK.sql nếu lỗi do cột FK không cho phép NULL."),
-    RESERVATION_ALREADY_HAS_TRANSACTION(1032, "Đặt chỗ này đã có giao dịch, không thể tạo trùng.");
+    USER_INACTIVE(1030, "Tài khoản của bạn đã bị vô hiệu hóa"),
+    MISSING_USER_INFO(1031, "Bạn cần cập nhật đầy đủ số điện thoại và địa chỉ trước khi đăng bán xe");
 
     private int code;
     private String message;

@@ -30,14 +30,13 @@ public class ApplicationInitConfig {
                 Users user = Users.builder()
                         .username("admin")
                         .role(Role.ADMIN.name())
-                        .password("1")
+                        .password("1") // In a real application, ensure to hash passwords
+                        // .passwordHash(passwordEncoder.encode("1"))
                         .fullName("Administrator")
                         .build();
                 userRepository.save(user);
                 log.warning(
                         "Default admin user created with username 'admin' and password '1'. Please change the password after first login.");
-            } else {
-                log.info("Admin user already exists; login with username 'admin' and password '1' (or the password set in DB).");
             }
 
             if (walletRepository.findByType("System").isEmpty()) {

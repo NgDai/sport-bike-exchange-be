@@ -71,6 +71,10 @@ public class AuthenticationService {
         var user = userRepository.findByUsername(request.getUsername())
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 
+        if ("Inactive".equalsIgnoreCase(user.getStatus())) {
+            throw new AppException(ErrorCode.USER_INACTIVE);
+        }
+
         boolean authenticated = request.getPassword().equals(user.getPassword());
         // boolean authenticated = passwordEncoder.matches(request.getPassword(),
         // user.getPassword());
@@ -87,6 +91,10 @@ public class AuthenticationService {
     public AuthenticationResponse loginWithEmail(EmailAuthenticationRequest request) {
         var user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+
+        if ("Inactive".equalsIgnoreCase(user.getStatus())) {
+            throw new AppException(ErrorCode.USER_INACTIVE);
+        }
 
         // boolean authenticated = passwordEncoder.matches(request.getPassword(),
         // user.getPassword());
@@ -164,6 +172,10 @@ public class AuthenticationService {
             Users savedUser = userRepository.save(newUser);
             return savedUser;
         });
+
+        if ("Inactive".equalsIgnoreCase(user.getStatus())) {
+            throw new AppException(ErrorCode.USER_INACTIVE);
+        }
 
         // Trả về JWT nội bộ như flow đăng nhập thường
         return AuthenticationResponse.builder()
