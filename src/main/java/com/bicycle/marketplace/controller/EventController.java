@@ -101,4 +101,13 @@ public class EventController {
         apiResponse.setMessage("Events fetched successfully");
         return apiResponse;
     }
+
+    @PutMapping("/{eventId}/cancel")
+    @PreAuthorize("hasRole('ADMIN')")
+    ApiResponse<EventResponse> cancelEvent(@PathVariable int eventId) {
+        ApiResponse<EventResponse> apiResponse = new ApiResponse<>();
+        apiResponse.setResult(eventService.cancelEvent(eventId));
+        apiResponse.setMessage("Event cancelled successfully");
+        return apiResponse;
+    }
 }
