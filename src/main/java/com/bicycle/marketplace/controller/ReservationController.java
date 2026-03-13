@@ -48,21 +48,12 @@ public class ReservationController {
         return apiResponse;
     }
 
-    @GetMapping("/my-buyer-reservations")
+    @GetMapping("/my-reservations")
     @PreAuthorize("isAuthenticated()")
-    public ApiResponse<List<ReservationResponse>> getMyBuyerReservations() {
+    public ApiResponse<List<ReservationResponse>> getMyReservations() {
         ApiResponse<List<ReservationResponse>> apiResponse = new ApiResponse<>();
-        apiResponse.setResult(reservationService.getMyBuyerReservations());
-        apiResponse.setMessage("Lấy danh sách đặt chỗ (người mua) thành công");
-        return apiResponse;
-    }
-
-    @GetMapping("/my-seller-reservations")
-    @PreAuthorize("isAuthenticated()")
-    public ApiResponse<List<ReservationResponse>> getMySellerReservations() {
-        ApiResponse<List<ReservationResponse>> apiResponse = new ApiResponse<>();
-        apiResponse.setResult(reservationService.getMySellerReservations());
-        apiResponse.setMessage("Lấy danh sách đặt chỗ (người bán) thành công");
+        apiResponse.setResult(reservationService.getMyReservations());
+        apiResponse.setMessage("Lấy danh sách đặt chỗ cá nhân thành công");
         return apiResponse;
     }
 
