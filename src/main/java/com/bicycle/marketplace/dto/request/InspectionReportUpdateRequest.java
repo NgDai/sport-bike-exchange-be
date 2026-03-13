@@ -1,18 +1,17 @@
 package com.bicycle.marketplace.dto.request;
 
+import com.bicycle.marketplace.enums.InspectionResult;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.util.Date;
-
-@Getter @Setter
+@Getter
+@Setter
 @AllArgsConstructor
 @NoArgsConstructor
 public class InspectionReportUpdateRequest {
-    private String result;
+    private InspectionResult result;
     private String reason;
     private String note;
-    private Date createAt;
 }
