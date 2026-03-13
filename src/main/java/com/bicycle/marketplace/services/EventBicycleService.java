@@ -2,6 +2,7 @@ package com.bicycle.marketplace.services;
 
 import com.bicycle.marketplace.dto.request.CreatePostingRequest;
 import com.bicycle.marketplace.dto.request.EventBicycleCreationRequest;
+import com.bicycle.marketplace.dto.response.CreatePostingResponse;
 import com.bicycle.marketplace.entities.*;
 import com.bicycle.marketplace.mapper.PostingMapper;
 import com.bicycle.marketplace.repository.*;
@@ -38,6 +39,14 @@ public class EventBicycleService {
     private ICategoryRepository categoryRepository;
     @Autowired
     private IBicycleRepository bicycleRepository;
+    @Autowired
+    private IWalletRepository walletRepository;
+    @Autowired
+    private WalletTransactionService walletTransactionService;
+    @Autowired
+    private VNPayService vnPayService;
+    @Autowired
+    private PostingService postingService;
 
     public EventBicycleResponse registerBicycleToEvent(int eventId, int listingId) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -48,7 +57,9 @@ public class EventBicycleService {
         Users user = userRepository.findByUsername(username).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
         Events events = eventRepository.findById(eventId).orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
         BikeListing bikeListing = bikeListingRepository.findById(listingId).orElseThrow(() -> new AppException(ErrorCode.BIKE_LISTING_NOT_FOUND));
-
+        if (eventBicycleRepository.existsByListing_ListingId(listingId)) {
+            throw new RuntimeException("Xe này đã được đăng ký vào sự kiện khác");
+        }
         if (bikeListing.getSeller() == null || bikeListing.getSeller().getUserId() != user.getUserId()) {
             throw new RuntimeException("Bạn không có quyền đăng ký xe này");
         }
@@ -112,6 +123,48 @@ public class EventBicycleService {
         eventBicycle.setTitle(request.getTitle());
         eventBicycle.setBikeType(bicycle.getBikeType());
         eventBicycle.setCreateDate(LocalDate.now());
+
+//        // 2. Tính phí
+//        double fee = postingService.calculateListingFee(request.getPrice());
+//
+//        Wallet wallet = walletRepository.findByUsername(username).orElseGet(() -> {
+//            Wallet newWallet = Wallet.builder().user(user).username(username).balance(0.0).type("User").build();
+//            return walletRepository.save(newWallet);
+//        });
+//
+//        // 3. Nếu VÍ KHÔNG ĐỦ TIỀN -> Lưu nháp Waiting_Payment & Trả về VNPay
+//        if (wallet.getBalance() < fee) {
+//            eventBicycle.setStatus("Waiting_Payment");
+//            EventBicycle savedEventBicycle = eventBicycleRepository.save(eventBicycle);
+//
+//            long amountNeeded = (long) Math.ceil(listingFee - wallet.getBalance());
+//            String customReturnUrl = vnpayReturnUrl + "?listingId=" + savedListing.getListingId();
+//
+//            String paymentUrl = vnPayService.createOrder(
+//                    amountNeeded,
+//                    username + "|fee|" + savedListing.getListingId(),
+//                    customReturnUrl, null
+//            );
+//
+//            return CreatePostingResponse.builder()
+//                    .listing(null)
+//                    .paymentUrl(paymentUrl)
+//                    .message("Số dư không đủ. Vui lòng thanh toán " + amountNeeded + " VND.")
+//                    .build();
+//        }
+//
+//        // 4. Nếu VÍ ĐỦ TIỀN -> Trừ tiền ngay và đăng bài (Pending chờ duyệt)
+//        Wallet systemWallet = walletRepository.findByUsername("System")
+//                .orElseThrow(() -> new AppException(ErrorCode.WALLET_NOT_FOUND));
+//
+//        wallet.setBalance(wallet.getBalance() - listingFee);
+//        systemWallet.setBalance(systemWallet.getBalance() + listingFee);
+//        walletRepository.save(wallet);
+//        walletRepository.save(systemWallet);
+//
+//        if (listingFee > 0) {
+//            walletTransactionService.createTransaction(wallet, listingFee, "ListingFee", "Phí đăng bài xe đạp");
+//        }
 
         return eventBicycleMapper.toEventBicycleResponse(eventBicycleRepository.save(eventBicycle));
     }

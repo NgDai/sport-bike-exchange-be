@@ -2,6 +2,7 @@
 package com.bicycle.marketplace.services;
 
 import com.bicycle.marketplace.entities.Users;
+import com.bicycle.marketplace.repository.IEventBicycleRepository;
 import com.bicycle.marketplace.repository.IEventRepository;
 import com.bicycle.marketplace.dto.request.EventCreationRequest;
 import com.bicycle.marketplace.dto.request.EventUpdateRequest;
@@ -15,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -27,6 +29,8 @@ public class EventService {
 
     @Autowired
     private EventMapper eventMapper;
+    @Autowired
+    private IEventBicycleRepository eventBicycleRepository;
 
     public EventResponse createEvent(EventCreationRequest request) {
         Events event = eventMapper.toEvents(request);
@@ -60,12 +64,16 @@ public class EventService {
         return eventMapper.toEventResponse(eventRepository.save(event));
     }
 
+    @Transactional
     public String deleteEvent(int eventId) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated()) {
             throw new AppException(ErrorCode.UNAUTHORIZED);
         }
         Events event = eventRepository.findById(eventId).orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
+        if (eventBicycleRepository.existsByEvent_EventId(eventId)) {
+            eventBicycleRepository.deleteByEvent_EventId(eventId);
+        }
         eventRepository.delete(event);
         return "Event deleted successfully";
     }

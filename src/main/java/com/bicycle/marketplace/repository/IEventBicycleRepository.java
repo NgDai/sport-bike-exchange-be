@@ -6,4 +6,9 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface IEventBicycleRepository extends JpaRepository<EventBicycle, Integer> {
+    boolean existsByListing_ListingId(int listingId);
+
+    boolean existsByEvent_EventId(int eventId);
+
+    void deleteByEvent_EventId(int eventId);
 }
