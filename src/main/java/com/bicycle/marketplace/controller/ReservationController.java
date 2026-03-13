@@ -48,6 +48,15 @@ public class ReservationController {
         return apiResponse;
     }
 
+    @GetMapping("/my-reservations")
+    @PreAuthorize("isAuthenticated()")
+    public ApiResponse<List<ReservationResponse>> getMyReservations() {
+        ApiResponse<List<ReservationResponse>> apiResponse = new ApiResponse<>();
+        apiResponse.setResult(reservationService.getMyReservations());
+        apiResponse.setMessage("Lấy danh sách đặt chỗ cá nhân thành công");
+        return apiResponse;
+    }
+
     // --- API MỚI CHO ADMIN LÊN LỊCH ---
     @PutMapping("/{reservationId}/schedule")
     @PreAuthorize("hasRole('ADMIN')")

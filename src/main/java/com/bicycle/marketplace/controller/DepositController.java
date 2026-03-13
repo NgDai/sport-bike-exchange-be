@@ -34,6 +34,13 @@ public class DepositController {
         return apiResponse;
     }
 
+    @PostMapping("/confirm/{depositId}")
+    public ApiResponse<String> confirmDepositPayment(@PathVariable int depositId) {
+        ApiResponse<String> apiResponse = new ApiResponse<>();
+        apiResponse.setResult(depositService.confirmDepositPayment(depositId));
+        return apiResponse;
+    }
+
 //    @PutMapping("/{depositId}")
 //    ApiResponse<DepositResponse> updateDeposit(@PathVariable int depositId, @RequestBody DepositUpdateRequest request) {
 //        ApiResponse<DepositResponse> apiResponse = new ApiResponse<>();
