@@ -12,10 +12,22 @@ import org.mapstruct.MappingTarget;
 public interface DisputeMapper {
     @Mapping(source = "transaction.transactionId", target = "transactionId")
     @Mapping(source = "raisedBy.username", target = "raisedBy")
+    @Mapping(source = "raisedBy.userId", target = "raisedByUserId")
+    @Mapping(source = "assignedInspector.userId", target = "assignedInspectorId")
+    @Mapping(source = "assignedInspector.fullName", target = "assignedInspectorName")
+    @Mapping(source = "createdAt", target = "createdAt")
     DisputeResponse toDisputeResponse(Dispute dispute);
 
     @Mapping(target = "transaction", ignore = true)
     @Mapping(target = "raisedBy", ignore = true)
+    @Mapping(target = "status", ignore = true)
+    @Mapping(target = "assignedInspector", ignore = true)
+    @Mapping(target = "createdAt", ignore = true)
     Dispute toDispute(DisputeCreationRequest request);
+
+    @Mapping(target = "transaction", ignore = true)
+    @Mapping(target = "raisedBy", ignore = true)
+    @Mapping(target = "assignedInspector", ignore = true)
+    @Mapping(target = "createdAt", ignore = true)
     void updateDispute(@MappingTarget Dispute dispute, DisputeUpdateRequest request);
 }
