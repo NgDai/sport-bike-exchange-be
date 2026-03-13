@@ -53,6 +53,10 @@ public class CategoryService {
         return categoryMapper.toCategoryResponse(category);
     }
 
+    public List<String> getAllBicycleTypes() {
+        return categoryRepository.findAllBicycleTypes();
+    }
+
     @PreAuthorize("hasRole('ADMIN')")
     public String deleteCategory(int categoryId) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();

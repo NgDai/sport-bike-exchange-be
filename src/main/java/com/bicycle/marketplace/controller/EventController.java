@@ -7,6 +7,7 @@ import com.bicycle.marketplace.dto.response.ApiResponse;
 import com.bicycle.marketplace.dto.response.EventResponse;
 import com.bicycle.marketplace.dto.response.EventInspectorResponse;
 import com.bicycle.marketplace.dto.request.AssignInspectorRequest;
+import com.bicycle.marketplace.services.CategoryService;
 import com.bicycle.marketplace.services.EventService;
 import com.bicycle.marketplace.services.EventInspectorService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,6 +24,9 @@ public class EventController {
 
     @Autowired
     private EventInspectorService eventInspectorService;
+
+    @Autowired
+    private CategoryService categoryService;
 
     @PostMapping("/{eventId}/inspectors")
     @PreAuthorize("hasRole('ADMIN')")
@@ -65,6 +69,14 @@ public class EventController {
         ApiResponse<EventResponse> apiResponse = new ApiResponse<>();
         apiResponse.setResult(eventService.getEventById(eventId));
         apiResponse.setMessage("Event fetched successfully");
+        return apiResponse;
+    }
+
+    @GetMapping("/bicycle-types")
+    ApiResponse<List<String>> getAllBicycleTypes() {
+        ApiResponse<List<String>> apiResponse = new ApiResponse<>();
+        apiResponse.setResult(categoryService.getAllBicycleTypes());
+        apiResponse.setMessage("Bicycle types fetched successfully");
         return apiResponse;
     }
 

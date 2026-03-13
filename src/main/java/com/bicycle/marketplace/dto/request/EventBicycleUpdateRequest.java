@@ -13,5 +13,7 @@ import java.time.LocalDate;
 public class EventBicycleUpdateRequest {
     private Double price;
     private String title;
+    private String condition;
+    private String image_url;
     private LocalDate createDate;
 }

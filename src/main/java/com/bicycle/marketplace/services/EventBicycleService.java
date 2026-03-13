@@ -82,6 +82,8 @@ public class EventBicycleService {
         eventBicycle.setPrice(bikeListing.getPrice());
         eventBicycle.setTitle(bikeListing.getTitle());
         eventBicycle.setBikeType(bikeListing.getBicycle().getBikeType());
+        eventBicycle.setImage_url(bikeListing.getImage_url());
+        eventBicycle.setCondition(bikeListing.getCondition());
         eventBicycle.setCreateDate(LocalDate.now());
 
         return eventBicycleMapper.toEventBicycleResponse(eventBicycleRepository.save(eventBicycle));
@@ -122,6 +124,8 @@ public class EventBicycleService {
         eventBicycle.setPrice(request.getPrice());
         eventBicycle.setTitle(request.getTitle());
         eventBicycle.setBikeType(bicycle.getBikeType());
+        eventBicycle.setImage_url(request.getImage_url());
+        eventBicycle.setCondition(request.getCondition());
         eventBicycle.setCreateDate(LocalDate.now());
 
 //        // 2. Tính phí
@@ -178,7 +182,7 @@ public class EventBicycleService {
 
         eventBicycleMapper.updateEventBicycle(eventBicycle, request);
         eventBicycle.setStatus("Pending");
-        eventBicycle.setCreateDate(LocalDate.now());
+        eventBicycle.setUpdateDate(LocalDate.now());
         return eventBicycleMapper.toEventBicycleResponse(eventBicycleRepository.save(eventBicycle));
     }
 

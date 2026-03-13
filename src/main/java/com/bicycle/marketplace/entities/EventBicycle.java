@@ -34,8 +34,12 @@ public class EventBicycle {
     String bikeType;
     @Column(nullable = true)
     Double price;
+    String condition;
+    String image_url;
     String title;
     String status;
     @CreationTimestamp
     LocalDate createDate;
+    @CreationTimestamp
+    LocalDate updateDate;
 }

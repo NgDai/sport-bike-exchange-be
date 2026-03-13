@@ -15,5 +15,7 @@ public class EventBicycleCreationRequest {
     private Double price;
     private String title;
     private String bikeType;
+    private String condition;
+    private String image_url;
     private LocalDate createDate;
 }

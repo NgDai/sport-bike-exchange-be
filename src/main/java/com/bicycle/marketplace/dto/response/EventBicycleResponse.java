@@ -25,5 +25,7 @@ public class EventBicycleResponse {
     private Double price;
     private String title;
     private String status;
+    private String condition;
+    private String image_url;
     private LocalDate createDate;
 }
