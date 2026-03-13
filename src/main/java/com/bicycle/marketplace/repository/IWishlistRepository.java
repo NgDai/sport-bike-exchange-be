@@ -12,4 +12,6 @@ public interface IWishlistRepository extends JpaRepository<Wishlist, Integer> {
     Optional<Wishlist> findByUser_UserIdAndListing_ListingId(int userId, int listingId);
 
     List<Wishlist> findAllByUser_UserId(int userId);
+
+    int countByListing_ListingId(int listingId);
 }
