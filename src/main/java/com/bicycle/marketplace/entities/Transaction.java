@@ -42,7 +42,7 @@ public class Transaction {
     double fee;
     String description;
     String type;
-    String status;
+    String status; // "Pending", "Paid", "Completed"
     @CreationTimestamp
     Date createAt;
     @UpdateTimestamp

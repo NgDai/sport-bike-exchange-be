@@ -1,6 +1,7 @@
 package com.bicycle.marketplace.controller;
 
 import com.bicycle.marketplace.dto.request.ReservationCreationRequest;
+import com.bicycle.marketplace.dto.request.ReservationScheduleRequest;
 import com.bicycle.marketplace.dto.request.ReservationUpdateRequest;
 import com.bicycle.marketplace.dto.response.ApiResponse;
 import com.bicycle.marketplace.dto.response.ReservationResponse;
@@ -30,7 +31,7 @@ public class ReservationController {
     @PutMapping("/{reservationId}")
     @PreAuthorize("hasRole('ADMIN')")
     ApiResponse<ReservationResponse> updateReservation(@PathVariable int reservationId,
-            @RequestBody ReservationUpdateRequest request) {
+                                                       @RequestBody ReservationUpdateRequest request) {
         ApiResponse<ReservationResponse> apiResponse = new ApiResponse<>();
         apiResponse.setResult(reservationService.updateReservation(reservationId, request));
         apiResponse.setMessage("Reservation updated successfully");
@@ -40,10 +41,22 @@ public class ReservationController {
     @PutMapping("/{reservationId}/status")
     @PreAuthorize("hasRole('ADMIN')")
     ApiResponse<ReservationResponse> updateReservationStatus(@PathVariable int reservationId,
-            @RequestBody ReservationUpdateRequest request) {
+                                                             @RequestBody ReservationUpdateRequest request) {
         ApiResponse<ReservationResponse> apiResponse = new ApiResponse<>();
         apiResponse.setResult(reservationService.updateReservationStatus(reservationId, request));
         apiResponse.setMessage("Reservation status updated successfully");
+        return apiResponse;
+    }
+
+    // --- API MỚI CHO ADMIN LÊN LỊCH ---
+    @PutMapping("/{reservationId}/schedule")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ApiResponse<ReservationResponse> scheduleReservation(
+            @PathVariable int reservationId,
+            @RequestBody ReservationScheduleRequest request) {
+        ApiResponse<ReservationResponse> apiResponse = new ApiResponse<>();
+        apiResponse.setResult(reservationService.scheduleReservation(reservationId, request));
+        apiResponse.setMessage("Gán lịch hẹn và người kiểm định thành công");
         return apiResponse;
     }
 
