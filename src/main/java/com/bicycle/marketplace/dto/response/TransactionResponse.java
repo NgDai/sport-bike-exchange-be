@@ -19,6 +19,8 @@ public class TransactionResponse {
     private int reservationId;
     private int sellerId;
     private int listingId;
+    private String listingTitle;   // Thêm
+    private String listingImage;
     private double amount;
     private double actualPrice;
     private double fee;

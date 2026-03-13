@@ -39,4 +39,9 @@ public class Reservation {
     Double depositAmount;
     @CreationTimestamp
     Date reservedAt;
+    @Column(name = "latitude")
+    private Double latitude;
+
+    @Column(name = "longitude")
+    private Double longitude;
 }

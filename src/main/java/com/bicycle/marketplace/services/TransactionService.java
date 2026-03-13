@@ -122,6 +122,17 @@ public class TransactionService {
         return toTransactionResponseSafe(transaction);
     }
 
+    public List<TransactionResponse> getMyTransactions() {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        Users currentUser = userRepository.findByUsername(username)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+
+        List<Transaction> transactions = transactionRepository.findByBuyerOrSeller(currentUser);
+        return transactions.stream()
+                .map(this::toTransactionResponseSafe)
+                .toList();
+    }
+
     private static String inferTransactionType(Deposit deposit, BikeListing listing, Reservation reservation) {
         if (deposit != null) return "Deposit";
         if (listing != null && reservation != null) return "Sale";
@@ -164,6 +175,10 @@ public class TransactionService {
         r.setSellerId(t.getSeller() != null ? t.getSeller().getUserId() : 0);
         r.setEventId(t.getEvent() != null ? t.getEvent().getEventId() : 0);
         r.setListingId(t.getListing() != null ? t.getListing().getListingId() : 0);
+        if (t.getListing() != null) {
+            r.setListingTitle(t.getListing().getTitle());
+            r.setListingImage(t.getListing().getImage_url());
+        }
         r.setDepositId(t.getDeposit() != null ? t.getDeposit().getDepositId() : 0);
         r.setReservationId(t.getReservation() != null ? t.getReservation().getReservationId() : 0);
         r.setAmount(t.getAmount());

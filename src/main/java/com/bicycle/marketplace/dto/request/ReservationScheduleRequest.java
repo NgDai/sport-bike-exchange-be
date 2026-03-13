@@ -15,4 +15,6 @@ public class ReservationScheduleRequest {
     private Integer inspectorId;
     private String meetingLocation;
     private Date meetingTime;
+    private Double latitude;
+    private Double longitude;
 }

@@ -14,14 +14,16 @@ public interface ReservationMapper {
     @Mapping(source = "listing.title", target = "listingTitle")
     @Mapping(source = "buyer.userId", target = "buyerId")
     @Mapping(source = "buyer.fullName", target = "buyerName")
-    @Mapping(source = "deposit.depositId", target = "depositId")
-
-    // Map các trường mới
+    @Mapping(source = "listing.image_url", target = "listingImage")
+    @Mapping(source = "listing.seller.userId", target = "sellerId")
+    @Mapping(source = "listing.seller.fullName", target = "sellerName")
     @Mapping(source = "inspector.userId", target = "inspectorId")
     @Mapping(source = "inspector.fullName", target = "inspectorName")
     @Mapping(source = "inspector.phone", target = "inspectorPhone")
+    @Mapping(source = "deposit.depositId", target = "depositId")
+    @Mapping(source = "latitude", target = "latitude")
+    @Mapping(source = "longitude", target = "longitude")
     ReservationResponse toReservationResponse(Reservation reservation);
 
     void updateReservation(@MappingTarget Reservation reservation, ReservationUpdateRequest request);
-
 }

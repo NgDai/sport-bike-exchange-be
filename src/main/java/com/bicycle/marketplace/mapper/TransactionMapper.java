@@ -16,6 +16,8 @@ public interface TransactionMapper {
     @Mapping(source = "seller.userId", target = "sellerId", defaultExpression = "java(0)")
     @Mapping(source = "event.eventId", target = "eventId", defaultExpression = "java(0)")
     @Mapping(source = "listing.listingId", target = "listingId", defaultExpression = "java(0)")
+    @Mapping(source = "listing.title", target = "listingTitle", defaultExpression = "java(\"\")") // Thêm
+    @Mapping(source = "listing.image_url", target = "listingImage", defaultExpression = "java(\"\")") // Thêm
     @Mapping(source = "deposit.depositId", target = "depositId", defaultExpression = "java(0)")
     @Mapping(source = "reservation.reservationId", target = "reservationId", defaultExpression = "java(0)")
     @Mapping(source = "createAt", target = "createdAt")

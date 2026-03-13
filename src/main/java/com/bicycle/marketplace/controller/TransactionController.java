@@ -71,4 +71,13 @@ public class TransactionController {
         apiResponse.setResult(transactionService.deleteTransaction(transactionId));
         return apiResponse;
     }
+
+    @GetMapping("/my-transactions")
+    @PreAuthorize("isAuthenticated()")
+    ApiResponse<List<TransactionResponse>> getMyTransactions() {
+        ApiResponse<List<TransactionResponse>> apiResponse = new ApiResponse<>();
+        apiResponse.setResult(transactionService.getMyTransactions());
+        apiResponse.setMessage("Transactions fetched successfully");
+        return apiResponse;
+    }
 }

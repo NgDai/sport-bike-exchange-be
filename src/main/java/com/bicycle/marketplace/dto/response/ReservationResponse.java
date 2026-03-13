@@ -14,19 +14,30 @@ import java.util.Date;
 public class ReservationResponse {
     private int reservationId;
 
-    // Thông tin cơ bản
+    // Thông tin sản phẩm
     private int listingId;
     private String listingTitle;
+    private String listingImage;
+
+
+    // Người mua
     private int buyerId;
     private String buyerName;
 
-    // --- BỔ SUNG CÁC TRƯỜNG LỊCH HẸN ---
+    // Người bán (BỔ SUNG)
+    private int sellerId;
+    private String sellerName;
+
+    // Inspector
     private Integer inspectorId;
     private String inspectorName;
     private String inspectorPhone;
+
+    // Lịch hẹn
     private String meetingLocation;
     private Date meetingTime;
-    // -----------------------------------
+    private Double latitude;
+    private Double longitude;
 
     private String status;
     private int depositId;

@@ -98,6 +98,8 @@ public class ReservationService {
         reservation.setInspector(inspector);
         reservation.setMeetingLocation(request.getMeetingLocation());
         reservation.setMeetingTime(request.getMeetingTime());
+        reservation.setLatitude(request.getLatitude());
+        reservation.setLongitude(request.getLongitude());
         reservation.setStatus("Scheduled"); // Chuyển trạng thái thành đã lên lịch
 
         // 4. Đồng bộ trạng thái Transaction (Nếu có)
@@ -149,5 +151,11 @@ public class ReservationService {
 
     public List<Reservation> findReservationsByStatus(String status) {
         return reservationRepository.findAllByStatus(status);
+    }
+
+    public List<ReservationResponse> findAllReservationResponses() {
+        return reservationRepository.findAll().stream()
+                .map(reservationMapper::toReservationResponse)
+                .toList();
     }
 }

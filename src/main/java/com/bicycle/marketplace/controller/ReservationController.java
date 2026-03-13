@@ -69,11 +69,20 @@ public class ReservationController {
         return apiResponse;
     }
 
+//    @GetMapping
+//    @PreAuthorize("hasRole('ADMIN')")
+//    ApiResponse<List<Reservation>> findAllReservations() {
+//        ApiResponse<List<Reservation>> apiResponse = new ApiResponse<>();
+//        apiResponse.setResult(reservationService.findAllReservations());
+//        apiResponse.setMessage("Reservations fetched successfully");
+//        return apiResponse;
+//    }
+
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
-    ApiResponse<List<Reservation>> findAllReservations() {
-        ApiResponse<List<Reservation>> apiResponse = new ApiResponse<>();
-        apiResponse.setResult(reservationService.findAllReservations());
+    ApiResponse<List<ReservationResponse>> findAllReservations() {
+        ApiResponse<List<ReservationResponse>> apiResponse = new ApiResponse<>();
+        apiResponse.setResult(reservationService.findAllReservationResponses());
         apiResponse.setMessage("Reservations fetched successfully");
         return apiResponse;
     }
@@ -103,4 +112,6 @@ public class ReservationController {
         apiResponse.setMessage("Reservations fetched successfully");
         return apiResponse;
     }
+
+
 }
