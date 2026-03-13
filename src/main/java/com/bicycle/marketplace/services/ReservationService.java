@@ -111,7 +111,7 @@ public class ReservationService {
         return reservationMapper.toReservationResponse(reservationRepository.save(reservation));
     }
 
-    public List<ReservationResponse> getMyReservations() {
+    public List<ReservationResponse> getMyBuyerReservations() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated()) {
             throw new AppException(ErrorCode.UNAUTHORIZED);
@@ -120,8 +120,23 @@ public class ReservationService {
         Users user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 
-        // Hàm này đã có sẵn trong IReservationRepository của bạn
         List<Reservation> reservations = reservationRepository.findByBuyer_UserIdOrderByReservedAtDesc(user.getUserId());
+
+        return reservations.stream()
+                .map(reservationMapper::toReservationResponse)
+                .toList();
+    }
+
+    public List<ReservationResponse> getMySellerReservations() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new AppException(ErrorCode.UNAUTHORIZED);
+        }
+        String username = authentication.getName();
+        Users user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+
+        List<Reservation> reservations = reservationRepository.findByListing_Seller_UserIdOrderByReservedAtDesc(user.getUserId());
 
         return reservations.stream()
                 .map(reservationMapper::toReservationResponse)

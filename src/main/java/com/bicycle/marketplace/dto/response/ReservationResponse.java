@@ -24,7 +24,7 @@ public class ReservationResponse {
     private int buyerId;
     private String buyerName;
 
-    // Người bán (BỔ SUNG)
+    // Người bán
     private int sellerId;
     private String sellerName;
 
