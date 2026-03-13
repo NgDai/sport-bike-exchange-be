@@ -14,7 +14,6 @@ import com.bicycle.marketplace.repository.IBikeListingRepository;
 import com.bicycle.marketplace.repository.IReservationRepository;
 import com.bicycle.marketplace.repository.ITransactionRepository;
 import com.bicycle.marketplace.repository.IUserRepository;
-import lombok.extern.slf4j.XSlf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -125,7 +124,7 @@ public class ReservationService {
 
         // Hàm này đã có sẵn trong IReservationRepository của bạn
         List<Reservation> reservations = reservationRepository
-                .findByBuyer_UserIdOrderByReservedAtDesc(user.getUserId());
+                .findByBuyer_UserIdAndStatusNotOrderByReservedAtDesc(user.getUserId(), "Cancelled");
 
         return reservations.stream()
                 .map(reservationMapper::toReservationResponse)
@@ -133,7 +132,7 @@ public class ReservationService {
     }
 
     public List<Reservation> findAllReservations() {
-        return reservationRepository.findAll();
+        return reservationRepository.findAllByStatusNot("Cancelled");
     }
 
     public ReservationResponse findReservationById(int reservationId) {
@@ -158,7 +157,7 @@ public class ReservationService {
     }
 
     public List<ReservationResponse> findAllReservationResponses() {
-        return reservationRepository.findAll().stream()
+        return reservationRepository.findAllByStatusNot("Cancelled").stream()
                 .map(reservationMapper::toReservationResponse)
                 .toList();
     }
