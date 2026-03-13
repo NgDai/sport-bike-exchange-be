@@ -3,12 +3,15 @@ package com.bicycle.marketplace.controller;
 import com.bicycle.marketplace.config.VNPayConfig;
 import com.bicycle.marketplace.dto.request.VNPayRequest;
 import com.bicycle.marketplace.dto.response.VNPayResponse;
+import com.bicycle.marketplace.services.DepositService;
+import com.bicycle.marketplace.services.PostingService;
 import com.bicycle.marketplace.services.VNPayService;
 import com.bicycle.marketplace.services.WalletService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -24,48 +27,51 @@ public class PaymentController {
 
     @Autowired
     private VNPayService vnPayService;
+
     @Autowired
     private WalletService walletService;
-    @Autowired
-    private com.bicycle.marketplace.services.DepositService depositService;
 
-    /** URL frontend sau khi đăng bài thành công */
+    @Autowired
+    private DepositService depositService;
+
+    @Autowired
+    private PostingService postingService;
+
+    /** URL frontend sau khi ĐĂNG BÀI thành công */
     @Value("${vnpay.frontend.post-success-url:http://localhost:5173/profile?tab=my-bikes}")
     private String postSuccessUrl;
 
-    /** URL frontend sau khi nạp ví thành công */
+    /** URL frontend sau khi NẠP VÍ thành công hoặc LỖI chung */
     @Value("${vnpay.frontend.wallet-url:http://localhost:5173/profile?tab=wallet}")
     private String walletSuccessUrl;
 
+    /** URL frontend sau khi ĐẶT CỌC thành công */
+    private final String depositSuccessUrl = "http://localhost:5173/profile?tab=transaction-manage";
+
+    // 1. API GỌI TỪ FRONTEND ĐỂ NẠP TIỀN VÀO VÍ (NẠP THƯỜNG)
     @PostMapping("/submitOrder")
     public VNPayResponse submitOrder(
             @RequestBody VNPayRequest request,
             HttpServletRequest httpRequest) {
 
-        // 1. Get username from login session
-        String username = org.springframework.security.core.context.SecurityContextHolder.getContext()
-                .getAuthentication().getName();
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
 
-        // 2. Add username into orderInfo so we can retrieve it on callback
-        String secureOrderInfo = username + "|" + request.getOrderInfo();
+        // Gắn tag "topup" để phân biệt với cọc (deposit) và phí (fee)
+        String secureOrderInfo = username + "|topup|" + request.getOrderInfo();
 
-        String baseUrl = httpRequest.getScheme()
-                + "://"
-                + httpRequest.getServerName()
-                + ":"
-                + httpRequest.getServerPort();
         String clientIp = VNPayConfig.getIpAddress(httpRequest);
         String vnpayUrl = vnPayService.createOrder(
                 request.getAmount(),
-                secureOrderInfo, // Pass the custom order info string
-                request.getReturnUrl(), // Lấy URL do React gửi lên
-                // baseUrl,
+                secureOrderInfo,
+                request.getReturnUrl(),
                 clientIp);
+
         VNPayResponse response = new VNPayResponse();
         response.setRedirectUrl(vnpayUrl);
         return response;
     }
 
+    // 2. WEBHOOK/IPN (VNPAY GỌI NGẦM XUỐNG ĐỂ XÁC NHẬN GIAO DỊCH)
     @GetMapping("/vnpay-wallet")
     public VNPayResponse handleVnPayWallet(HttpServletRequest request) {
         int paymentStatus = vnPayService.orderReturn(request);
@@ -77,38 +83,47 @@ public class PaymentController {
         response.setTransactionId(request.getParameter("vnp_TransactionNo"));
         response.setTotalPrice(request.getParameter("vnp_Amount"));
 
+        String orderInfo = request.getParameter("vnp_OrderInfo");
+        String username = parseUsername(orderInfo);
+
         if (paymentStatus == 1) {
             double amount = Double.parseDouble(request.getParameter("vnp_Amount")) / 100;
-            String orderInfo = request.getParameter("vnp_OrderInfo");
-            String username = parseUsername(orderInfo);
+
             if (isDepositPayment(orderInfo)) {
-                // Thanh toán đặt cọc thành công → confirm deposit
-                int depositId = parseDepositId(orderInfo);
+                int depositId = parseId(orderInfo);
                 depositService.confirmDepositPayment(depositId, username, amount);
-                response.setMessage("Đặt cọc thành công qua VNPay");
+                response.setMessage("Đặt cọc xe thành công.");
+
             } else if (isFeePayment(orderInfo)) {
-                walletService.addFundsToSystemWallet(amount, username);
-                response.setMessage("Thanh toán phí đăng bài thành công");
+                int listingId = parseId(orderInfo);
+                postingService.confirmPaymentAndPublish(listingId, username, amount);
+                response.setMessage("Thanh toán phí đăng bài thành công.");
+
             } else {
                 walletService.addFundsToUserWallet(amount, username);
-                response.setMessage("Nạp ví thành công");
+                response.setMessage("Nạp tiền vào ví thành công.");
             }
         } else {
-            // Thanh toán thất bại hoặc hủy
-            String orderInfo = request.getParameter("vnp_OrderInfo");
+            // Giao dịch lỗi / Hủy
             if (isDepositPayment(orderInfo)) {
-                int depositId = parseDepositId(orderInfo);
                 try {
-                    depositService.cancelDepositPayment(depositId);
+                    depositService.cancelDepositPayment(parseId(orderInfo));
                 } catch (Exception e) {
-                    log.warn("Cancel deposit payment failed for depositId={}: {}", depositId, e.getMessage());
+                    log.warn("Lỗi khi hủy cọc: {}", e.getMessage());
+                }
+            } else if (isFeePayment(orderInfo)) {
+                try {
+                    postingService.cancelPostingPayment(parseId(orderInfo));
+                } catch (Exception e) {
+                    log.warn("Lỗi khi hủy đăng bài: {}", e.getMessage());
                 }
             }
-            throw new RuntimeException("Giao dịch không thành công hoặc chữ ký không hợp lệ");
+            throw new RuntimeException("Giao dịch thanh toán không thành công hoặc đã bị hủy.");
         }
         return response;
     }
 
+    // 3. RETURN URL (SAU KHI USER THANH TOÁN XONG SẼ BỊ ĐIỀU HƯỚNG VỀ ĐÂY)
     @GetMapping("/vnpay-payment")
     public void handleVnPayReturn(HttpServletRequest request, HttpServletResponse response) throws Exception {
         int paymentStatus = vnPayService.orderReturn(request);
@@ -117,54 +132,66 @@ public class PaymentController {
 
         if (paymentStatus == 1) {
             double amount = Double.parseDouble(request.getParameter("vnp_Amount")) / 100;
+
             if (isDepositPayment(orderInfo)) {
-                int depositId = parseDepositId(orderInfo);
+                int depositId = parseId(orderInfo);
                 depositService.confirmDepositPayment(depositId, username, amount);
-                response.sendRedirect(postSuccessUrl);
+                response.sendRedirect(depositSuccessUrl);
+
             } else if (isFeePayment(orderInfo)) {
-                walletService.addFundsToSystemWallet(amount, username);
+                int listingId = parseId(orderInfo);
+                postingService.confirmPaymentAndPublish(listingId, username, amount);
                 response.sendRedirect(postSuccessUrl);
+
             } else {
                 walletService.addFundsToUserWallet(amount, username);
                 response.sendRedirect(walletSuccessUrl);
             }
         } else {
-            // Thanh toán thất bại hoặc hủy → nếu là deposit thì hủy và trả listing về Available
+            // Thanh toán lỗi hoặc người dùng bấm Hủy
             if (isDepositPayment(orderInfo)) {
-                int depositId = parseDepositId(orderInfo);
                 try {
-                    depositService.cancelDepositPayment(depositId);
+                    depositService.cancelDepositPayment(parseId(orderInfo));
                 } catch (Exception e) {
-                    log.warn("Cancel deposit payment failed for depositId={}: {}", depositId, e.getMessage());
+                    log.warn("Lỗi khi hủy cọc: {}", e.getMessage());
+                }
+            } else if (isFeePayment(orderInfo)) {
+                try {
+                    postingService.cancelPostingPayment(parseId(orderInfo));
+                } catch (Exception e) {
+                    log.warn("Lỗi khi hủy đăng bài: {}", e.getMessage());
                 }
             }
-            response.sendRedirect(walletSuccessUrl + "&status=failed");
+            // Điều hướng về trang ví hoặc hiển thị lỗi
+            response.sendRedirect(walletSuccessUrl + "?status=failed");
         }
     }
 
-    /** Parse phần username (trước dấu |) từ vnp_OrderInfo. */
+    // ==========================================
+    // CÁC HÀM HỖ TRỢ XỬ LÝ CHUỖI ORDER_INFO
+    // ==========================================
+
+    /** Format mẫu: "username|type|id" */
     private String parseUsername(String orderInfo) {
         if (orderInfo == null || !orderInfo.contains("|")) return "";
         return orderInfo.split("\\|")[0].trim();
     }
 
-    /** Format phí: "username|fee|..." — parts[1] == "fee" */
     private boolean isFeePayment(String orderInfo) {
         if (orderInfo == null) return false;
         String[] parts = orderInfo.split("\\|");
-        return parts.length >= 2 && "fee".equalsIgnoreCase(parts[1].trim());
+        return parts.length >= 3 && "fee".equalsIgnoreCase(parts[1].trim());
     }
-    /** Format đặt cọc: "username|deposit|depositId" — parts[1] == "deposit" */
+
     private boolean isDepositPayment(String orderInfo) {
         if (orderInfo == null) return false;
         String[] parts = orderInfo.split("\\|");
-        return parts.length >= 2 && "deposit".equalsIgnoreCase(parts[1].trim());
+        return parts.length >= 3 && "deposit".equalsIgnoreCase(parts[1].trim());
     }
 
-    /** Parse depositId từ orderInfo dạng "username|deposit|depositId" */
-    private int parseDepositId(String orderInfo) {
+    /** Lấy ra ID (listingId hoặc depositId) từ chuỗi */
+    private int parseId(String orderInfo) {
         String[] parts = orderInfo.split("\\|");
         return Integer.parseInt(parts[2].trim());
     }
-
 }

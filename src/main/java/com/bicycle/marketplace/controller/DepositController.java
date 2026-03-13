@@ -34,10 +34,22 @@ public class DepositController {
         return apiResponse;
     }
 
+//    @PostMapping("/confirm/{depositId}")
+//    public ApiResponse<String> confirmDepositPayment(@PathVariable int depositId) {
+//        ApiResponse<String> apiResponse = new ApiResponse<>();
+//        apiResponse.setResult(depositService.confirmDepositPayment(depositId));
+//        return apiResponse;
+//    }
     @PostMapping("/confirm/{depositId}")
-    public ApiResponse<String> confirmDepositPayment(@PathVariable int depositId) {
+    public ApiResponse<String> confirmDepositPayment(
+            @PathVariable int depositId,
+            @RequestParam String username,
+            @RequestParam double vnpayAmount) {
+
         ApiResponse<String> apiResponse = new ApiResponse<>();
-        apiResponse.setResult(depositService.confirmDepositPayment(depositId));
+        depositService.confirmDepositPayment(depositId, username, vnpayAmount);
+
+        apiResponse.setResult("Xác nhận thanh toán đặt cọc thành công");
         return apiResponse;
     }
 

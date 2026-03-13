@@ -27,7 +27,9 @@ import java.util.stream.Collectors;
 public class PostingService {
     @Value("${vnpay.returnUrl}")
     private String vnpayReturnUrl;
+
     private final IBikeListingRepository bikeListingRepository;
+    private final IBicycleRepository bicycleRepository; // ĐÃ THÊM ĐỂ XÓA XE RÁC
     private final PostingMapper postingMapper;
     private final IUserRepository userRepository;
     private final IBrandRepository brandRepository;
@@ -38,7 +40,6 @@ public class PostingService {
     private final VNPayService vnPayService;
 
     public double calculateListingFee(double price) {
-        // Lấy phí từ DB, nếu chưa cấu hình thì mặc định thu 5%
         double feePercent = systemConfigRepository.findByKey("Phí_Sàn")
                 .map(SystemConfig::getValue)
                 .orElse(5.0);
@@ -61,41 +62,37 @@ public class PostingService {
             throw new AppException(ErrorCode.MISSING_USER_INFO);
         }
 
-        // 1. Kiểm tra ví
-        Wallet wallet = walletRepository.findByUsername(username).orElseGet(() -> {
-            Wallet newWallet = Wallet.builder()
-                    .user(user)
-                    .username(username)
-                    .balance(0.0)
-                    .type("User")
-                    .build();
-            return walletRepository.save(newWallet);
-        });
+        // 1. Khởi tạo đối tượng xe và bài đăng trước
+        Brand brand = brandRepository.findByNameIgnoreCase(request.getBrandName()).orElseThrow();
+        Category category = categoryRepository.findByNameIgnoreCase(request.getCategoryName()).orElseThrow();
+        Bicycle bicycle = postingMapper.toBicycle(request, brand, category);
+
+        // Lưu xe vào DB trước
+        bicycle = bicycleRepository.save(bicycle);
+
+        BikeListing bikeListing = postingMapper.toBikeListing(request, bicycle);
+        bikeListing.setSeller(user);
 
         // 2. Tính phí
         double listingFee = calculateListingFee(request.getPrice());
 
-        // 3. Khởi tạo đối tượng
-        Brand brand = brandRepository.findByNameIgnoreCase(request.getBrandName()).orElseThrow();
-        Category category = categoryRepository.findByNameIgnoreCase(request.getCategoryName()).orElseThrow();
-        Bicycle bicycle = postingMapper.toBicycle(request, brand, category);
-        BikeListing bikeListing = postingMapper.toBikeListing(request, bicycle);
-        bikeListing.setSeller(user);
+        Wallet wallet = walletRepository.findByUsername(username).orElseGet(() -> {
+            Wallet newWallet = Wallet.builder().user(user).username(username).balance(0.0).type("User").build();
+            return walletRepository.save(newWallet);
+        });
 
-        // 4. Nếu VÍ KHÔNG ĐỦ TIỀN -> Trả về link nạp tiền
+        // 3. Nếu VÍ KHÔNG ĐỦ TIỀN -> Lưu nháp Waiting_Payment & Trả về VNPay
         if (wallet.getBalance() < listingFee) {
             bikeListing.setStatus("Waiting_Payment");
             BikeListing savedListing = bikeListingRepository.save(bikeListing);
 
             long amountNeeded = (long) Math.ceil(listingFee - wallet.getBalance());
-            // Gắn ID bài đăng vào URL để khi thanh toán xong VNPay gọi về có thể update đúng bài
             String customReturnUrl = vnpayReturnUrl + "?listingId=" + savedListing.getListingId();
 
             String paymentUrl = vnPayService.createOrder(
                     amountNeeded,
                     username + "|fee|" + savedListing.getListingId(),
-                    customReturnUrl,
-                    null
+                    customReturnUrl, null
             );
 
             return CreatePostingResponse.builder()
@@ -105,19 +102,20 @@ public class PostingService {
                     .build();
         }
 
+        // 4. Nếu VÍ ĐỦ TIỀN -> Trừ tiền ngay và đăng bài (Pending chờ duyệt)
         Wallet systemWallet = walletRepository.findByUsername("System")
                 .orElseThrow(() -> new AppException(ErrorCode.WALLET_NOT_FOUND));
 
-        // 5. Nếu VÍ ĐỦ TIỀN -> Trừ tiền và đăng
         wallet.setBalance(wallet.getBalance() - listingFee);
         systemWallet.setBalance(systemWallet.getBalance() + listingFee);
         walletRepository.save(wallet);
+        walletRepository.save(systemWallet);
 
         if (listingFee > 0) {
             walletTransactionService.createTransaction(wallet, listingFee, "ListingFee", "Phí đăng bài xe đạp");
         }
 
-        bikeListing.setStatus("Pending"); // Trạng thái chờ Admin duyệt
+        bikeListing.setStatus("Pending");
         PostingResponse saved = postingMapper.toPostingResponse(bikeListingRepository.save(bikeListing));
 
         return CreatePostingResponse.builder()
@@ -127,97 +125,93 @@ public class PostingService {
                 .build();
     }
 
-//    @Transactional
-//    public CreatePostingResponse createPosting(CreatePostingRequest request) {
-//        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-//        if (authentication == null || !authentication.isAuthenticated()) {
-//            throw new AppException(ErrorCode.UNAUTHORIZED);
-//        }
-//        String username = authentication.getName();
-//        Users user = userRepository.findByUsername(username)
-//                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
-//
-//        if (user.getPhone() == null || user.getPhone().trim().isEmpty() ||
-//            user.getAddress() == null || user.getAddress().trim().isEmpty()) {
-//            throw new AppException(ErrorCode.MISSING_USER_INFO);
-//        }
-//
-//        // Phí_Sàn lưu theo dạng % (ví dụ 5.0 = 5%)
-//        // Phí thực tế = giá bán xe × Phí_Sàn / 100
-//        double feePercent = systemConfigRepository.findByKey("Phí_Sàn")
-//                .map(SystemConfig::getValue)
-//                .orElseThrow(() -> new RuntimeException("Chưa cấu hình Phí_Sàn trong hệ thống. Vui lòng thêm config key 'Phí_Sàn'."));
-//        double listingFee = request.getPrice() * feePercent / 100.0;
-//        log.info("[createPosting] feePercent={}, price={}, listingFee={}", feePercent, request.getPrice(), listingFee);
-//
-//        Wallet wallet = walletRepository.findByUsername(username).orElseGet(() -> {
-//            Wallet newWallet = Wallet.builder()
-//                    .user(user)
-//                    .username(username)
-//                    .balance(0.0)
-//                    .type("User")
-//                    .build();
-//            return walletRepository.save(newWallet);
-//        });
-//
-//        if (wallet.getBalance() < listingFee) {
-//            long amountNeeded = (long) Math.ceil(listingFee - wallet.getBalance());
-//            String paymentUrl = vnPayService.createOrder(
-//                    amountNeeded,
-//                    "Thanh toan phi dang bai",
-//                    vnpayReturnUrl,
-//                    null
-//            );
-//            return CreatePostingResponse.builder()
-//                    .listing(null)
-//                    .paymentUrl(paymentUrl)
-//                    .message("Số dư ví không đủ. Vui lòng thanh toán " + amountNeeded + " VND để tiếp tục đăng bài.")
-//                    .build();
-//        }
-//
-//        wallet.setBalance(wallet.getBalance() - listingFee);
-//        walletRepository.save(wallet);
-//
-//        if (listingFee > 0) {
-//            walletTransactionService.createTransaction(wallet, listingFee, "ListingFee", "Phí đăng bài xe đạp");
-//        }
-//
-//        // 5. Tạo bài đăng
-//        Brand brand = brandRepository.findByNameIgnoreCase(request.getBrandName())
-//                .orElseThrow();
-//
-//        Category category = categoryRepository.findByNameIgnoreCase(request.getCategoryName())
-//                .orElseThrow();
-//
-//        Bicycle bicycle = postingMapper.toBicycle(request, brand, category);
-//
-//        BikeListing bikeListing = postingMapper.toBikeListing(request, bicycle);
-//        bikeListing.setSeller(user);
-//        bikeListing.setStatus("Pending");
-//
-//        PostingResponse saved = postingMapper.toPostingResponse(bikeListingRepository.save(bikeListing));
-//
-//        return CreatePostingResponse.builder()
-//                .listing(saved)
-//                .paymentUrl(null)
-//                .message("Đăng bài thành công. Phí đăng bài " + (long) listingFee + " VND đã được trừ từ ví.")
-//                .build();
-//    }
-
+    // --- HÀM BỔ SUNG: DÀNH CHO USER BẤM THANH TOÁN LẠI TỪ KHO XE TRÊN FRONTEND ---
     @Transactional
-    public String confirmPaymentAndPublish(int listingId) {
+    public CreatePostingResponse retryPayment(int listingId) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = authentication.getName();
+
         BikeListing bikeListing = bikeListingRepository.findById(listingId)
                 .orElseThrow(() -> new AppException(ErrorCode.BIKE_LISTING_NOT_FOUND));
 
         if (!"Waiting_Payment".equals(bikeListing.getStatus())) {
-            return "Bài đăng này đã được xử lý thanh toán trước đó.";
+            throw new RuntimeException("Bài đăng này không ở trạng thái chờ thanh toán.");
         }
 
-        // Cập nhật trạng thái chờ Admin duyệt
+        double listingFee = calculateListingFee(bikeListing.getPrice());
+        Wallet wallet = walletRepository.findByUsername(username).orElseThrow();
+
+        if (wallet.getBalance() < listingFee) {
+            long amountNeeded = (long) Math.ceil(listingFee - wallet.getBalance());
+            String customReturnUrl = vnpayReturnUrl + "?listingId=" + listingId;
+            String paymentUrl = vnPayService.createOrder(
+                    amountNeeded,
+                    username + "|fee|" + listingId,
+                    customReturnUrl, null
+            );
+            return CreatePostingResponse.builder().paymentUrl(paymentUrl).build();
+        } else {
+            Wallet systemWallet = walletRepository.findByUsername("System").orElseThrow();
+            wallet.setBalance(wallet.getBalance() - listingFee);
+            systemWallet.setBalance(systemWallet.getBalance() + listingFee);
+            walletRepository.save(wallet);
+            walletRepository.save(systemWallet);
+
+            walletTransactionService.createTransaction(wallet, listingFee, "ListingFee", "Phí đăng bài xe đạp #" + listingId);
+
+            bikeListing.setStatus("Pending");
+            PostingResponse saved = postingMapper.toPostingResponse(bikeListingRepository.save(bikeListing));
+            return CreatePostingResponse.builder().listing(saved).build();
+        }
+    }
+
+    // --- HÀM XỬ LÝ KHI VNPAY TRẢ VỀ THÀNH CÔNG (ĐƯỢC GỌI TỪ PAYMENT CONTROLLER) ---
+    @Transactional
+    public void confirmPaymentAndPublish(int listingId, String username, double vnpayAmount) {
+        BikeListing bikeListing = bikeListingRepository.findById(listingId)
+                .orElseThrow(() -> new AppException(ErrorCode.BIKE_LISTING_NOT_FOUND));
+
+        if (!"Waiting_Payment".equals(bikeListing.getStatus())) {
+            return; // Tránh xử lý trùng lặp
+        }
+
+        double listingFee = calculateListingFee(bikeListing.getPrice());
+
+        Wallet userWallet = walletRepository.findByUsername(username).orElseThrow();
+        Wallet systemWallet = walletRepository.findByUsername("System").orElseThrow();
+
+        // 1. Nạp tiền VNPay vào ví User
+        userWallet.setBalance(userWallet.getBalance() + vnpayAmount);
+        walletRepository.save(userWallet);
+        walletTransactionService.createTransaction(userWallet, vnpayAmount, "Fee_TopUp", "Nạp tiền VNPay để trả phí đăng bài");
+
+        // 2. Trừ tiền ví User sang ví System
+        userWallet.setBalance(userWallet.getBalance() - listingFee);
+        systemWallet.setBalance(systemWallet.getBalance() + listingFee);
+        walletRepository.save(userWallet);
+        walletRepository.save(systemWallet);
+        walletTransactionService.createTransaction(userWallet, listingFee, "ListingFee", "Phí đăng bài xe đạp #" + listingId);
+
+        // 3. Cập nhật trạng thái bài đăng sang chờ Admin duyệt
         bikeListing.setStatus("Pending");
         bikeListingRepository.save(bikeListing);
+    }
 
-        return "Thanh toán thành công. Bài đăng đã chuyển sang chờ duyệt!";
+    // --- HÀM XÓA BÀI RÁC NẾU USER HỦY VNPAY ---
+    @Transactional
+    public void cancelPostingPayment(int listingId) {
+        BikeListing bikeListing = bikeListingRepository.findById(listingId).orElse(null);
+        if (bikeListing != null && "Waiting_Payment".equals(bikeListing.getStatus())) {
+            Bicycle bicycle = bikeListing.getBicycle();
+
+            // Xóa BikeListing trước
+            bikeListingRepository.delete(bikeListing);
+
+            // Xóa luôn Bicycle để tránh rác DB
+            if (bicycle != null) {
+                bicycleRepository.delete(bicycle);
+            }
+        }
     }
 
     @Transactional
@@ -226,10 +220,8 @@ public class PostingService {
                 .orElseThrow(() -> new AppException(ErrorCode.BIKE_LISTING_NOT_FOUND));
 
         Bicycle bicycle = bikeListing.getBicycle();
-
         postingMapper.updateBicycleFromRequest(request, bicycle);
         postingMapper.updateBikeListingFromRequest(request, bikeListing);
-
         bikeListing.setStatus("Pending");
 
         return postingMapper.toPostingResponse(bikeListingRepository.save(bikeListing));
@@ -249,17 +241,13 @@ public class PostingService {
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 
         return bikeListingRepository.findBySeller(user)
-                .stream()
-                .map(postingMapper::toPostingResponse)
-                .collect(Collectors.toList());
+                .stream().map(postingMapper::toPostingResponse).collect(Collectors.toList());
     }
 
     @Transactional
     public List<PostingResponse> getAllPostings() {
         return bikeListingRepository.findAll()
-                .stream()
-                .map(postingMapper::toPostingResponse)
-                .collect(Collectors.toList());
+                .stream().map(postingMapper::toPostingResponse).collect(Collectors.toList());
     }
 
     @Transactional

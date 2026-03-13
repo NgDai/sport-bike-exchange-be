@@ -35,11 +35,12 @@ public class PostingController {
         return apiResponse;
     }
 
-    @PutMapping("/confirm-payment/{listingId}")
-    ApiResponse<String> confirmPayment(
-            @PathVariable int listingId) {
-        ApiResponse<String> apiResponse = new ApiResponse<>();
-        apiResponse.setResult(postingService.confirmPaymentAndPublish(listingId));
+    // --- API MỚI: DÙNG ĐỂ THANH TOÁN LẠI NẾU BỊ HỦY GIỮA CHỪNG ---
+    @PostMapping("/retry-payment/{listingId}")
+    ApiResponse<CreatePostingResponse> retryPayment(@PathVariable int listingId) {
+        ApiResponse<CreatePostingResponse> apiResponse = new ApiResponse<>();
+        apiResponse.setResult(postingService.retryPayment(listingId));
+        apiResponse.setMessage("Tạo giao dịch thanh toán lại thành công");
         return apiResponse;
     }
 
