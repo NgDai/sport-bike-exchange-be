@@ -13,12 +13,9 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = lombok.AccessLevel.PRIVATE)
 public class CreateDepositResponse {
 
-    /** Deposit vừa tạo (null nếu ví không đủ tiền) */
     DepositResponse deposit;
 
-    /** URL thanh toán VNPay (null nếu đã trừ ví thành công) */
     String paymentUrl;
 
-    /** Mô tả kết quả */
     String message;
 }

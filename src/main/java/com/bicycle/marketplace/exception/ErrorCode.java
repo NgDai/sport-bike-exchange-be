@@ -53,7 +53,8 @@ public enum ErrorCode {
     WALLET_NOT_FOUND(1024, "Không tìm thấy ví của người dùng"),
     INSUFFICIENT_FUNDS(1025, "Số dư không đủ để thực hiện giao dịch"),
     USER_INACTIVE(1030, "Tài khoản của bạn đã bị vô hiệu hóa"),
-    MISSING_USER_INFO(1031, "Bạn cần cập nhật đầy đủ số điện thoại và địa chỉ trước khi đăng bán xe");
+    MISSING_USER_INFO(1031, "Bạn cần cập nhật đầy đủ số điện thoại và địa chỉ trước khi đăng bán xe"),
+    DEPOSIT_NOT_WAITING_PAYMENT(1033, "Deposit không ở trạng thái chờ thanh toán, không thể hủy");
 
     private int code;
     private String message;

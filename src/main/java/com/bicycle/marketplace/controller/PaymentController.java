@@ -15,14 +15,19 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import lombok.extern.slf4j.Slf4j;
+
 @RestController
 @RequestMapping("/payments")
+@Slf4j
 public class PaymentController {
 
     @Autowired
     private VNPayService vnPayService;
     @Autowired
     private WalletService walletService;
+    @Autowired
+    private com.bicycle.marketplace.services.DepositService depositService;
 
     /** URL frontend sau khi đăng bài thành công */
     @Value("${vnpay.frontend.post-success-url:http://localhost:5173/profile?tab=my-bikes}")
@@ -76,16 +81,29 @@ public class PaymentController {
             double amount = Double.parseDouble(request.getParameter("vnp_Amount")) / 100;
             String orderInfo = request.getParameter("vnp_OrderInfo");
             String username = parseUsername(orderInfo);
-            // Nếu orderInfo có dạng "username|fee|..." thì đây là phí đăng bài → vào ví System
-            if (isFeePayment(orderInfo)) {
+            if (isDepositPayment(orderInfo)) {
+                // Thanh toán đặt cọc thành công → confirm deposit
+                int depositId = parseDepositId(orderInfo);
+                depositService.confirmDepositPayment(depositId, username, amount);
+                response.setMessage("Đặt cọc thành công qua VNPay");
+            } else if (isFeePayment(orderInfo)) {
                 walletService.addFundsToSystemWallet(amount, username);
                 response.setMessage("Thanh toán phí đăng bài thành công");
             } else {
-                // Nạp ví thông thường → vào ví user (parse username từ orderInfo, không dùng session)
                 walletService.addFundsToUserWallet(amount, username);
                 response.setMessage("Nạp ví thành công");
             }
         } else {
+            // Thanh toán thất bại hoặc hủy
+            String orderInfo = request.getParameter("vnp_OrderInfo");
+            if (isDepositPayment(orderInfo)) {
+                int depositId = parseDepositId(orderInfo);
+                try {
+                    depositService.cancelDepositPayment(depositId);
+                } catch (Exception e) {
+                    log.warn("Cancel deposit payment failed for depositId={}: {}", depositId, e.getMessage());
+                }
+            }
             throw new RuntimeException("Giao dịch không thành công hoặc chữ ký không hợp lệ");
         }
         return response;
@@ -99,16 +117,27 @@ public class PaymentController {
 
         if (paymentStatus == 1) {
             double amount = Double.parseDouble(request.getParameter("vnp_Amount")) / 100;
-            if (isFeePayment(orderInfo)) {
-                // Phí đăng bài → tiền vào ví System, redirect về trang đăng bài thành công
+            if (isDepositPayment(orderInfo)) {
+                int depositId = parseDepositId(orderInfo);
+                depositService.confirmDepositPayment(depositId, username, amount);
+                response.sendRedirect(postSuccessUrl);
+            } else if (isFeePayment(orderInfo)) {
                 walletService.addFundsToSystemWallet(amount, username);
                 response.sendRedirect(postSuccessUrl);
             } else {
-                // Nạp ví thường → tiền vào ví user, redirect về trang ví
                 walletService.addFundsToUserWallet(amount, username);
                 response.sendRedirect(walletSuccessUrl);
             }
         } else {
+            // Thanh toán thất bại hoặc hủy → nếu là deposit thì hủy và trả listing về Available
+            if (isDepositPayment(orderInfo)) {
+                int depositId = parseDepositId(orderInfo);
+                try {
+                    depositService.cancelDepositPayment(depositId);
+                } catch (Exception e) {
+                    log.warn("Cancel deposit payment failed for depositId={}: {}", depositId, e.getMessage());
+                }
+            }
             response.sendRedirect(walletSuccessUrl + "&status=failed");
         }
     }
@@ -124,6 +153,18 @@ public class PaymentController {
         if (orderInfo == null) return false;
         String[] parts = orderInfo.split("\\|");
         return parts.length >= 2 && "fee".equalsIgnoreCase(parts[1].trim());
+    }
+    /** Format đặt cọc: "username|deposit|depositId" — parts[1] == "deposit" */
+    private boolean isDepositPayment(String orderInfo) {
+        if (orderInfo == null) return false;
+        String[] parts = orderInfo.split("\\|");
+        return parts.length >= 2 && "deposit".equalsIgnoreCase(parts[1].trim());
+    }
+
+    /** Parse depositId từ orderInfo dạng "username|deposit|depositId" */
+    private int parseDepositId(String orderInfo) {
+        String[] parts = orderInfo.split("\\|");
+        return Integer.parseInt(parts[2].trim());
     }
 
 }
