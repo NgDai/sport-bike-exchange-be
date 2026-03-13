@@ -24,7 +24,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 
 @Service
-@XSlf4j
 public class ReservationService {
     @Autowired
     private IReservationRepository reservationRepository;
