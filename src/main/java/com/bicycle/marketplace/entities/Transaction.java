@@ -14,31 +14,35 @@ import java.util.Date;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Entity
+@Table(name = "transaction")
 public class Transaction {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     int transactionId;
     @ManyToOne
-    @JoinColumn(name = "event_id")
+    @JoinColumn(name = "event_id", nullable = true)
     Events event;
     @ManyToOne
-    @JoinColumn(name = "listing_id")
+    @JoinColumn(name = "listing_id", nullable = true)
     BikeListing listing;
     @ManyToOne
-    @JoinColumn(name = "buyer_id")
+    @JoinColumn(name = "buyer_id", nullable = false)
     Users buyer;
     @ManyToOne
-    @JoinColumn(name = "seller_id")
+    @JoinColumn(name = "seller_id", nullable = true)
     Users seller;
     @OneToOne
-    @JoinColumn(name = "deposit_id")
+    @JoinColumn(name = "deposit_id", nullable = true)
     Deposit deposit;
     @OneToOne
-    @JoinColumn(name = "reservation_id")
+    @JoinColumn(name = "reservation_id", nullable = true)
     Reservation reservation;
     double amount;
     double actualPrice;
-    String status;
+    double fee;
+    String description;
+    String type;
+    String status; // "Pending", "Paid", "Completed"
     @CreationTimestamp
     Date createAt;
     @UpdateTimestamp

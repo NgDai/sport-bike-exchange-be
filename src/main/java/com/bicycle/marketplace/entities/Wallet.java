@@ -23,4 +23,5 @@ public class Wallet {
     Users user;
     String username;
     double balance;
+    String type;
 }

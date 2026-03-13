@@ -18,11 +18,11 @@ public class DisputeController {
     @Autowired
     private DisputeService disputeService;
 
-    @PostMapping
+    @PostMapping("/{transactionId}/create")
     @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
-    ApiResponse<DisputeResponse> createDispute(@RequestBody DisputeCreationRequest request) {
+    ApiResponse<DisputeResponse> createDispute(@PathVariable int transactionId, @RequestBody DisputeCreationRequest request) {
         ApiResponse<DisputeResponse> apiResponse = new ApiResponse<>();
-        apiResponse.setResult(disputeService.createDispute(request));
+        apiResponse.setResult(disputeService.createDispute(transactionId, request));
         apiResponse.setMessage("Dispute created successfully");
         return apiResponse;
     }

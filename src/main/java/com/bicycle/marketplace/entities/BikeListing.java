@@ -17,7 +17,7 @@ import java.time.LocalDateTime;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class BikeListing {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     int listingId;
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "bicycle_id")
@@ -29,7 +29,8 @@ public class BikeListing {
     String description;
     String image_url;
     double price;
-    String status; // Available, Sold, Pending
+    String condition;
+    String status; // Available, Deposited, Sold, Pending, Waiting_Payment
     @CreationTimestamp
     LocalDateTime createdAt;
     @UpdateTimestamp

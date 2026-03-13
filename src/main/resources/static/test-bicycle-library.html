@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>🚲 Bicycle Library – API Test</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet" />
+    <style>
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --bg: #0f1117;
+            --surface: #1a1d27;
+            --surface2: #222535;
+            --border: #2e3148;
+            --accent: #6c63ff;
+            --accent-hover: #8178ff;
+            --success: #22c55e;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --text: #e2e8f0;
+            --text-muted: #8892a4;
+            --radius: 12px;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            padding: 24px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        header h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #6c63ff, #a78bfa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        header p {
+            color: var(--text-muted);
+            margin-top: 6px;
+            font-size: 0.9rem;
+        }
+
+        .layout {
+            display: grid;
+            grid-template-columns: 340px 1fr;
+            gap: 24px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 20px;
+        }
+
+        .card h2 {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text);
+        }
+
+        .card h2 .badge {
+            background: var(--accent);
+            color: #fff;
+            font-size: 0.65rem;
+            padding: 2px 8px;
+            border-radius: 20px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        label {
+            display: block;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+            font-weight: 500;
+        }
+
+        input,
+        select {
+            width: 100%;
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text);
+            padding: 10px 14px;
+            font-size: 0.875rem;
+            font-family: inherit;
+            outline: none;
+            transition: border 0.2s;
+            margin-bottom: 14px;
+        }
+
+        input:focus,
+        select:focus {
+            border-color: var(--accent);
+        }
+
+        input[readonly] {
+            color: var(--text-muted);
+            cursor: default;
+        }
+
+        button {
+            width: 100%;
+            padding: 11px 16px;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent), #8b5cf6);
+            color: #fff;
+        }
+
+        .btn-primary:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background: var(--surface2);
+            color: var(--text);
+            border: 1px solid var(--border);
+            margin-top: 8px;
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        button:disabled {
+            opacity: 0.45;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        .token-box {
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 10px 14px;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            word-break: break-all;
+            min-height: 56px;
+            margin-bottom: 14px;
+            line-height: 1.5;
+        }
+
+        .token-box.has-token {
+            color: var(--success);
+        }
+
+        .status-dot {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--danger);
+            margin-right: 6px;
+            flex-shrink: 0;
+            transition: background 0.3s;
+        }
+
+        .status-dot.connected {
+            background: var(--success);
+        }
+
+        .right-col {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .filter-row {
+            display: flex;
+            gap: 12px;
+        }
+
+        .filter-row>* {
+            flex: 1;
+        }
+
+        .bike-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 12px;
+            max-height: 280px;
+            overflow-y: auto;
+            padding-right: 4px;
+        }
+
+        .bike-card {
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .bike-card:hover {
+            border-color: var(--accent);
+            transform: translateY(-2px);
+        }
+
+        .bike-card.selected {
+            border-color: var(--accent);
+            background: rgba(108, 99, 255, 0.12);
+        }
+
+        .bike-card .model {
+            font-weight: 600;
+            font-size: 0.9rem;
+            margin-bottom: 4px;
+        }
+
+        .bike-card .year {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .bike-card .type-tag {
+            display: inline-block;
+            margin-top: 8px;
+            background: rgba(108, 99, 255, 0.2);
+            color: #a78bfa;
+            font-size: 0.7rem;
+            padding: 2px 8px;
+            border-radius: 20px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0 20px;
+        }
+
+        .form-grid .full {
+            grid-column: 1 / -1;
+        }
+
+        .empty-state {
+            text-align: center;
+            color: var(--text-muted);
+            padding: 32px 0;
+            font-size: 0.875rem;
+        }
+
+        .empty-state .icon {
+            font-size: 2.5rem;
+            margin-bottom: 8px;
+        }
+
+        .response-box {
+            background: #0d1117;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 14px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.78rem;
+            color: #7ee787;
+            max-height: 200px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+
+        .tag-info {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            background: rgba(34, 197, 94, 0.1);
+            color: var(--success);
+            font-size: 0.75rem;
+            padding: 3px 10px;
+            border-radius: 20px;
+            margin-bottom: 12px;
+        }
+
+        .tag-info.warn {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--warning);
+        }
+
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 3px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <h1>🚲 Bicycle Library</h1>
+        <p>Test API tự động điền thông tin xe vào form</p>
+    </header>
+
+    <div class="layout">
+
+        <!-- LEFT: Login panel -->
+        <div>
+            <div class="card">
+                <h2>
+                    <span class="status-dot" id="statusDot"></span>
+                    Đăng nhập
+                    <span class="badge">BƯỚC 1</span>
+                </h2>
+
+                <label>Username / Email</label>
+                <input type="text" id="loginUsername" placeholder="admin@example.com" />
+
+                <label>Password</label>
+                <input type="password" id="loginPassword" placeholder="••••••••" />
+
+                <button class="btn-primary" onclick="login()">🔐 Đăng nhập & Lấy Token</button>
+
+                <div style="margin-top: 16px;">
+                    <label>JWT Token</label>
+                    <div class="token-box" id="tokenBox">Chưa đăng nhập...</div>
+                </div>
+
+                <button class="btn-secondary" onclick="clearToken()">🗑 Xóa token</button>
+            </div>
+
+            <!-- Raw response -->
+            <div class="card" style="margin-top: 16px;">
+                <h2>📡 Raw API Response</h2>
+                <div class="response-box" id="rawResponse">// Response sẽ hiện ở đây...</div>
+            </div>
+        </div>
+
+        <!-- RIGHT: Library browser + auto-fill form -->
+        <div class="right-col">
+
+            <!-- Step 2: Browse library -->
+            <div class="card">
+                <h2>📚 Duyệt thư viện xe <span class="badge">BƯỚC 2</span></h2>
+
+                <div class="filter-row">
+                    <div>
+                        <label>Tên Brand</label>
+                        <input type="text" id="filterBrand" placeholder="VD: Trek, Giant, Specialized..." />
+                    </div>
+                    <div>
+                        <label>Lọc theo Năm</label>
+                        <input type="number" id="filterYear" placeholder="VD: 2023" />
+                    </div>
+                </div>
+
+                <button class="btn-primary" onclick="fetchLibrary()" style="margin-bottom:16px;">
+                    🔍 Tìm kiếm xe
+                </button>
+
+                <div id="bikeListContainer">
+                    <div class="empty-state">
+                        <div class="icon">🚲</div>
+                        Đăng nhập và nhấn Tìm kiếm để xem danh sách xe
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 3: Auto-fill form -->
+            <div class="card">
+                <h2>📝 Form tạo Listing <span class="badge">BƯỚC 3</span></h2>
+
+                <div id="formHint" class="tag-info warn">
+                    ⚡ Chọn một xe ở trên để tự động điền thông tin
+                </div>
+
+                <div class="form-grid">
+                    <div class="full">
+                        <label>Tiêu đề listing</label>
+                        <input type="text" id="fTitle" placeholder="VD: Bán xe đạp Trek gần như mới" />
+                    </div>
+
+                    <div>
+                        <label>Brand</label>
+                        <input type="text" id="fBrand" placeholder="Tự điền từ thư viện" readonly />
+                    </div>
+                    <div>
+                        <label>Model</label>
+                        <input type="text" id="fModel" placeholder="Tự điền từ thư viện" readonly />
+                    </div>
+                    <div>
+                        <label>Loại xe (bikeType)</label>
+                        <input type="text" id="fBikeType" placeholder="Tự điền" readonly />
+                    </div>
+                    <div>
+                        <label>Năm sản xuất</label>
+                        <input type="text" id="fYear" placeholder="Tự điền" readonly />
+                    </div>
+                    <div>
+                        <label>Cỡ bánh (wheelSize)</label>
+                        <input type="text" id="fWheelSize" placeholder="Tự điền" readonly />
+                    </div>
+                    <div>
+                        <label>Số tốc độ (numberOfGears)</label>
+                        <input type="text" id="fGears" placeholder="Tự điền" readonly />
+                    </div>
+                    <div>
+                        <label>Phanh (brakeType)</label>
+                        <input type="text" id="fBrake" placeholder="Tự điền" readonly />
+                    </div>
+                    <div>
+                        <label>Kích thước khung (frameSize)</label>
+                        <input type="text" id="fFrameSize" placeholder="Tự điền" readonly />
+                    </div>
+                    <div>
+                        <label>Chất liệu khung (frameMaterial)</label>
+                        <input type="text" id="fFrameMaterial" placeholder="Tự điền" readonly />
+                    </div>
+                    <div>
+                        <label>Truyền động (drivetrain)</label>
+                        <input type="text" id="fDrivetrain" placeholder="Tự điền" readonly />
+                    </div>
+                    <div>
+                        <label>Phuộc (forkType)</label>
+                        <input type="text" id="fFork" placeholder="Tự điền" readonly />
+                    </div>
+                    <div>
+                        <label>Màu sắc (color)</label>
+                        <input type="text" id="fColor" placeholder="Tự điền" readonly />
+                    </div>
+                    <div>
+                        <label>Trọng lượng (kg)</label>
+                        <input type="text" id="fWeight" placeholder="Tự điền" readonly />
+                    </div>
+                    <div>
+                        <label>Yên xe (saddle)</label>
+                        <input type="text" id="fSaddle" placeholder="Tự điền" readonly />
+                    </div>
+                    <div>
+                        <label>Giảm xốc (shockAbsorber)</label>
+                        <input type="text" id="fShock" placeholder="Tự điền" readonly />
+                    </div>
+
+                    <div>
+                        <label>Giá (VNĐ)</label>
+                        <input type="number" id="fPrice" placeholder="Nhập giá bán" />
+                    </div>
+                    <div>
+                        <label>Tình trạng (1–10)</label>
+                        <input type="number" id="fCondition" placeholder="VD: 8" min="1" max="10" />
+                    </div>
+                    <div class="full">
+                        <label>Mô tả</label>
+                        <input type="text" id="fDescription" placeholder="Mô tả thêm về xe..." />
+                    </div>
+                </div>
+
+                <button class="btn-primary" onclick="submitForm()" style="margin-top: 4px;">
+                    🚀 Tạo Listing (giả lập)
+                </button>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        const BASE = 'http://localhost:8080/api';
+        let token = '';
+        let selectedLibraryId = null;
+
+        /* ─── Helpers ─── */
+        function setRaw(data) {
+            document.getElementById('rawResponse').textContent =
+                typeof data === 'string' ? data : JSON.stringify(data, null, 2);
+        }
+
+        function setToken(t) {
+            token = t;
+            const box = document.getElementById('tokenBox');
+            const dot = document.getElementById('statusDot');
+            if (t) {
+                box.textContent = t.substring(0, 60) + '...';
+                box.classList.add('has-token');
+                dot.classList.add('connected');
+            } else {
+                box.textContent = 'Chưa đăng nhập...';
+                box.classList.remove('has-token');
+                dot.classList.remove('connected');
+            }
+        }
+
+        function clearToken() {
+            setToken('');
+            setRaw('// Token đã xóa');
+        }
+
+        /* ─── Login ─── */
+        async function login() {
+            const username = document.getElementById('loginUsername').value.trim();
+            const password = document.getElementById('loginPassword').value.trim();
+            if (!username || !password) {
+                alert('Vui lòng nhập username và password!');
+                return;
+            }
+            try {
+                const res = await fetch(`${BASE}/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+                const data = await res.json();
+                setRaw(data);
+                const t = data?.result?.token || data?.token;
+                if (t) {
+                    setToken(t);
+                    alert('✅ Đăng nhập thành công! Bây giờ có thể tìm xe.');
+                } else {
+                    alert('❌ Đăng nhập thất bại. Kiểm tra lại thông tin.');
+                }
+            } catch (e) {
+                setRaw('Lỗi kết nối: ' + e.message);
+                alert('Không thể kết nối tới server. Đảm bảo backend đang chạy.');
+            }
+        }
+
+        /* ─── Fetch Library ─── */
+        async function fetchLibrary() {
+            if (!token) { alert('Vui lòng đăng nhập trước!'); return; }
+
+            const brandName = document.getElementById('filterBrand').value.trim();
+            const year = document.getElementById('filterYear').value;
+
+            let url = `${BASE}/bicycle-library`;
+            const params = [];
+            if (brandName) params.push(`brandName=${encodeURIComponent(brandName)}`);
+            if (year) params.push(`year=${year}`);
+            if (params.length) url += '?' + params.join('&');
+
+            try {
+                const res = await fetch(url, {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                const data = await res.json();
+                setRaw(data);
+                const bikes = data?.result ?? [];
+                renderBikeList(bikes);
+            } catch (e) {
+                setRaw('Lỗi: ' + e.message);
+            }
+        }
+
+        /* ─── Render bike cards ─── */
+        function renderBikeList(bikes) {
+            const container = document.getElementById('bikeListContainer');
+            if (!bikes.length) {
+                container.innerHTML = `<div class="empty-state"><div class="icon">🔍</div>Không tìm thấy xe nào</div>`;
+                return;
+            }
+            container.innerHTML = `<div class="bike-list">${bikes.map(b => `
+      <div class="bike-card" id="card-${b.id}" onclick="selectBike(${b.id})">
+        <div class="model">${b.model ?? '—'}</div>
+        <div class="year">${b.brand?.name ?? ''} • ${b.yearManufacture ?? ''}</div>
+        <span class="type-tag">${b.bikeType ?? 'N/A'}</span>
+      </div>`).join('')}
+    </div>`;
+        }
+
+        /* ─── Select bike → fetch detail → auto-fill ─── */
+        async function selectBike(id) {
+            if (!token) return;
+
+            // Highlight selected card
+            document.querySelectorAll('.bike-card').forEach(c => c.classList.remove('selected'));
+            const card = document.getElementById('card-' + id);
+            if (card) card.classList.add('selected');
+
+            try {
+                const res = await fetch(`${BASE}/bicycle-library/${id}`, {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                const data = await res.json();
+                setRaw(data);
+                const b = data?.result;
+                if (!b) return;
+
+                selectedLibraryId = id;
+
+                // Auto-fill form fields
+                document.getElementById('fBrand').value = b.brand?.name ?? '';
+                document.getElementById('fModel').value = b.model ?? '';
+                document.getElementById('fBikeType').value = b.bikeType ?? '';
+                document.getElementById('fYear').value = b.yearManufacture ?? '';
+                document.getElementById('fWheelSize').value = b.wheelSize ?? '';
+                document.getElementById('fGears').value = b.numberOfGears ?? '';
+                document.getElementById('fBrake').value = b.brakeType ?? '';
+                document.getElementById('fFrameSize').value = b.frameSize ?? '';
+                document.getElementById('fFrameMaterial').value = b.frameMaterial ?? '';
+                document.getElementById('fDrivetrain').value = b.drivetrain ?? '';
+                document.getElementById('fFork').value = b.forkType ?? '';
+                document.getElementById('fColor').value = b.color ?? '';
+                document.getElementById('fWeight').value = b.weight ?? '';
+                document.getElementById('fSaddle').value = b.saddle ?? '';
+                document.getElementById('fShock').value = b.shockAbsorber ?? '';
+
+                // Auto-fill title suggestion
+                if (!document.getElementById('fTitle').value) {
+                    document.getElementById('fTitle').value =
+                        `Bán ${b.brand?.name ?? ''} ${b.model ?? ''} ${b.yearManufacture ?? ''}`.trim();
+                }
+
+                // Update hint
+                const hint = document.getElementById('formHint');
+                hint.className = 'tag-info';
+                hint.textContent = `✅ Đã điền thông tin từ thư viện (ID: ${id})`;
+
+            } catch (e) {
+                setRaw('Lỗi lấy chi tiết: ' + e.message);
+            }
+        }
+
+        /* ─── Submit (simulate) ─── */
+        function submitForm() {
+            const payload = {
+                libraryId: selectedLibraryId,
+                title: document.getElementById('fTitle').value,
+                price: document.getElementById('fPrice').value,
+                condition: document.getElementById('fCondition').value,
+                description: document.getElementById('fDescription').value,
+            };
+            setRaw({
+                note: '⚠ Đây là giả lập – payload sẽ gửi lên POST /listings',
+                payload
+            });
+            alert('📋 Payload đã hiển thị trong Raw Response!\n(Kết nối POST /listings khi backend sẵn sàng)');
+        }
+    </script>
+</body>
+
+</html>

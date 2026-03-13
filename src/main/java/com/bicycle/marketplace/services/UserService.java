@@ -1,19 +1,14 @@
 package com.bicycle.marketplace.services;
 
-import com.bicycle.marketplace.dto.request.ChangePasswordRequest;
-import com.bicycle.marketplace.dto.request.EmailPasswordRequest;
-import com.bicycle.marketplace.dto.request.UserCreationRequest;
-import com.bicycle.marketplace.dto.request.UserUpdateRequest;
+import com.bicycle.marketplace.dto.request.*;
 import com.bicycle.marketplace.dto.response.EmailPasswordResponse;
 import com.bicycle.marketplace.dto.response.UserResponse;
 import com.bicycle.marketplace.entities.Users;
-import com.bicycle.marketplace.entities.Wallet;
 import com.bicycle.marketplace.enums.Role;
 import com.bicycle.marketplace.exception.AppException;
 import com.bicycle.marketplace.exception.ErrorCode;
 import com.bicycle.marketplace.mapper.UserMapper;
 import com.bicycle.marketplace.repository.IUserRepository;
-import com.bicycle.marketplace.repository.IWalletRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
@@ -34,7 +29,6 @@ public class UserService {
     IUserRepository userRepository;
     UserMapper userMapper;
     PasswordEncoder passwordEncoder;
-    IWalletRepository walletRepository;
 
     public Users createUser(UserCreationRequest request) {
         if (userRepository.existsByUsername(request.getUsername())) {
@@ -45,19 +39,11 @@ public class UserService {
         }
 
         Users user = userMapper.toUser(request);
-        //user.setPassword(passwordEncoder.encode(request.getPassword())); // encode BCrypt
-
-        HashSet<String> roles = new HashSet<>();
-        roles.add(Role.USER.name());
+        // user.setPassword(passwordEncoder.encode(request.getPassword())); // encode
+        // BCrypt
 
         user.setStatus("Active");
-        user.setRole(roles);
-
-        Wallet wallet = new Wallet();
-        wallet.setBalance(0.0);
-        wallet.setUser(user);
-        wallet.setUsername(user.getUsername());
-        walletRepository.save(wallet);
+        user.setRole(Role.USER.name());
         return userRepository.save(user);
     }
 
@@ -70,12 +56,9 @@ public class UserService {
             throw new AppException(ErrorCode.EMAIL_ALREADY_EXISTS);
         }
         Users user = userMapper.toUser(request);
-        //user.setPassword(passwordEncoder.encode(request.getPassword()));
+        // user.setPassword(passwordEncoder.encode(request.getPassword()));
 
-        HashSet<String> roles = new HashSet<>();
-        roles.add(Role.INSPECTOR.name());
-
-        user.setRole(roles);
+        user.setRole(Role.INSPECTOR.name());
         user.setStatus("Active");
         return userRepository.save(user);
     }
@@ -153,7 +136,16 @@ public class UserService {
         Users user = userRepository.findByUsername(name)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 
-        return userMapper.toUserResponse(user);
+        // Map sang DTO
+        UserResponse response = userMapper.toUserResponse(user);
+
+        // KIỂM TRA VÀ GÁN GIÁ TRỊ CHO hasPassword
+        // Nếu password khác null và không bị rỗng, tức là đã có mật khẩu (tạo từ web)
+        // Nếu password là null (đăng nhập qua Google), nó sẽ là false
+        boolean hasPass = user.getPassword() != null && !user.getPassword().isEmpty();
+        response.setHasPassword(hasPass);
+
+        return response;
     }
 
     public EmailPasswordResponse emailPassword(EmailPasswordRequest request) {
@@ -168,5 +160,15 @@ public class UserService {
         }
 
         return userMapper.toEmailResponse(userRepository.save(user));
+    }
+
+    public UserResponse changeRole(int userId, UserChangeRoleRequest request) {
+        Users user = userRepository.findById(userId)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+
+        String role = request.getRole();
+        user.setRole(role);
+
+        return userMapper.toUserResponse(userRepository.save(user));
     }
 }

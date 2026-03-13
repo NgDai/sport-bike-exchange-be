@@ -13,7 +13,5 @@ import java.util.Date;
 @Getter
 @Setter
 public class CheckInUpdateRequest {
-    private String roleId;
-    private String status;
-    private Date checkInTime;
+    private String token;
 }

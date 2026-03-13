@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import java.util.Arrays;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -38,6 +39,11 @@ public class SecurityConfig {
             "/auth/google"
     };
 
+    private final String[] PUBLIC_CORS_DOMAIN = {
+            "http://localhost:5173",
+            "https://sport-bike-exchange-fe.vercel.app/"
+    };
+
     @Value("${jwt.signer.key}")
     private String jwtSecret;
 
@@ -51,6 +57,9 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, PUBLIC_USER_ENDPOINTS).permitAll()
                         .requestMatchers(HttpMethod.GET, "/post/all", "/post/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/*.html", "/static/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/events/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/payments/vnpay-wallet", "/payments/vnpay-payment")
+                        .permitAll()
                         .anyRequest().authenticated());
 
         httpSecurity.oauth2ResourceServer(oauth2 -> oauth2
@@ -64,7 +73,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("http://localhost:5173"));
+        configuration.setAllowedOrigins(Arrays.asList(PUBLIC_CORS_DOMAIN));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);

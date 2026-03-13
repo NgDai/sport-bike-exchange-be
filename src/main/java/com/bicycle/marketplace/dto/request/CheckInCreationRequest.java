@@ -15,7 +15,5 @@ import java.util.Date;
 @NoArgsConstructor
 
 public class CheckInCreationRequest {
-    private String role;
-    private String status;
-    private Date checkInTime;
+    private String token;
 }

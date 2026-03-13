@@ -1,9 +1,7 @@
 package com.bicycle.marketplace.enums;
 
-import lombok.*;
-
 public enum Role {
+    USER,
     ADMIN,
-    INSPECTOR,
-    USER
+    INSPECTOR
 }

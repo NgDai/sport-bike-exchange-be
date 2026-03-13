@@ -32,6 +32,13 @@ public class CreatePostingRequest {
     String forkType;
     String color;
     String frameMaterial;
-    int condition;
+    String condition;
+    Double weight;
+    String saddle;
+    String chainring;
+    String chain;
+    String handlebar;
+    String rim;
+    String shockAbsorber;
     String image_url;
 }

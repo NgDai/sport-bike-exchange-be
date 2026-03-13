@@ -10,6 +10,8 @@ import com.bicycle.marketplace.exception.ErrorCode;
 import com.bicycle.marketplace.mapper.BrandMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -23,12 +25,20 @@ public class BrandService {
 
     @PreAuthorize("hasRole('ADMIN')")
     public BrandResponse createBrand(BrandCreationRequest request){
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new AppException(ErrorCode.UNAUTHORIZED);
+        }
         Brand brand = brandMapper.toBrand(request);
         return brandMapper.toBrandResponse(brandRepository.save(brand));
     }
 
     @PreAuthorize("hasRole('ADMIN')")
     public BrandResponse updateBrand(int brandId, BrandUpdateRequest request){
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new AppException(ErrorCode.UNAUTHORIZED);
+        }
         Brand brand = brandRepository.findById(brandId).orElseThrow(() -> new AppException(ErrorCode.BRAND_NOT_FOUND));
         brandMapper.updateBrand(brand, request);
         return brandMapper.toBrandResponse(brandRepository.save(brand));
@@ -45,6 +55,10 @@ public class BrandService {
 
     @PreAuthorize("hasRole('ADMIN')")
     public String deleteBrand(int brandId){
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new AppException(ErrorCode.UNAUTHORIZED);
+        }
         Brand brand = brandRepository.findById(brandId).orElseThrow(() -> new AppException(ErrorCode.BRAND_NOT_FOUND));
         brandRepository.delete(brand);
         return "Brand deleted successfully";

@@ -21,6 +21,7 @@ public class WalletTransaction {
     @ManyToOne
     @JoinColumn(name = "wallet_id")
     Wallet wallet;
+    double balance;
     double amount;
     String type;
     String description;

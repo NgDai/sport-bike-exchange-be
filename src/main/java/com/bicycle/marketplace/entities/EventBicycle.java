@@ -22,13 +22,20 @@ public class EventBicycle {
     @JoinColumn(name = "event_id")
     Events event;
     @ManyToOne
-    @JoinColumn(name = "listing_id")
+    @JoinColumn(name = "listing_id", nullable = true)
     BikeListing listing;
+    @ManyToOne
+    @JoinColumn(name = "bike_id")
+    Bicycle bicycle;
     @ManyToOne
     @JoinColumn(name = "user_id")
     Users seller;
     String sellerName;
-    String type;
+    String bikeType;
+    @Column(nullable = true)
+    Double price;
+    String title;
+    String status;
     @CreationTimestamp
     LocalDate createDate;
 }

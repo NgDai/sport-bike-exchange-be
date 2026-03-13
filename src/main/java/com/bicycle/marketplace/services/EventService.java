@@ -41,18 +41,30 @@ public class EventService {
     }
 
     public EventResponse updateEvent(int eventId, EventUpdateRequest request) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new AppException(ErrorCode.UNAUTHORIZED);
+        }
         Events event = eventRepository.findById(eventId).orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
         eventMapper.updateEvent(event, request);
         return eventMapper.toEventResponse(eventRepository.save(event));
     }
 
     public EventResponse updateEventStatus(int eventId, EventUpdateRequest request) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new AppException(ErrorCode.UNAUTHORIZED);
+        }
         Events event = eventRepository.findById(eventId).orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
         event.setStatus(request.getStatus());
         return eventMapper.toEventResponse(eventRepository.save(event));
     }
 
     public String deleteEvent(int eventId) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new AppException(ErrorCode.UNAUTHORIZED);
+        }
         Events event = eventRepository.findById(eventId).orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
         eventRepository.delete(event);
         return "Event deleted successfully";

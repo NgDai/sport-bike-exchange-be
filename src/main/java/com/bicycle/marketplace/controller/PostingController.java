@@ -4,8 +4,8 @@ import com.bicycle.marketplace.dto.request.CreatePostingRequest;
 import com.bicycle.marketplace.dto.request.UpdatePostingRequest;
 import com.bicycle.marketplace.dto.request.UpdatePostingStatusRequest;
 import com.bicycle.marketplace.dto.response.ApiResponse;
+import com.bicycle.marketplace.dto.response.CreatePostingResponse;
 import com.bicycle.marketplace.dto.response.PostingResponse;
-import com.bicycle.marketplace.entities.BikeListing;
 import com.bicycle.marketplace.services.PostingService;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -21,16 +21,32 @@ public class PostingController {
 
     PostingService postingService;
 
+    @GetMapping("/calculate-fee")
+    ApiResponse<Double> getListingFee(@RequestParam double price) {
+        ApiResponse<Double> apiResponse = new ApiResponse<>();
+        apiResponse.setResult(postingService.calculateListingFee(price));
+        return apiResponse;
+    }
+
     @PostMapping("/create")
-    ApiResponse<BikeListing> createPosting(@RequestBody CreatePostingRequest request) {
-        ApiResponse<BikeListing> apiResponse = new ApiResponse<>();
+    ApiResponse<CreatePostingResponse> createPosting(@RequestBody CreatePostingRequest request) {
+        ApiResponse<CreatePostingResponse> apiResponse = new ApiResponse<>();
         apiResponse.setResult(postingService.createPosting(request));
         return apiResponse;
     }
 
+    // --- API MỚI: DÙNG ĐỂ THANH TOÁN LẠI NẾU BỊ HỦY GIỮA CHỪNG ---
+    @PostMapping("/retry-payment/{listingId}")
+    ApiResponse<CreatePostingResponse> retryPayment(@PathVariable int listingId) {
+        ApiResponse<CreatePostingResponse> apiResponse = new ApiResponse<>();
+        apiResponse.setResult(postingService.retryPayment(listingId));
+        apiResponse.setMessage("Tạo giao dịch thanh toán lại thành công");
+        return apiResponse;
+    }
+
     @PutMapping("/update/{listingId}")
-    ApiResponse<BikeListing> updatePosting(@RequestBody UpdatePostingRequest request, @PathVariable int listingId) {
-        ApiResponse<BikeListing> apiResponse = new ApiResponse<>();
+    ApiResponse<PostingResponse> updatePosting(@RequestBody UpdatePostingRequest request, @PathVariable int listingId) {
+        ApiResponse<PostingResponse> apiResponse = new ApiResponse<>();
         apiResponse.setResult(postingService.updatePosting(request, listingId));
         return apiResponse;
     }
@@ -64,8 +80,8 @@ public class PostingController {
     }
 
     @PutMapping("/updateStatus/{listingId}")
-    ApiResponse<BikeListing> updatePostingStatus(@PathVariable int listingId, @RequestBody UpdatePostingStatusRequest status) {
-        ApiResponse<BikeListing> apiResponse = new ApiResponse<>();
+    ApiResponse<PostingResponse> updatePostingStatus(@PathVariable int listingId, @RequestBody UpdatePostingStatusRequest status) {
+        ApiResponse<PostingResponse> apiResponse = new ApiResponse<>();
         apiResponse.setResult(postingService.updatePostingStatus(listingId, status));
         return apiResponse;
     }

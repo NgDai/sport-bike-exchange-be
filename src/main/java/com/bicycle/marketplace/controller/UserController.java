@@ -1,9 +1,6 @@
 package com.bicycle.marketplace.controller;
 
-import com.bicycle.marketplace.dto.request.ChangePasswordRequest;
-import com.bicycle.marketplace.dto.request.EmailPasswordRequest;
-import com.bicycle.marketplace.dto.request.UserCreationRequest;
-import com.bicycle.marketplace.dto.request.UserUpdateRequest;
+import com.bicycle.marketplace.dto.request.*;
 import com.bicycle.marketplace.dto.response.ApiResponse;
 import com.bicycle.marketplace.dto.response.EmailPasswordResponse;
 import com.bicycle.marketplace.dto.response.UserResponse;
@@ -17,6 +14,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Set;
 
 @RestController
 @RequestMapping("/users")
@@ -98,6 +96,13 @@ public class UserController {
     ApiResponse<EmailPasswordResponse> changePasswordWithEmail(@RequestBody @Valid EmailPasswordRequest request) {
         ApiResponse<EmailPasswordResponse> apiResponse = new ApiResponse<>();
         apiResponse.setResult(userService.emailPassword(request));
+        return apiResponse;
+    }
+
+    @PutMapping("/role/{userId}")
+    ApiResponse<UserResponse> updateUserRole(@PathVariable int userId, @RequestBody UserChangeRoleRequest request) {
+        ApiResponse<UserResponse> apiResponse = new ApiResponse<>();
+        apiResponse.setResult(userService.changeRole(userId, request));
         return apiResponse;
     }
 }
