@@ -23,7 +23,20 @@ public class Reservation {
     @ManyToOne
     @JoinColumn(name = "buyer_id")
     Users buyer;
-    String status;
+    @ManyToOne
+    @JoinColumn(name = "inspector_id")
+    Users inspector;
+
+    @Column(name = "meeting_location")
+    String meetingLocation;
+
+    @Column(name = "meeting_time")
+    Date meetingTime;
+    String status; // "Deposited", "Scheduled", "Completed", "Cancelled"
+    @OneToOne
+    @JoinColumn(name = "deposit_id")
+    Deposit deposit;
+    Double depositAmount;
     @CreationTimestamp
     Date reservedAt;
 }

@@ -4,18 +4,20 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.hibernate.annotations.CreationTimestamp;
-
-import java.util.Date;
 
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
 public class TransactionCreationRequest {
-    private String status;
+    private Integer eventId;
+    private Integer listingId;
+    private Integer buyerId;
+    private Integer sellerId;
+    private Integer depositId;
+    private Integer reservationId;
+
     private double amount;
     private double actualPrice;
-    private Date createdAt;
-    private Date updateAt;
+    private Double fee;
 }

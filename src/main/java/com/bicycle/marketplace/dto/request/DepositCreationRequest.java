@@ -16,5 +16,4 @@ public class DepositCreationRequest {
     private String type;
     private double amount;
     private String status;
-    private Date createAt;
 }

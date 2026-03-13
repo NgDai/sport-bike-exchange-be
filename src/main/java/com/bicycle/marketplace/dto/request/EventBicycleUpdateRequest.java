@@ -11,5 +11,7 @@ import java.time.LocalDate;
 @AllArgsConstructor
 @NoArgsConstructor
 public class EventBicycleUpdateRequest {
+    private Double price;
+    private String title;
     private LocalDate createDate;
 }

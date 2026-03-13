@@ -38,6 +38,10 @@ public enum ErrorCode {
     INSPECTIONREPORT_NOT_FOUND(1014, "Không tìm thấy báo cáo kiểm định"),
     RESERVATION_NOT_FOUND(1015, "Không tìm thấy đặt chỗ"),
     TRANSACTION_NOT_FOUND(1016, "Không tìm thấy giao dịch"),
+    TRANSACTION_SAVE_FAILED(1029, "Không thể lưu giao dịch. Có thể bản ghi giao dịch này đã tồn tại hoặc dữ liệu không hợp lệ."),
+    RESERVATION_ALREADY_HAS_TRANSACTION(1030, "Lỗi tạo giao dịch: Reservation này đã có một Refund Transaction tương ứng."),
+    DEPOSIT_ALREADY_HAS_TRANSACTION(1031, "Deposit này đã có một Transaction tương ứng."),
+    DEPOSIT_ALREADY_EXISTS(1032, "Bạn đã đặt cọc cho bài đăng này rồi"),
     BRAND_NOT_FOUND(1017, "Không tìm thấy thương hiệu"),
     CATEGORY_NOT_FOUND(1018, "Không tìm thấy danh mục"),
     EVENT_BICYCLE_NOT_FOUND(1019, "Không tìm thấy xe đạp trong sự kiện"),
@@ -49,7 +53,8 @@ public enum ErrorCode {
     WALLET_NOT_FOUND(1024, "Không tìm thấy ví của người dùng"),
     INSUFFICIENT_FUNDS(1025, "Số dư không đủ để thực hiện giao dịch"),
     USER_INACTIVE(1030, "Tài khoản của bạn đã bị vô hiệu hóa"),
-    MISSING_USER_INFO(1031, "Bạn cần cập nhật đầy đủ số điện thoại và địa chỉ trước khi đăng bán xe");
+    MISSING_USER_INFO(1031, "Bạn cần cập nhật đầy đủ số điện thoại và địa chỉ trước khi đăng bán xe"),
+    DEPOSIT_NOT_WAITING_PAYMENT(1033, "Deposit không ở trạng thái chờ thanh toán, không thể hủy");
 
     private int code;
     private String message;
