@@ -17,7 +17,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 public class WishlistService {
@@ -62,25 +61,6 @@ public class WishlistService {
         return new WishlistToggleResponse(true, "Removed from wishlist");
     }
 
-    // Toggle: thêm nếu chưa có, xóa nếu đã có
-    public WishlistToggleResponse toggleWishlist(int userId, int listingId) {
-        var existing = wishlistRepository.findByUser_UserIdAndListing_ListingId(userId, listingId);
-        if (existing.isPresent()) {
-            wishlistRepository.delete(existing.get());
-            return new WishlistToggleResponse(false, "Removed from wishlist");
-        } else {
-            Users user = userRepository.findById(userId)
-                    .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
-            BikeListing listing = bikeListingRepository.findById(listingId)
-                    .orElseThrow(() -> new AppException(ErrorCode.LISTING_NOT_FOUND));
-            Wishlist wishlist = new Wishlist();
-            wishlist.setUser(user);
-            wishlist.setListing(listing);
-            wishlistRepository.save(wishlist);
-            return new WishlistToggleResponse(true, "Added to wishlist");
-        }
-    }
-
     public boolean isInWishlist(int userId, int listingId){
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated()) {
@@ -89,11 +69,13 @@ public class WishlistService {
         return wishlistRepository.findByUser_UserIdAndListing_ListingId(userId, listingId).isPresent();
     }
 
-    // Lấy wishlist theo userId (trả DTO, không trả Entity)
-    public List<WishlistResponse> getWishlistByUserId(int userId) {
-        return wishlistRepository.findAllByUser_UserId(userId)
-                .stream()
-                .map(wishlistMapper::toWishlistResponse)
-                .collect(Collectors.toList());
+    public List<Wishlist> getAllWishlist() {
+        return wishlistRepository.findAll();
+    }
+
+    public WishlistResponse getWishlistById(int wishlistId) {
+        Wishlist wishlist = wishlistRepository.findById(wishlistId)
+                .orElseThrow(() -> new AppException(ErrorCode.WISHLIST_NOT_FOUND));
+        return wishlistMapper.toWishlistResponse(wishlist);
     }
 }
