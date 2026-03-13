@@ -113,5 +113,14 @@ public class ReservationController {
         return apiResponse;
     }
 
+    @PutMapping("/cancel/{reservationId}")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('USER')")
+    ApiResponse<ReservationResponse> cancelReservation(@PathVariable int reservationId) {
+        ApiResponse<ReservationResponse> apiResponse = new ApiResponse<>();
+        apiResponse.setResult(reservationService.cancelReservation(reservationId));
+        apiResponse.setMessage("Reservation cancelled successfully");
+        return apiResponse;
+    }
+
 
 }
