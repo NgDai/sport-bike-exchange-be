@@ -17,5 +17,4 @@ public class EventBicycleCreationRequest {
     private String bikeType;
     private String condition;
     private String image_url;
-    private LocalDate createDate;
 }
