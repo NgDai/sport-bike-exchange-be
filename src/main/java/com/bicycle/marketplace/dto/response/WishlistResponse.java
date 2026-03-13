@@ -1,16 +1,23 @@
 package com.bicycle.marketplace.dto.response;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
+import lombok.experimental.FieldDefaults;
 
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
+@Builder
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class WishlistResponse {
-    private int wishlistId;
-    private int userId;
-    private int listingId;
+    int wishlistId;
+    int userId;
+    int listingId;
+    String listingTitle;
+    String listingDescription;
+    String listingImageUrl;
+    double listingPrice;
+    String listingCondition;
+    String listingStatus;
+    String sellerName;
 }
