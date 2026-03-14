@@ -14,4 +14,6 @@ public interface IWishlistRepository extends JpaRepository<Wishlist, Integer> {
     List<Wishlist> findAllByUser_UserId(int userId);
 
     int countByListing_ListingId(int listingId);
+
+    void deleteAllByListing_ListingId(int listingId);
 }

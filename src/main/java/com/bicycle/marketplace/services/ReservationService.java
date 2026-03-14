@@ -162,23 +162,35 @@ public class ReservationService {
                 .toList();
     }
 
-    public ReservationResponse cancelReservation(int reservationId) {
+    @Transactional
+    public String cancelReservation(int reservationId) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated()) {
             throw new AppException(ErrorCode.UNAUTHORIZED);
         }
         Reservation reservation = reservationRepository.findById(reservationId)
                 .orElseThrow(() -> new AppException(ErrorCode.RESERVATION_NOT_FOUND));
-        BikeListing listing = bikeListingRepository.findById(reservation.getListing().getListingId())
-                .orElseThrow(() -> new AppException(ErrorCode.BIKE_LISTING_NOT_FOUND));
-        if (reservation.getStatus().equalsIgnoreCase("Deposited")) {
-            reservation.setStatus("Cancelled");
-            listing.setStatus("Available");
-        } else {
-            throw new RuntimeException("Chỉ có thể hủy reservation đang ở trạng thái 'Deposited'");
+
+        if (!reservation.getStatus().equalsIgnoreCase("Deposited")
+                && !reservation.getStatus().equalsIgnoreCase("Reserved")
+                && !reservation.getStatus().equalsIgnoreCase("Scheduled")) {
+            throw new RuntimeException("Không thể hủy reservation ở trạng thái: " + reservation.getStatus());
         }
 
+        BikeListing listing = bikeListingRepository.findById(reservation.getListing().getListingId())
+                .orElseThrow(() -> new AppException(ErrorCode.BIKE_LISTING_NOT_FOUND));
+
+        // 1. Xóa Transaction liên quan (nếu có) trước khi xóa Reservation
+        transactionRepository.findByReservation_ReservationId(reservationId)
+                .ifPresent(transactionRepository::delete);
+
+        // 2. Xóa Reservation
+        reservationRepository.delete(reservation);
+
+        // 3. Đặt lại trạng thái listing về Available
+        listing.setStatus("Available");
         bikeListingRepository.save(listing);
-        return reservationMapper.toReservationResponse(reservationRepository.save(reservation));
+
+        return "Reservation và Transaction đã được xóa, xe đã trở về trạng thái Available.";
     }
 }

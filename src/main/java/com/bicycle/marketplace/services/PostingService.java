@@ -38,6 +38,7 @@ public class PostingService {
     private final SystemConfigRepository systemConfigRepository;
     private final WalletTransactionService walletTransactionService;
     private final VNPayService vnPayService;
+    private final IWishlistRepository wishlistRepository;
 
     public double calculateListingFee(double price) {
         double feePercent = systemConfigRepository.findByKey("Phí_Sàn")
@@ -204,7 +205,10 @@ public class PostingService {
         if (bikeListing != null && "Waiting_Payment".equals(bikeListing.getStatus())) {
             Bicycle bicycle = bikeListing.getBicycle();
 
-            // Xóa BikeListing trước
+            // Xóa wishlist liên quan trước
+            wishlistRepository.deleteAllByListing_ListingId(listingId);
+
+            // Xóa BikeListing
             bikeListingRepository.delete(bikeListing);
 
             // Xóa luôn Bicycle để tránh rác DB
@@ -254,6 +258,8 @@ public class PostingService {
     public String deletePosting(int listingId) {
         BikeListing bikeListing = bikeListingRepository.findById(listingId)
                 .orElseThrow(() -> new AppException(ErrorCode.BIKE_LISTING_NOT_FOUND));
+        // Xóa tất cả wishlist liên quan trước để tránh lỗi foreign key constraint
+        wishlistRepository.deleteAllByListing_ListingId(listingId);
         bikeListingRepository.delete(bikeListing);
         return "Bike listing deleted successfully";
     }
