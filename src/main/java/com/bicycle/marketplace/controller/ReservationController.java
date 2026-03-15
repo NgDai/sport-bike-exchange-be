@@ -3,6 +3,7 @@ package com.bicycle.marketplace.controller;
 import com.bicycle.marketplace.dto.request.ReservationCreationRequest;
 import com.bicycle.marketplace.dto.request.ReservationScheduleRequest;
 import com.bicycle.marketplace.dto.request.ReservationUpdateRequest;
+import com.bicycle.marketplace.dto.request.CancelReservationRequest;
 import com.bicycle.marketplace.dto.response.ApiResponse;
 import com.bicycle.marketplace.dto.response.ReservationResponse;
 import com.bicycle.marketplace.entities.Reservation;
@@ -122,5 +123,33 @@ public class ReservationController {
         return apiResponse;
     }
 
+    @PutMapping("/{reservationId}/request-cancel")
+    @PreAuthorize("hasRole('USER')")
+    public ApiResponse<String> requestCancelReservation(
+            @PathVariable int reservationId,
+            @RequestBody CancelReservationRequest request) {
+        ApiResponse<String> apiResponse = new ApiResponse<>();
+        apiResponse.setResult(reservationService.requestCancelReservationBySeller(reservationId, request));
+        apiResponse.setMessage("Gửi yêu cầu hủy giao dịch thành công");
+        return apiResponse;
+    }
+
+    @PutMapping("/{reservationId}/approve-cancel")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ApiResponse<String> approveCancelReservation(@PathVariable int reservationId) {
+        ApiResponse<String> apiResponse = new ApiResponse<>();
+        apiResponse.setResult(reservationService.approveCancelReservationByAdmin(reservationId));
+        apiResponse.setMessage("Duyệt yêu cầu hủy giao dịch thành công");
+        return apiResponse;
+    }
+
+    @PutMapping("/{reservationId}/reject-cancel")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ApiResponse<String> rejectCancelReservation(@PathVariable int reservationId) {
+        ApiResponse<String> apiResponse = new ApiResponse<>();
+        apiResponse.setResult(reservationService.rejectCancelReservationByAdmin(reservationId));
+        apiResponse.setMessage("Từ chối yêu cầu hủy giao dịch thành công");
+        return apiResponse;
+    }
 
 }

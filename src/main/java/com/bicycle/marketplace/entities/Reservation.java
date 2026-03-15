@@ -44,4 +44,7 @@ public class Reservation {
 
     @Column(name = "longitude")
     private Double longitude;
+
+    @Column(name = "cancel_description")
+    private String cancelDescription;
 }

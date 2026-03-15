@@ -43,4 +43,6 @@ public class ReservationResponse {
     private int depositId;
     private Double depositAmount;
     private Date reservedAt;
+    
+    private String cancelDescription;
 }

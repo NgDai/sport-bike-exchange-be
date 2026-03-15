@@ -3,6 +3,7 @@ package com.bicycle.marketplace.services;
 import com.bicycle.marketplace.dto.request.ReservationCreationRequest;
 import com.bicycle.marketplace.dto.request.ReservationScheduleRequest;
 import com.bicycle.marketplace.dto.request.ReservationUpdateRequest;
+import com.bicycle.marketplace.dto.request.CancelReservationRequest;
 import com.bicycle.marketplace.dto.response.ReservationResponse;
 import com.bicycle.marketplace.entities.BikeListing;
 import com.bicycle.marketplace.entities.Reservation;
@@ -192,5 +193,109 @@ public class ReservationService {
         bikeListingRepository.save(listing);
 
         return "Reservation và Transaction đã được xóa, xe đã trở về trạng thái Available.";
+    }
+
+    @Transactional
+    public String requestCancelReservationBySeller(int reservationId, CancelReservationRequest request) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new AppException(ErrorCode.UNAUTHORIZED);
+        }
+        String username = authentication.getName();
+        Users seller = userRepository.findByUsername(username)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+
+        Reservation reservation = reservationRepository.findById(reservationId)
+                .orElseThrow(() -> new AppException(ErrorCode.RESERVATION_NOT_FOUND));
+
+        if (reservation.getListing().getSeller().getUserId() != seller.getUserId()) {
+            throw new RuntimeException("Chỉ người bán mới có quyền yêu cầu hủy giao dịch này.");
+        }
+
+        if (!reservation.getStatus().equalsIgnoreCase("Deposited")
+                && !reservation.getStatus().equalsIgnoreCase("Reserved")
+                && !reservation.getStatus().equalsIgnoreCase("Scheduled")) {
+            throw new RuntimeException("Không thể yêu cầu hủy reservation ở trạng thái: " + reservation.getStatus());
+        }
+
+        reservation.setStatus("Pending_Cancel");
+        reservation.setCancelDescription(request.getCancelDescription());
+        reservationRepository.save(reservation);
+
+        // Đồng bộ Transaction nếu có (chờ admin duyệt nên đổi status của transation cũng hợp lý, hoặc giữ nguyên nhưng đổi Reservation là đủ)
+        transactionRepository.findByReservation_ReservationId(reservationId).ifPresent(transaction -> {
+            transaction.setStatus("Pending_Cancel");
+            transactionRepository.save(transaction);
+        });
+
+        return "Yêu cầu hủy giao dịch đã được gửi và đang chờ Admin duyệt.";
+    }
+
+    @Transactional
+    public String approveCancelReservationByAdmin(int reservationId) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new AppException(ErrorCode.UNAUTHORIZED);
+        }
+
+        Reservation reservation = reservationRepository.findById(reservationId)
+                .orElseThrow(() -> new AppException(ErrorCode.RESERVATION_NOT_FOUND));
+
+        if (!reservation.getStatus().equalsIgnoreCase("Pending_Cancel")) {
+            throw new RuntimeException("Reservation này không ở trạng thái chờ hủy.");
+        }
+
+        // Thực hiện hủy như cancel bình thường
+        // Vì status hiện tại là Pending_Cancel nên ta gọi logic giống cancelReservation, nhưng bypass cái check status đó
+        BikeListing listing = bikeListingRepository.findById(reservation.getListing().getListingId())
+                .orElseThrow(() -> new AppException(ErrorCode.BIKE_LISTING_NOT_FOUND));
+
+        transactionRepository.findByReservation_ReservationId(reservationId)
+                .ifPresent(transactionRepository::delete);
+
+        reservationRepository.delete(reservation);
+
+        listing.setStatus("Available");
+        bikeListingRepository.save(listing);
+
+        return "Yêu cầu hủy giao dịch đã được duyệt. Đã hủy Reservation và Transaction.";
+    }
+
+    @Transactional
+    public String rejectCancelReservationByAdmin(int reservationId) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new AppException(ErrorCode.UNAUTHORIZED);
+        }
+
+        Reservation reservation = reservationRepository.findById(reservationId)
+                .orElseThrow(() -> new AppException(ErrorCode.RESERVATION_NOT_FOUND));
+
+        if (!reservation.getStatus().equalsIgnoreCase("Pending_Cancel")) {
+            throw new RuntimeException("Reservation này không ở trạng thái chờ hủy.");
+        }
+
+        // Khôi phục lại trạng thái cũ
+        // Nếu có inspector thì có thể là Scheduled, nếu không có inspector và có meeting info thì là Reserved, không तो là Deposited
+        String restoredStatus = "Deposited"; 
+        if (reservation.getInspector() != null && reservation.getMeetingTime() != null) {
+            restoredStatus = "Scheduled";
+        } else if (reservation.getMeetingTime() == null) {
+            restoredStatus = "Deposited"; // Hoặc Reserved tuỳ luồng ban đầu
+        } else {
+             restoredStatus = "Reserved";
+        }
+        
+        reservation.setStatus(restoredStatus);
+        reservation.setCancelDescription(null);
+        reservationRepository.save(reservation);
+
+        final String finalRestoredStatus = restoredStatus;
+        transactionRepository.findByReservation_ReservationId(reservationId).ifPresent(transaction -> {
+            transaction.setStatus(finalRestoredStatus);
+            transactionRepository.save(transaction);
+        });
+
+        return "Yêu cầu hủy giao dịch đã bị từ chối. Trạng thái đã được khôi phục về " + restoredStatus + ".";
     }
 }

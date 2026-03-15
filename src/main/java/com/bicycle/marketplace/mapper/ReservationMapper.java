@@ -23,6 +23,7 @@ public interface ReservationMapper {
     @Mapping(source = "deposit.depositId", target = "depositId")
     @Mapping(source = "latitude", target = "latitude")
     @Mapping(source = "longitude", target = "longitude")
+    @Mapping(source = "cancelDescription", target = "cancelDescription")
     ReservationResponse toReservationResponse(Reservation reservation);
 
     void updateReservation(@MappingTarget Reservation reservation, ReservationUpdateRequest request);
