@@ -4,6 +4,7 @@ import com.bicycle.marketplace.config.VNPayConfig;
 import com.bicycle.marketplace.dto.request.VNPayRequest;
 import com.bicycle.marketplace.dto.response.VNPayResponse;
 import com.bicycle.marketplace.services.DepositService;
+import com.bicycle.marketplace.services.EventBicycleService;
 import com.bicycle.marketplace.services.PostingService;
 import com.bicycle.marketplace.services.VNPayService;
 import com.bicycle.marketplace.services.WalletService;
@@ -37,6 +38,9 @@ public class PaymentController {
     @Autowired
     private PostingService postingService;
 
+    @Autowired
+    private EventBicycleService eventBicycleService;
+
     /** URL frontend sau khi ĐĂNG BÀI thành công */
     @Value("${vnpay.frontend.post-success-url:http://localhost:5173/profile?tab=my-bikes}")
     private String postSuccessUrl;
@@ -47,6 +51,10 @@ public class PaymentController {
 
     /** URL frontend sau khi ĐẶT CỌC thành công */
     private final String depositSuccessUrl = "http://localhost:5173/profile?tab=transaction-manage";
+
+    /** URL frontend sau khi ĐĂNG KÝ EVENT thành công hoặc hủy, redirect về trang event */
+    @Value("${vnpay.frontend.event-url:http://localhost:5173/events}")
+    private String eventUrl;
 
     // 1. API GỌI TỪ FRONTEND ĐỂ NẠP TIỀN VÀO VÍ (NẠP THƯỜNG)
     @PostMapping("/submitOrder")
@@ -99,12 +107,16 @@ public class PaymentController {
                 postingService.confirmPaymentAndPublish(listingId, username, amount);
                 response.setMessage("Thanh toán phí đăng bài thành công.");
 
+            } else if (isEventFeePayment(orderInfo)) {
+                int eventBikeId = parseId(orderInfo);
+                eventBicycleService.confirmEventBicyclePayment(eventBikeId, username, amount);
+                response.setMessage("Thanh toán phí đăng ký event thành công.");
+
             } else {
                 walletService.addFundsToUserWallet(amount, username);
                 response.setMessage("Nạp tiền vào ví thành công.");
             }
         } else {
-            // Giao dịch lỗi / Hủy
             if (isDepositPayment(orderInfo)) {
                 try {
                     depositService.cancelDepositPayment(parseId(orderInfo));
@@ -116,6 +128,12 @@ public class PaymentController {
                     postingService.cancelPostingPayment(parseId(orderInfo));
                 } catch (Exception e) {
                     log.warn("Lỗi khi hủy đăng bài: {}", e.getMessage());
+                }
+            } else if (isEventFeePayment(orderInfo)) {
+                try {
+                    eventBicycleService.cancelEventBicyclePayment(parseId(orderInfo));
+                } catch (Exception e) {
+                    log.warn("Lỗi khi hủy event bicycle: {}", e.getMessage());
                 }
             }
             throw new RuntimeException("Giao dịch thanh toán không thành công hoặc đã bị hủy.");
@@ -143,6 +161,12 @@ public class PaymentController {
                 postingService.confirmPaymentAndPublish(listingId, username, amount);
                 response.sendRedirect(postSuccessUrl);
 
+            } else if (isEventFeePayment(orderInfo)) {
+                int eventBikeId = parseId(orderInfo);
+                int eventId = eventBicycleService.getEventIdByEventBikeId(eventBikeId);
+                eventBicycleService.confirmEventBicyclePayment(eventBikeId, username, amount);
+                response.sendRedirect(eventUrl + "/" + eventId);
+
             } else {
                 walletService.addFundsToUserWallet(amount, username);
                 response.sendRedirect(walletSuccessUrl);
@@ -161,9 +185,21 @@ public class PaymentController {
                 } catch (Exception e) {
                     log.warn("Lỗi khi hủy đăng bài: {}", e.getMessage());
                 }
+                response.sendRedirect(walletSuccessUrl + "?status=failed");
+            } else if (isEventFeePayment(orderInfo)) {
+                int eventBikeId = parseId(orderInfo);
+                int eventId = 0;
+                try {
+                    eventId = eventBicycleService.getEventIdByEventBikeId(eventBikeId);
+                    eventBicycleService.cancelEventBicyclePayment(eventBikeId);
+                } catch (Exception e) {
+                    log.warn("Lỗi khi hủy event bicycle: {}", e.getMessage());
+                }
+                response.sendRedirect(eventId > 0 ? eventUrl + "/" + eventId : eventUrl);
+            } else {
+                // Điều hướng về trang ví hoặc hiển thị lỗi
+                response.sendRedirect(walletSuccessUrl + "?status=failed");
             }
-            // Điều hướng về trang ví hoặc hiển thị lỗi
-            response.sendRedirect(walletSuccessUrl + "?status=failed");
         }
     }
 
@@ -187,6 +223,12 @@ public class PaymentController {
         if (orderInfo == null) return false;
         String[] parts = orderInfo.split("\\|");
         return parts.length >= 3 && "deposit".equalsIgnoreCase(parts[1].trim());
+    }
+
+    private boolean isEventFeePayment(String orderInfo) {
+        if (orderInfo == null) return false;
+        String[] parts = orderInfo.split("\\|");
+        return parts.length >= 3 && "eventfee".equalsIgnoreCase(parts[1].trim());
     }
 
     /** Lấy ra ID (listingId hoặc depositId) từ chuỗi */

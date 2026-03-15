@@ -4,6 +4,7 @@ import com.bicycle.marketplace.dto.request.CreatePostingRequest;
 import com.bicycle.marketplace.dto.request.EventBicycleCreationRequest;
 import com.bicycle.marketplace.dto.request.EventBicycleUpdateRequest;
 import com.bicycle.marketplace.dto.response.ApiResponse;
+import com.bicycle.marketplace.dto.response.CreateEventBicycleResponse;
 import com.bicycle.marketplace.dto.response.EventBicycleResponse;
 import com.bicycle.marketplace.entities.Bicycle;
 import com.bicycle.marketplace.entities.EventBicycle;
@@ -38,13 +39,14 @@ public class EventBicycleController {
     }
 
     @PostMapping("/event/{eventId}/bicycle/{bicycleId}/register")
-    public ApiResponse<EventBicycleResponse> createEventBicycleWithoutPosting(
+    public ApiResponse<CreateEventBicycleResponse> createEventBicycleWithoutPosting(
             @PathVariable int eventId,
             @PathVariable int bicycleId,
             @RequestBody EventBicycleCreationRequest request) {
-        ApiResponse<EventBicycleResponse> apiResponse = new ApiResponse<>();
-        apiResponse.setResult(eventBicycleService.registerBicycleToEventWithoutPosting(eventId, bicycleId, request));
-        apiResponse.setMessage("Event Bicycle registered successfully.");
+        ApiResponse<CreateEventBicycleResponse> apiResponse = new ApiResponse<>();
+        CreateEventBicycleResponse result = eventBicycleService.registerBicycleToEventWithoutPosting(eventId, bicycleId, request);
+        apiResponse.setResult(result);
+        apiResponse.setMessage(result.getMessage());
         return apiResponse;
     }
 
