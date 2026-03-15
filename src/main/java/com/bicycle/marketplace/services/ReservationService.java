@@ -13,6 +13,7 @@ import com.bicycle.marketplace.exception.ErrorCode;
 import com.bicycle.marketplace.mapper.ReservationMapper;
 import com.bicycle.marketplace.repository.IBikeListingRepository;
 import com.bicycle.marketplace.repository.IReservationRepository;
+import com.bicycle.marketplace.repository.IDepositRepository;
 import com.bicycle.marketplace.repository.ITransactionRepository;
 import com.bicycle.marketplace.repository.IUserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,6 +36,8 @@ public class ReservationService {
     private IBikeListingRepository bikeListingRepository;
     @Autowired
     private ITransactionRepository transactionRepository;
+    @Autowired
+    private IDepositRepository depositRepository;
 
     public ReservationResponse createReservation(int bikeListingId, ReservationCreationRequest request) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -181,9 +184,16 @@ public class ReservationService {
         BikeListing listing = bikeListingRepository.findById(reservation.getListing().getListingId())
                 .orElseThrow(() -> new AppException(ErrorCode.BIKE_LISTING_NOT_FOUND));
 
-        // 1. Xóa Transaction liên quan (nếu có) trước khi xóa Reservation
+        // 1. Xóa Transaction liên quan (nếu có) và Deposit trước khi xóa Reservation
         transactionRepository.findByReservation_ReservationId(reservationId)
-                .ifPresent(transactionRepository::delete);
+                .ifPresent(transaction -> {
+                    // Lấy Deposit từ Transaction rồi xóa sau khi xóa Transaction
+                    var deposit = transaction.getDeposit();
+                    transactionRepository.delete(transaction);
+                    if (deposit != null) {
+                        depositRepository.delete(deposit);
+                    }
+                });
 
         // 2. Xóa Reservation
         reservationRepository.delete(reservation);
@@ -192,7 +202,7 @@ public class ReservationService {
         listing.setStatus("Available");
         bikeListingRepository.save(listing);
 
-        return "Reservation và Transaction đã được xóa, xe đã trở về trạng thái Available.";
+        return "Reservation, Transaction và Deposit đã được xóa, xe đã trở về trạng thái Available.";
     }
 
     @Transactional
@@ -251,14 +261,20 @@ public class ReservationService {
                 .orElseThrow(() -> new AppException(ErrorCode.BIKE_LISTING_NOT_FOUND));
 
         transactionRepository.findByReservation_ReservationId(reservationId)
-                .ifPresent(transactionRepository::delete);
+                .ifPresent(transaction -> {
+                    var deposit = transaction.getDeposit();
+                    transactionRepository.delete(transaction);
+                    if (deposit != null) {
+                        depositRepository.delete(deposit);
+                    }
+                });
 
         reservationRepository.delete(reservation);
 
         listing.setStatus("Available");
         bikeListingRepository.save(listing);
 
-        return "Yêu cầu hủy giao dịch đã được duyệt. Đã hủy Reservation và Transaction.";
+        return "Yêu cầu hủy giao dịch đã được duyệt. Đã hủy Reservation, Transaction và Deposit.";
     }
 
     @Transactional
