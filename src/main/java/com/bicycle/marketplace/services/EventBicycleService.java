@@ -78,6 +78,12 @@ public class EventBicycleService {
             }
         }
 
+        if (events.getStatus().equalsIgnoreCase("ongoing")) {
+            throw new RuntimeException("Sự kiện này đang diễn ra, không thể đăng ký xe mới");
+        } else if (events.getStatus().equalsIgnoreCase("completed") || events.getStatus().equalsIgnoreCase("cancelled")) {
+            throw new RuntimeException("Sự kiện này đã kết thúc, không thể đăng ký xe mới");
+        }
+
         EventBicycle eventBicycle = new EventBicycle();
         eventBicycle.setSeller(user);
         eventBicycle.setEvent(events);
@@ -118,6 +124,12 @@ public class EventBicycleService {
             if (!events.getBikeType().equalsIgnoreCase(bicycle.getBikeType())) {
                 throw new RuntimeException("Loại xe bạn không được đăng ký vào sự kiện này");
             }
+        }
+
+        if (events.getStatus().equalsIgnoreCase("ongoing")) {
+            throw new RuntimeException("Sự kiện này đang diễn ra, không thể đăng ký xe mới");
+        } else if (events.getStatus().equalsIgnoreCase("completed") || events.getStatus().equalsIgnoreCase("cancelled")) {
+            throw new RuntimeException("Sự kiện này đã kết thúc, không thể đăng ký xe mới");
         }
 
         EventBicycle eventBicycle = new EventBicycle();
