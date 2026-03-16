@@ -28,6 +28,8 @@ public class DepositService {
     @Autowired
     private IBikeListingRepository bikeListingRepository;
     @Autowired
+    private IEventBicycleRepository eventBicycleRepository;
+    @Autowired
     private IWalletRepository walletRepository;
     @Autowired
     private VNPayService vnPayService;
@@ -77,18 +79,22 @@ public class DepositService {
                 throw new RuntimeException("Bạn đã thanh toán cọc cho chiếc xe này rồi.");
             } else if ("Waiting_Payment".equalsIgnoreCase(existingDeposit.getStatus())) {
                 // Xóa rác cũ để làm lại giao dịch mới
-                transactionRepository.findByDeposit_DepositId(existingDeposit.getDepositId()).ifPresent(transactionRepository::delete);
-                reservationRepository.findByDeposit_DepositId(existingDeposit.getDepositId()).ifPresent(reservationRepository::delete);
+                transactionRepository.findByDeposit_DepositId(existingDeposit.getDepositId())
+                        .ifPresent(transactionRepository::delete);
+                reservationRepository.findByDeposit_DepositId(existingDeposit.getDepositId())
+                        .ifPresent(reservationRepository::delete);
                 depositRepository.delete(existingDeposit);
             }
         } else if ("Waiting_Payment".equals(listing.getStatus())) {
             // Nếu người khác đang thanh toán xe này
-            throw new RuntimeException("Xe này đang trong quá trình thanh toán bởi người khác. Vui lòng thử lại sau vài phút.");
+            throw new RuntimeException(
+                    "Xe này đang trong quá trình thanh toán bởi người khác. Vui lòng thử lại sau vài phút.");
         }
 
         double amount = calculateDepositAmount(listing.getPrice());
         Wallet wallet = walletRepository.findByUsername(username).orElseGet(() -> {
-            return walletRepository.save(Wallet.builder().user(user).username(username).balance(0.0).type("User").build());
+            return walletRepository
+                    .save(Wallet.builder().user(user).username(username).balance(0.0).type("User").build());
         });
 
         // 3. TRƯỜNG HỢP VÍ KHÔNG ĐỦ TIỀN -> GỌI VNPAY
@@ -101,7 +107,8 @@ public class DepositService {
                     .user(user).listing(listing).type("Deposit").amount(amount).status("Waiting_Payment").build());
 
             Reservation reservation = reservationRepository.save(Reservation.builder()
-                    .buyer(user).listing(listing).depositAmount(amount).deposit(deposit).status("Waiting_Payment").build());
+                    .buyer(user).listing(listing).depositAmount(amount).deposit(deposit).status("Waiting_Payment")
+                    .build());
 
             TransactionCreationRequest txnRequest = new TransactionCreationRequest();
             txnRequest.setDepositId(deposit.getDepositId());
@@ -118,8 +125,7 @@ public class DepositService {
             String paymentUrl = vnPayService.createOrder(
                     amountNeeded,
                     username + "|deposit|" + deposit.getDepositId(),
-                    customReturnUrl, null
-            );
+                    customReturnUrl, null);
 
             return CreateDepositResponse.builder()
                     .deposit(null)
@@ -137,7 +143,8 @@ public class DepositService {
         systemWallet.setBalance(systemWallet.getBalance() + amount);
         walletRepository.save(wallet);
         walletRepository.save(systemWallet);
-        walletTransactionService.createTransaction(wallet, amount, "Deposit", "Đặt cọc xe đạp #" + listing.getListingId());
+        walletTransactionService.createTransaction(wallet, amount, "Deposit",
+                "Đặt cọc xe đạp #" + listing.getListingId());
 
         // ĐỔI TRẠNG THÁI BÀI ĐĂNG (ẨN KHỎI SÀN)
         listing.setStatus("Deposited");
@@ -172,7 +179,8 @@ public class DepositService {
         Deposit deposit = depositRepository.findById(depositId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy giao dịch đặt cọc này"));
 
-        if (!"Waiting_Payment".equals(deposit.getStatus())) return;
+        if (!"Waiting_Payment".equals(deposit.getStatus()))
+            return;
 
         Users user = deposit.getUser();
         BikeListing listing = deposit.getListing();
@@ -184,14 +192,16 @@ public class DepositService {
         // Nạp tiền VNPay vào ví User
         userWallet.setBalance(userWallet.getBalance() + vnpayAmount);
         walletRepository.save(userWallet);
-        walletTransactionService.createTransaction(userWallet, vnpayAmount, "Deposit_TopUp", "Nạp tiền qua VNPay để cọc");
+        walletTransactionService.createTransaction(userWallet, vnpayAmount, "Deposit_TopUp",
+                "Nạp tiền qua VNPay để cọc");
 
         // Trừ tiền cọc từ ví User sang ví System
         userWallet.setBalance(userWallet.getBalance() - depositAmount);
         systemWallet.setBalance(systemWallet.getBalance() + depositAmount);
         walletRepository.save(userWallet);
         walletRepository.save(systemWallet);
-        walletTransactionService.createTransaction(userWallet, depositAmount, "Deposit", "Thanh toán cọc xe #" + listing.getListingId());
+        walletTransactionService.createTransaction(userWallet, depositAmount, "Deposit",
+                "Thanh toán cọc xe #" + listing.getListingId());
 
         // ĐỔI TRẠNG THÁI BÀI ĐĂNG ĐỂ ẨN KHỎI SÀN
         listing.setStatus("Deposited");
@@ -236,5 +246,166 @@ public class DepositService {
     @Transactional
     public DepositResponse createDeposit(int listingId, DepositCreationRequest request) {
         return null;
+    }
+
+    @Transactional
+    public CreateDepositResponse createDepositViaVNPayForEvent(int eventBikeId) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new AppException(ErrorCode.UNAUTHORIZED);
+        }
+        String username = authentication.getName();
+        Users user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+        EventBicycle eventBicycle = eventBicycleRepository.findById(eventBikeId)
+                .orElseThrow(() -> new AppException(ErrorCode.EVENT_BICYCLE_NOT_FOUND));
+
+        // 1. KIỂM TRA TRẠNG THÁI BÀI ĐĂNG (BIKELISTING)
+        if ("Deposited".equals(eventBicycle.getStatus())) {
+            throw new RuntimeException("Xe này đã được đặt cọc.");
+        }
+
+        double amount = calculateDepositAmount(eventBicycle.getPrice());
+        Wallet wallet = walletRepository.findByUsername(username).orElseGet(() -> {
+            return walletRepository.save(Wallet.builder().user(user).username(username).balance(0.0).type("User").build());
+        });
+
+        // 3. TRƯỜNG HỢP VÍ KHÔNG ĐỦ TIỀN -> GỌI VNPAY
+        if (wallet.getBalance() < amount) {
+            // Khóa bài đăng lại để người khác không mua được
+            eventBicycle.setStatus("Waiting_Payment");
+            eventBicycleRepository.save(eventBicycle);
+
+            Deposit deposit = depositRepository.save(Deposit.builder()
+                    .user(user).listing(eventBicycle.getListing()).eventBicycle(eventBicycle).type("Deposit").amount(amount).status("Waiting_Payment").build());
+
+            Reservation reservation = reservationRepository.save(Reservation.builder()
+                    .buyer(user).listing(eventBicycle.getListing()).eventBicycle(eventBicycle).depositAmount(amount).deposit(deposit).status("Waiting_Payment").build());
+
+            TransactionCreationRequest txnRequest = new TransactionCreationRequest();
+            txnRequest.setDepositId(deposit.getDepositId());
+            txnRequest.setReservationId(reservation.getReservationId());
+            if (eventBicycle.getListing() != null) {
+                txnRequest.setListingId(eventBicycle.getListing().getListingId());
+            } else {
+                txnRequest.setListingId(null);
+            }
+            txnRequest.setEventBikeId(eventBikeId);
+            txnRequest.setBuyerId(user.getUserId());
+            txnRequest.setSellerId(eventBicycle.getSeller() != null ? eventBicycle.getSeller().getUserId() : null);
+            txnRequest.setAmount(amount);
+            txnRequest.setActualPrice(eventBicycle.getPrice());
+            transactionService.createTransaction(txnRequest);
+
+            long amountNeeded = (long) Math.ceil(amount - wallet.getBalance());
+            String customReturnUrl = vnpayReturnUrl + "?depositId=" + deposit.getDepositId();
+            String paymentUrl = vnPayService.createOrder(
+                    amountNeeded,
+                    username + "|deposit|" + deposit.getDepositId(),
+                    customReturnUrl, null
+            );
+
+            return CreateDepositResponse.builder()
+                    .deposit(null)
+                    .paymentUrl(paymentUrl)
+                    .message("Vui lòng thanh toán thêm " + amountNeeded + " VND qua VNPay.")
+                    .build();
+        }
+
+        // 4. TRƯỜNG HỢP VÍ ĐỦ TIỀN -> TRỪ LUÔN VÀ HOÀN TẤT ĐẶT CỌC
+        Wallet systemWallet = walletRepository.findByUsername("System")
+                .orElseThrow(() -> new RuntimeException("Chưa cấu hình System Wallet"));
+
+        // Chuyển tiền ví User -> ví System
+        wallet.setBalance(wallet.getBalance() - amount);
+        systemWallet.setBalance(systemWallet.getBalance() + amount);
+        walletRepository.save(wallet);
+        walletRepository.save(systemWallet);
+        walletTransactionService.createTransaction(wallet, amount, "Deposit", "Đặt cọc xe đạp #" + eventBikeId);
+
+        // ĐỔI TRẠNG THÁI BÀI ĐĂNG (ẨN KHỎI SÀN)
+        eventBicycle.setStatus("Deposited");
+        eventBicycleRepository.save(eventBicycle);
+
+        Deposit deposit = depositRepository.save(Deposit.builder()
+                .user(user).listing(eventBicycle.getListing()).eventBicycle(eventBicycle).type("Deposit").amount(amount).status("Paid").build());
+
+        Reservation reservation = reservationRepository.save(Reservation.builder()
+                .buyer(user).listing(eventBicycle.getListing()).eventBicycle(eventBicycle).depositAmount(amount).deposit(deposit).status("Deposited").build());
+
+        TransactionCreationRequest txnRequest = new TransactionCreationRequest();
+        txnRequest.setDepositId(deposit.getDepositId());
+        txnRequest.setReservationId(reservation.getReservationId());
+        if (eventBicycle.getListing() != null) {
+            txnRequest.setListingId(eventBicycle.getListing().getListingId());
+        } else {
+            txnRequest.setListingId(null);
+        }
+        txnRequest.setEventBikeId(eventBikeId);
+        txnRequest.setBuyerId(user.getUserId());
+        txnRequest.setSellerId(eventBicycle.getSeller() != null ? eventBicycle.getSeller().getUserId() : null);
+        txnRequest.setAmount(amount);
+        txnRequest.setActualPrice(eventBicycle.getPrice());
+        transactionService.createTransaction(txnRequest);
+
+        return CreateDepositResponse.builder()
+                .deposit(depositMapper.toDepositResponse(deposit))
+                .paymentUrl(null)
+                .message("Đặt cọc thành công! Hệ thống đã trừ " + (long) amount + " VND từ ví.")
+                .build();
+    }
+
+    // 5. HÀM XỬ LÝ KHI VNPAY THANH TOÁN THÀNH CÔNG (Được Controller gọi)
+    @Transactional
+    public void confirmDepositPaymentForEvent(int depositId, String username, double vnpayAmount) {
+        Deposit deposit = depositRepository.findById(depositId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy giao dịch đặt cọc này"));
+
+        if (!"Waiting_Payment".equals(deposit.getStatus()))
+            return;
+
+        Users user = deposit.getUser();
+        BikeListing listing = deposit.getListing();
+        EventBicycle eventBicycle = deposit.getEventBicycle();
+        double depositAmount = deposit.getAmount();
+
+        Wallet userWallet = walletRepository.findByUsername(username).orElseThrow();
+        Wallet systemWallet = walletRepository.findByUsername("System").orElseThrow();
+
+        // Nạp tiền VNPay vào ví User
+        userWallet.setBalance(userWallet.getBalance() + vnpayAmount);
+        walletRepository.save(userWallet);
+        walletTransactionService.createTransaction(userWallet, vnpayAmount, "Deposit_TopUp",
+                "Nạp tiền qua VNPay để cọc");
+
+        // Trừ tiền cọc từ ví User sang ví System
+        userWallet.setBalance(userWallet.getBalance() - depositAmount);
+        systemWallet.setBalance(systemWallet.getBalance() + depositAmount);
+        walletRepository.save(userWallet);
+        walletRepository.save(systemWallet);
+        walletTransactionService.createTransaction(userWallet, depositAmount, "Deposit",
+                "Thanh toán cọc xe #" + eventBicycle.getEventBikeId());
+
+        // ĐỔI TRẠNG THÁI BÀI ĐĂNG ĐỂ ẨN KHỎI SÀN
+        if (listing != null) {
+            listing.setStatus("Deposited");
+            bikeListingRepository.save(listing);
+        }
+        eventBicycle.setStatus("Deposited");
+        eventBicycleRepository.save(eventBicycle);
+
+        // Cập nhật trạng thái các bảng liên quan
+        deposit.setStatus("Paid");
+        depositRepository.save(deposit);
+
+        reservationRepository.findByDeposit_DepositId(depositId).ifPresent(res -> {
+            res.setStatus("Deposited");
+            reservationRepository.save(res);
+        });
+
+        transactionRepository.findByDeposit_DepositId(depositId).ifPresent(txn -> {
+            txn.setStatus("Paid");
+            transactionRepository.save(txn);
+        });
     }
 }

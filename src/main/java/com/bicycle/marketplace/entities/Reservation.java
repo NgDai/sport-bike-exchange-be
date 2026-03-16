@@ -18,8 +18,11 @@ public class Reservation {
     @GeneratedValue(strategy = GenerationType.AUTO)
     int reservationId;
     @ManyToOne
-    @JoinColumn(name = "listing_id")
+    @JoinColumn(name = "listing_id", nullable = true)
     BikeListing listing;
+    @ManyToOne
+    @JoinColumn(name = "event_bike_id", nullable = true)
+    EventBicycle eventBicycle;
     @ManyToOne
     @JoinColumn(name = "buyer_id")
     Users buyer;

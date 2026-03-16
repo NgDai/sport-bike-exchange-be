@@ -54,15 +54,28 @@ public class EventBicycleService {
     @Autowired
     private PostingService postingService;
 
+    // public boolean checkStatusEvent(int eventId) {
+    // boolean result = false;
+    // Events event = eventRepository.findById(eventId).orElseThrow(() -> new
+    // AppException(ErrorCode.EVENT_NOT_FOUND));
+    // if (event.getStatus().equalsIgnoreCase("upcoming")) {
+    // result = true;
+    // }
+    // return result;
+    // }
+
     public EventBicycleResponse registerBicycleToEvent(int eventId, int listingId) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated()) {
             throw new AppException(ErrorCode.UNAUTHORIZED);
         }
         String username = authentication.getName();
-        Users user = userRepository.findByUsername(username).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
-        Events events = eventRepository.findById(eventId).orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
-        BikeListing bikeListing = bikeListingRepository.findById(listingId).orElseThrow(() -> new AppException(ErrorCode.BIKE_LISTING_NOT_FOUND));
+        Users user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+        Events events = eventRepository.findById(eventId)
+                .orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
+        BikeListing bikeListing = bikeListingRepository.findById(listingId)
+                .orElseThrow(() -> new AppException(ErrorCode.BIKE_LISTING_NOT_FOUND));
         if (eventBicycleRepository.existsByListing_ListingId(listingId)) {
             throw new RuntimeException("Xe này đã được đăng ký vào sự kiện khác");
         }
@@ -80,7 +93,8 @@ public class EventBicycleService {
 
         if (events.getStatus().equalsIgnoreCase("ongoing")) {
             throw new RuntimeException("Sự kiện này đang diễn ra, không thể đăng ký xe mới");
-        } else if (events.getStatus().equalsIgnoreCase("completed") || events.getStatus().equalsIgnoreCase("cancelled")) {
+        } else if (events.getStatus().equalsIgnoreCase("completed")
+                || events.getStatus().equalsIgnoreCase("cancelled")) {
             throw new RuntimeException("Sự kiện này đã kết thúc, không thể đăng ký xe mới");
         }
 
@@ -110,15 +124,19 @@ public class EventBicycleService {
         return bicycleRepository.save(bicycle);
     }
 
-    public CreateEventBicycleResponse registerBicycleToEventWithoutPosting(int eventId, int bicycleId, EventBicycleCreationRequest request) {
+    public CreateEventBicycleResponse registerBicycleToEventWithoutPosting(int eventId, int bicycleId,
+            EventBicycleCreationRequest request) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated()) {
             throw new AppException(ErrorCode.UNAUTHORIZED);
         }
         String username = authentication.getName();
-        Users user = userRepository.findByUsername(username).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
-        Events events = eventRepository.findById(eventId).orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
-        Bicycle bicycle = bicycleRepository.findById(bicycleId).orElseThrow(() -> new AppException(ErrorCode.BICYCLE_NOT_FOUND));
+        Users user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+        Events events = eventRepository.findById(eventId)
+                .orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
+        Bicycle bicycle = bicycleRepository.findById(bicycleId)
+                .orElseThrow(() -> new AppException(ErrorCode.BICYCLE_NOT_FOUND));
 
         if (events.getBikeType() != null && !events.getBikeType().equalsIgnoreCase("ALL")) {
             if (!events.getBikeType().equalsIgnoreCase(bicycle.getBikeType())) {
@@ -128,7 +146,8 @@ public class EventBicycleService {
 
         if (events.getStatus().equalsIgnoreCase("ongoing")) {
             throw new RuntimeException("Sự kiện này đang diễn ra, không thể đăng ký xe mới");
-        } else if (events.getStatus().equalsIgnoreCase("completed") || events.getStatus().equalsIgnoreCase("cancelled")) {
+        } else if (events.getStatus().equalsIgnoreCase("completed")
+                || events.getStatus().equalsIgnoreCase("cancelled")) {
             throw new RuntimeException("Sự kiện này đã kết thúc, không thể đăng ký xe mới");
         }
 
@@ -154,7 +173,8 @@ public class EventBicycleService {
             Wallet newWallet = Wallet.builder().user(user).username(username).balance(0.0).type("User").build();
             return walletRepository.save(newWallet);
         });
-        log.info("[EventBicycle] walletBalance={}, fee={}, needVNPay={}", wallet.getBalance(), fee, wallet.getBalance() < fee);
+        log.info("[EventBicycle] walletBalance={}, fee={}, needVNPay={}", wallet.getBalance(), fee,
+                wallet.getBalance() < fee);
 
         // 3. Nếu VÍ KHÔNG ĐỦ TIỀN -> Lưu nháp Waiting_Payment & Trả về VNPay
         if (wallet.getBalance() < fee) {
@@ -167,8 +187,7 @@ public class EventBicycleService {
             String paymentUrl = vnPayService.createOrder(
                     amountNeeded,
                     username + "|eventfee|" + savedEventBicycle.getEventBikeId(),
-                    customReturnUrl, null
-            );
+                    customReturnUrl, null);
 
             return CreateEventBicycleResponse.builder()
                     .eventBicycle(null)
@@ -191,7 +210,8 @@ public class EventBicycleService {
         }
 
         eventBicycle.setStatus("Pending");
-        EventBicycleResponse saved = eventBicycleMapper.toEventBicycleResponse(eventBicycleRepository.save(eventBicycle));
+        EventBicycleResponse saved = eventBicycleMapper
+                .toEventBicycleResponse(eventBicycleRepository.save(eventBicycle));
 
         return CreateEventBicycleResponse.builder()
                 .eventBicycle(saved)
@@ -219,14 +239,16 @@ public class EventBicycleService {
         // 1. Nạp tiền VNPay vào ví User
         userWallet.setBalance(userWallet.getBalance() + vnpayAmount);
         walletRepository.save(userWallet);
-        walletTransactionService.createTransaction(userWallet, vnpayAmount, "Fee_TopUp", "Nạp tiền VNPay để trả phí đăng ký event");
+        walletTransactionService.createTransaction(userWallet, vnpayAmount, "Fee_TopUp",
+                "Nạp tiền VNPay để trả phí đăng ký event");
 
         // 2. Trừ tiền ví User sang ví System
         userWallet.setBalance(userWallet.getBalance() - fee);
         systemWallet.setBalance(systemWallet.getBalance() + fee);
         walletRepository.save(userWallet);
         walletRepository.save(systemWallet);
-        walletTransactionService.createTransaction(userWallet, fee, "BicycleFee", "Phí đăng ký xe đạp vào event #" + eventBikeId);
+        walletTransactionService.createTransaction(userWallet, fee, "BicycleFee",
+                "Phí đăng ký xe đạp vào event #" + eventBikeId);
 
         // 3. Cập nhật trạng thái sang Pending chờ Admin duyệt
         eventBicycle.setStatus("Pending");
@@ -265,7 +287,8 @@ public class EventBicycleService {
         if (authentication == null || !authentication.isAuthenticated()) {
             throw new AppException(ErrorCode.UNAUTHORIZED);
         }
-        EventBicycle eventBicycle = eventBicycleRepository.findById(eventBikeId).orElseThrow(() -> new AppException(ErrorCode.EVENT_BICYCLE_NOT_FOUND));
+        EventBicycle eventBicycle = eventBicycleRepository.findById(eventBikeId)
+                .orElseThrow(() -> new AppException(ErrorCode.EVENT_BICYCLE_NOT_FOUND));
 
         eventBicycleMapper.updateEventBicycle(eventBicycle, request);
         eventBicycle.setStatus("Pending");
@@ -278,13 +301,15 @@ public class EventBicycleService {
         if (authentication == null || !authentication.isAuthenticated()) {
             throw new AppException(ErrorCode.UNAUTHORIZED);
         }
-        EventBicycle eventBicycle = eventBicycleRepository.findById(eventBikeId).orElseThrow(() -> new AppException(ErrorCode.EVENT_BICYCLE_NOT_FOUND));
+        EventBicycle eventBicycle = eventBicycleRepository.findById(eventBikeId)
+                .orElseThrow(() -> new AppException(ErrorCode.EVENT_BICYCLE_NOT_FOUND));
         eventBicycle.setStatus("Available");
         return eventBicycleMapper.toEventBicycleResponse(eventBicycleRepository.save(eventBicycle));
     }
 
     public EventBicycleResponse getEventBicycleById(int eventBikeId) {
-        EventBicycle eventBicycle = eventBicycleRepository.findById(eventBikeId).orElseThrow(() -> new AppException(ErrorCode.EVENT_BICYCLE_NOT_FOUND));
+        EventBicycle eventBicycle = eventBicycleRepository.findById(eventBikeId)
+                .orElseThrow(() -> new AppException(ErrorCode.EVENT_BICYCLE_NOT_FOUND));
         return eventBicycleMapper.toEventBicycleResponse(eventBicycle);
     }
 
@@ -297,7 +322,8 @@ public class EventBicycleService {
         if (authentication == null || !authentication.isAuthenticated()) {
             throw new AppException(ErrorCode.UNAUTHORIZED);
         }
-        EventBicycle eventBicycle = eventBicycleRepository.findById(eventBikeId).orElseThrow(() -> new AppException(ErrorCode.EVENT_BICYCLE_NOT_FOUND));
+        EventBicycle eventBicycle = eventBicycleRepository.findById(eventBikeId)
+                .orElseThrow(() -> new AppException(ErrorCode.EVENT_BICYCLE_NOT_FOUND));
         eventBicycleRepository.delete(eventBicycle);
         return "Event Bicycle deleted successfully";
     }

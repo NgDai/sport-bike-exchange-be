@@ -26,6 +26,9 @@ public class Transaction {
     @JoinColumn(name = "listing_id", nullable = true)
     BikeListing listing;
     @ManyToOne
+    @JoinColumn(name = "event_bike_id", nullable = true)
+    EventBicycle eventBicycle;
+    @ManyToOne
     @JoinColumn(name = "buyer_id", nullable = false)
     Users buyer;
     @ManyToOne

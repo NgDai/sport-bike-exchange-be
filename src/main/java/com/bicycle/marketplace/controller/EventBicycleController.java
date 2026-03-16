@@ -67,6 +67,13 @@ public class EventBicycleController {
         return apiResponse;
     }
 
+//    @GetMapping("/event/{eventId}")
+//    public ApiResponse<Boolean> checkStatusEvent(@PathVariable int eventId) {
+//        ApiResponse<Boolean> apiResponse = new ApiResponse<>();
+//        apiResponse.setResult(eventBicycleService.checkStatusEvent(eventId));
+//        return apiResponse;
+//    }
+
     @GetMapping("/{eventBikeId}")
     public ApiResponse<EventBicycleResponse> getEventBicycleById(@PathVariable int eventBikeId) {
         ApiResponse<EventBicycleResponse> apiResponse = new ApiResponse<>();

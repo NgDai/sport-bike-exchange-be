@@ -16,6 +16,6 @@ public class CheckInResponse {
     private int checkInId;
     private int buyerId;
     private int sellerId;
-    private int eventId;
+    private int eventBikeId;
     private String token;
 }

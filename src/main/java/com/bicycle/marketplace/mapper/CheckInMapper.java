@@ -12,12 +12,12 @@ import org.mapstruct.MappingTarget;
 public interface CheckInMapper {
     @Mapping(source = "buyer.userId", target = "buyerId")
     @Mapping(source = "seller.userId", target = "sellerId")
-    @Mapping(source = "event.eventId", target = "eventId")
+    @Mapping(source = "eventBikeId.eventId", target = "eventBikeId")
     CheckInResponse toCheckInResponse(CheckIn checkIn);
 
     @Mapping(target = "buyer", ignore = true)
     @Mapping(target = "seller", ignore = true)
-    @Mapping(target = "event", ignore = true)
+    @Mapping(target = "eventBikeId", ignore = true)
     CheckIn toCheckIn(CheckInCreationRequest request);
 
     void updateCheckIn(@MappingTarget CheckIn checkIn, CheckInUpdateRequest request);

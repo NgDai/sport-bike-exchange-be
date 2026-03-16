@@ -19,6 +19,11 @@ public class ReservationResponse {
     private String listingTitle;
     private String listingImage;
 
+    // Thông tin sản phẩm ở sự kiện
+    private int eventBikeId;
+    private String eventBikeTitle;
+    private String eventBikeImage;
+
 
     // Người mua
     private int buyerId;

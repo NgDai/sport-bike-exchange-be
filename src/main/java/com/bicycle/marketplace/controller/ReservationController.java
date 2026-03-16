@@ -22,7 +22,8 @@ public class ReservationController {
 
     @PostMapping("/{listingId}/create")
     @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
-    ApiResponse<ReservationResponse> createReservation(@PathVariable int listingId, @RequestBody ReservationCreationRequest request) {
+    ApiResponse<ReservationResponse> createReservation(@PathVariable int listingId,
+            @RequestBody ReservationCreationRequest request) {
         ApiResponse<ReservationResponse> apiResponse = new ApiResponse<>();
         apiResponse.setResult(reservationService.createReservation(listingId, request));
         apiResponse.setMessage("Reservation created successfully");
@@ -32,7 +33,7 @@ public class ReservationController {
     @PutMapping("/{reservationId}")
     @PreAuthorize("hasRole('ADMIN')")
     ApiResponse<ReservationResponse> updateReservation(@PathVariable int reservationId,
-                                                       @RequestBody ReservationUpdateRequest request) {
+            @RequestBody ReservationUpdateRequest request) {
         ApiResponse<ReservationResponse> apiResponse = new ApiResponse<>();
         apiResponse.setResult(reservationService.updateReservation(reservationId, request));
         apiResponse.setMessage("Reservation updated successfully");
@@ -42,7 +43,7 @@ public class ReservationController {
     @PutMapping("/{reservationId}/status")
     @PreAuthorize("hasRole('ADMIN')")
     ApiResponse<ReservationResponse> updateReservationStatus(@PathVariable int reservationId,
-                                                             @RequestBody ReservationUpdateRequest request) {
+            @RequestBody ReservationUpdateRequest request) {
         ApiResponse<ReservationResponse> apiResponse = new ApiResponse<>();
         apiResponse.setResult(reservationService.updateReservationStatus(reservationId, request));
         apiResponse.setMessage("Reservation status updated successfully");
@@ -70,14 +71,14 @@ public class ReservationController {
         return apiResponse;
     }
 
-//    @GetMapping
-//    @PreAuthorize("hasRole('ADMIN')")
-//    ApiResponse<List<Reservation>> findAllReservations() {
-//        ApiResponse<List<Reservation>> apiResponse = new ApiResponse<>();
-//        apiResponse.setResult(reservationService.findAllReservations());
-//        apiResponse.setMessage("Reservations fetched successfully");
-//        return apiResponse;
-//    }
+    // @GetMapping
+    // @PreAuthorize("hasRole('ADMIN')")
+    // ApiResponse<List<Reservation>> findAllReservations() {
+    // ApiResponse<List<Reservation>> apiResponse = new ApiResponse<>();
+    // apiResponse.setResult(reservationService.findAllReservations());
+    // apiResponse.setMessage("Reservations fetched successfully");
+    // return apiResponse;
+    // }
 
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")

@@ -19,8 +19,11 @@ public class TransactionResponse {
     private int reservationId;
     private int sellerId;
     private int listingId;
-    private String listingTitle;   // Thêm
+    private String listingTitle; // Thêm
     private String listingImage;
+    private int eventBicycleId;
+    private String eventBicycleTitle; // Thêm
+    private String eventBicycleImage;
     private double amount;
     private double actualPrice;
     private double fee;

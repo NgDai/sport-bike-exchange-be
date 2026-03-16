@@ -24,8 +24,8 @@ public class CheckIn {
     @JoinColumn(name = "seller_id")
     Users seller;
     @ManyToOne
-    @JoinColumn(name = "event_id")
-    Events event;
+    @JoinColumn(name = "event_bike_id")
+    Events eventBikeId;
     String token;
     String status;
 }

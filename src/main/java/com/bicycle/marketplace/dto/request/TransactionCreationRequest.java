@@ -16,6 +16,7 @@ public class TransactionCreationRequest {
     private Integer sellerId;
     private Integer depositId;
     private Integer reservationId;
+    private Integer eventBikeId;
 
     private double amount;
     private double actualPrice;
