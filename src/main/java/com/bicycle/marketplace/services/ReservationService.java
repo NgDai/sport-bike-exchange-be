@@ -8,14 +8,11 @@ import com.bicycle.marketplace.dto.response.ReservationResponse;
 import com.bicycle.marketplace.entities.BikeListing;
 import com.bicycle.marketplace.entities.Reservation;
 import com.bicycle.marketplace.entities.Users;
+import com.bicycle.marketplace.entities.Wallet;
 import com.bicycle.marketplace.exception.AppException;
 import com.bicycle.marketplace.exception.ErrorCode;
 import com.bicycle.marketplace.mapper.ReservationMapper;
-import com.bicycle.marketplace.repository.IBikeListingRepository;
-import com.bicycle.marketplace.repository.IReservationRepository;
-import com.bicycle.marketplace.repository.IDepositRepository;
-import com.bicycle.marketplace.repository.ITransactionRepository;
-import com.bicycle.marketplace.repository.IUserRepository;
+import com.bicycle.marketplace.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -38,6 +35,8 @@ public class ReservationService {
     private ITransactionRepository transactionRepository;
     @Autowired
     private IDepositRepository depositRepository;
+    @Autowired
+    private WalletService walletService;
 
     public ReservationResponse createReservation(int bikeListingId, ReservationCreationRequest request) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -270,6 +269,9 @@ public class ReservationService {
                 });
 
         reservationRepository.delete(reservation);
+
+        // Hoàn tiền nếu có deposit
+        walletService.refundToUserWallet(reservation.getDepositAmount(), reservation.getBuyer().getUsername(), "Hoàn tiền do hủy giao dịch");
 
         listing.setStatus("Available");
         bikeListingRepository.save(listing);

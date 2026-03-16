@@ -232,4 +232,20 @@ public class WalletService {
                                 request.getType(),
                                 request.getDescription());
         }
+
+        public WalletTransactionResponse refundToUserWallet(double amount, String username, String description) {
+                Wallet wallet = walletRepository.findByUsername(username)
+                                .orElseThrow(() -> new AppException(ErrorCode.WALLET_NOT_FOUND));
+
+
+                Wallet system = walletRepository.findByUsername("System")
+                        .orElseThrow(() -> new AppException(ErrorCode.WALLET_NOT_FOUND));
+
+                wallet.setBalance(wallet.getBalance() + amount);
+                system.setBalance(system.getBalance() - amount);
+                walletRepository.save(wallet);
+                walletRepository.save(system);
+
+                return walletTransactionService.createTransaction(wallet, amount, "Refund", description);
+        }
 }
