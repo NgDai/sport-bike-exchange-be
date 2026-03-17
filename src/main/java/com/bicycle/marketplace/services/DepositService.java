@@ -54,6 +54,15 @@ public class DepositService {
         return price * depositPercent / 100.0;
     }
 
+    // ==========================================
+    // HÀM MỚI THÊM ĐỂ ĐIỀU HƯỚNG VỀ BIKEDETAIL
+    // ==========================================
+    public Integer getListingIdByDepositId(int depositId) {
+        return depositRepository.findById(depositId)
+                .map(deposit -> deposit.getListing() != null ? deposit.getListing().getListingId() : null)
+                .orElse(null);
+    }
+
     @Transactional
     public CreateDepositResponse createDepositViaVNPay(int listingId) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();

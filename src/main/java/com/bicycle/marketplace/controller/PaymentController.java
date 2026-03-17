@@ -41,20 +41,9 @@ public class PaymentController {
     @Autowired
     private EventBicycleService eventBicycleService;
 
-    /** URL frontend sau khi ĐĂNG BÀI thành công */
-    @Value("${vnpay.frontend.post-success-url:http://localhost:5173/profile?tab=my-bikes}")
-    private String postSuccessUrl;
-
-    /** URL frontend sau khi NẠP VÍ thành công hoặc LỖI chung */
-    @Value("${vnpay.frontend.wallet-url:http://localhost:5173/profile?tab=wallet}")
-    private String walletSuccessUrl;
-
-    /** URL frontend sau khi ĐẶT CỌC thành công */
-    private final String depositSuccessUrl = "http://localhost:5173/profile?tab=transaction-manage";
-
-    /** URL frontend sau khi ĐĂNG KÝ EVENT thành công hoặc hủy, redirect về trang event */
-    @Value("${vnpay.frontend.event-url:http://localhost:5173/events}")
-    private String eventUrl;
+    // Đọc Base URL của Frontend từ file properties (Hỗ trợ Local & Vercel)
+    @Value("${frontend.url:http://localhost:5173}")
+    private String frontendBaseUrl;
 
     // 1. API GỌI TỪ FRONTEND ĐỂ NẠP TIỀN VÀO VÍ (NẠP THƯỜNG)
     @PostMapping("/submitOrder")
@@ -64,7 +53,7 @@ public class PaymentController {
 
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
 
-        // Gắn tag "topup" để phân biệt với cọc (deposit) và phí (fee)
+        // Gắn tag "topup" để phân biệt với cọc (deposit) và phí (postfee/eventfee)
         String secureOrderInfo = username + "|topup|" + request.getOrderInfo();
 
         String clientIp = VNPayConfig.getIpAddress(httpRequest);
@@ -79,7 +68,7 @@ public class PaymentController {
         return response;
     }
 
-    // 2. WEBHOOK/IPN (VNPAY GỌI NGẦM XUỐNG ĐỂ XÁC NHẬN GIAO DỊCH)
+    // 2. WEBHOOK/IPN (VNPAY GỌI NGẦM XUỐNG ĐỂ XÁC NHẬN GIAO DỊCH - Dùng cho BE)
     @GetMapping("/vnpay-wallet")
     public VNPayResponse handleVnPayWallet(HttpServletRequest request) {
         int paymentStatus = vnPayService.orderReturn(request);
@@ -92,49 +81,37 @@ public class PaymentController {
         response.setTotalPrice(request.getParameter("vnp_Amount"));
 
         String orderInfo = request.getParameter("vnp_OrderInfo");
+        if (orderInfo == null || !orderInfo.contains("|")) {
+            throw new RuntimeException("Thông tin đơn hàng không hợp lệ.");
+        }
+
         String username = parseUsername(orderInfo);
+        int targetId = parseId(orderInfo);
 
         if (paymentStatus == 1) {
             double amount = Double.parseDouble(request.getParameter("vnp_Amount")) / 100;
 
             if (isDepositPayment(orderInfo)) {
-                int depositId = parseId(orderInfo);
-                depositService.confirmDepositPayment(depositId, username, amount);
+                depositService.confirmDepositPayment(targetId, username, amount);
                 response.setMessage("Đặt cọc xe thành công.");
-
-            } else if (isFeePayment(orderInfo)) {
-                int listingId = parseId(orderInfo);
-                postingService.confirmPaymentAndPublish(listingId, username, amount);
+            } else if (isPostFeePayment(orderInfo)) {
+                postingService.confirmPostingPayment(targetId, username, amount);
                 response.setMessage("Thanh toán phí đăng bài thành công.");
-
             } else if (isEventFeePayment(orderInfo)) {
-                int eventBikeId = parseId(orderInfo);
-                eventBicycleService.confirmEventBicyclePayment(eventBikeId, username, amount);
+                eventBicycleService.confirmEventBicyclePayment(targetId, username, amount);
                 response.setMessage("Thanh toán phí đăng ký event thành công.");
-
-            } else {
+            } else if (isTopUpPayment(orderInfo)) {
                 walletService.addFundsToUserWallet(amount, username);
                 response.setMessage("Nạp tiền vào ví thành công.");
             }
         } else {
+            // Xử lý hủy ngầm
             if (isDepositPayment(orderInfo)) {
-                try {
-                    depositService.cancelDepositPayment(parseId(orderInfo));
-                } catch (Exception e) {
-                    log.warn("Lỗi khi hủy cọc: {}", e.getMessage());
-                }
-            } else if (isFeePayment(orderInfo)) {
-                try {
-                    postingService.cancelPostingPayment(parseId(orderInfo));
-                } catch (Exception e) {
-                    log.warn("Lỗi khi hủy đăng bài: {}", e.getMessage());
-                }
+                try { depositService.cancelDepositPayment(targetId); } catch (Exception e) { log.warn("Lỗi khi hủy cọc: {}", e.getMessage()); }
+            } else if (isPostFeePayment(orderInfo)) {
+                try { postingService.cancelPostingPayment(targetId); } catch (Exception e) { log.warn("Lỗi khi hủy đăng bài: {}", e.getMessage()); }
             } else if (isEventFeePayment(orderInfo)) {
-                try {
-                    eventBicycleService.cancelEventBicyclePayment(parseId(orderInfo));
-                } catch (Exception e) {
-                    log.warn("Lỗi khi hủy event bicycle: {}", e.getMessage());
-                }
+                try { eventBicycleService.cancelEventBicyclePayment(targetId); } catch (Exception e) { log.warn("Lỗi khi hủy event bicycle: {}", e.getMessage()); }
             }
             throw new RuntimeException("Giao dịch thanh toán không thành công hoặc đã bị hủy.");
         }
@@ -146,61 +123,100 @@ public class PaymentController {
     public void handleVnPayReturn(HttpServletRequest request, HttpServletResponse response) throws Exception {
         int paymentStatus = vnPayService.orderReturn(request);
         String orderInfo = request.getParameter("vnp_OrderInfo");
-        String username = parseUsername(orderInfo);
 
+        if (orderInfo == null || !orderInfo.contains("|")) {
+            response.sendRedirect(frontendBaseUrl);
+            return;
+        }
+
+        String username = parseUsername(orderInfo);
+        int targetId = parseId(orderInfo);
+
+        // =========================================================
+        // TRƯỜNG HỢP 1: THANH TOÁN THÀNH CÔNG
+        // =========================================================
         if (paymentStatus == 1) {
-            double amount = Double.parseDouble(request.getParameter("vnp_Amount")) / 100;
+            String vnpAmountStr = request.getParameter("vnp_Amount");
+            double amount = (vnpAmountStr != null && !vnpAmountStr.isEmpty()) ? Double.parseDouble(vnpAmountStr) / 100 : 0;
 
             if (isDepositPayment(orderInfo)) {
-                int depositId = parseId(orderInfo);
-                depositService.confirmDepositPayment(depositId, username, amount);
-                response.sendRedirect(depositSuccessUrl);
+                // Đặt cọc thành công -> Về trang Quản lý giao dịch
+                depositService.confirmDepositPayment(targetId, username, amount);
+                response.sendRedirect(frontendBaseUrl + "/profile?tab=transaction-manage");
+                return;
 
-            } else if (isFeePayment(orderInfo)) {
-                int listingId = parseId(orderInfo);
-                postingService.confirmPaymentAndPublish(listingId, username, amount);
-                response.sendRedirect(postSuccessUrl);
+            } else if (isPostFeePayment(orderInfo)) {
+                // Đăng bán xe thành công -> Về trang Quản lý xe của tôi
+                postingService.confirmPostingPayment(targetId, username, amount);
+                response.sendRedirect(frontendBaseUrl + "/profile?tab=my-bikes");
+                return;
 
             } else if (isEventFeePayment(orderInfo)) {
-                int eventBikeId = parseId(orderInfo);
-                int eventId = eventBicycleService.getEventIdByEventBikeId(eventBikeId);
-                eventBicycleService.confirmEventBicyclePayment(eventBikeId, username, amount);
-                response.sendRedirect(eventUrl + "/" + eventId);
+                // Đăng ký sự kiện thành công -> Về trang Chi tiết sự kiện đó
+                int eventId = eventBicycleService.getEventIdByEventBikeId(targetId);
+                eventBicycleService.confirmEventBicyclePayment(targetId, username, amount);
+                response.sendRedirect(frontendBaseUrl + "/events/" + eventId);
+                return;
 
-            } else {
+            } else if (isTopUpPayment(orderInfo)) {
+                // Nạp ví thành công -> Về trang Quản lý ví
                 walletService.addFundsToUserWallet(amount, username);
-                response.sendRedirect(walletSuccessUrl);
+                response.sendRedirect(frontendBaseUrl + "/profile?tab=wallet");
+                return;
             }
-        } else {
-            // Thanh toán lỗi hoặc người dùng bấm Hủy
+        }
+
+        // =========================================================
+        // TRƯỜNG HỢP 2: THANH TOÁN THẤT BẠI / NGƯỜI DÙNG BẤM HỦY
+        // =========================================================
+        else {
             if (isDepositPayment(orderInfo)) {
+                Integer listingId = depositService.getListingIdByDepositId(targetId);
                 try {
-                    depositService.cancelDepositPayment(parseId(orderInfo));
+                    depositService.cancelDepositPayment(targetId);
                 } catch (Exception e) {
                     log.warn("Lỗi khi hủy cọc: {}", e.getMessage());
                 }
-            } else if (isFeePayment(orderInfo)) {
+                if (listingId != null) {
+                    response.sendRedirect(frontendBaseUrl + "/bikes/" + listingId);
+                } else {
+                    response.sendRedirect(frontendBaseUrl + "/bikes");
+                }
+                return;
+
+            } else if (isPostFeePayment(orderInfo)) {
                 try {
-                    postingService.cancelPostingPayment(parseId(orderInfo));
+                    postingService.cancelPostingPayment(targetId);
                 } catch (Exception e) {
                     log.warn("Lỗi khi hủy đăng bài: {}", e.getMessage());
                 }
-                response.sendRedirect(walletSuccessUrl + "?status=failed");
+                response.sendRedirect(frontendBaseUrl + "/post-bike");
+                return;
+
             } else if (isEventFeePayment(orderInfo)) {
-                int eventBikeId = parseId(orderInfo);
                 int eventId = 0;
                 try {
-                    eventId = eventBicycleService.getEventIdByEventBikeId(eventBikeId);
-                    eventBicycleService.cancelEventBicyclePayment(eventBikeId);
+                    eventId = eventBicycleService.getEventIdByEventBikeId(targetId);
+                    eventBicycleService.cancelEventBicyclePayment(targetId);
                 } catch (Exception e) {
-                    log.warn("Lỗi khi hủy event bicycle: {}", e.getMessage());
+                    log.warn("Lỗi khi lấy thông tin sự kiện để hủy: {}", e.getMessage());
                 }
-                response.sendRedirect(eventId > 0 ? eventUrl + "/" + eventId : eventUrl);
+                if (eventId > 0) {
+                    response.sendRedirect(frontendBaseUrl + "/events/" + eventId);
+                } else {
+                    response.sendRedirect(frontendBaseUrl + "/events");
+                }
+                return;
+
             } else {
-                // Điều hướng về trang ví hoặc hiển thị lỗi
-                response.sendRedirect(walletSuccessUrl + "?status=failed");
+                // Nếu là Topup thất bại
+                response.sendRedirect(frontendBaseUrl + "/profile?tab=wallet");
+                return;
             }
         }
+
+        // Fallback cuối cùng
+        response.sendRedirect(frontendBaseUrl);
     }
 
     // ==========================================
@@ -209,29 +225,30 @@ public class PaymentController {
 
     /** Format mẫu: "username|type|id" */
     private String parseUsername(String orderInfo) {
-        if (orderInfo == null || !orderInfo.contains("|")) return "";
         return orderInfo.split("\\|")[0].trim();
     }
 
-    private boolean isFeePayment(String orderInfo) {
-        if (orderInfo == null) return false;
+    private boolean isPostFeePayment(String orderInfo) {
         String[] parts = orderInfo.split("\\|");
-        return parts.length >= 3 && "fee".equalsIgnoreCase(parts[1].trim());
+        return parts.length >= 3 && "postfee".equalsIgnoreCase(parts[1].trim());
     }
 
     private boolean isDepositPayment(String orderInfo) {
-        if (orderInfo == null) return false;
         String[] parts = orderInfo.split("\\|");
         return parts.length >= 3 && "deposit".equalsIgnoreCase(parts[1].trim());
     }
 
     private boolean isEventFeePayment(String orderInfo) {
-        if (orderInfo == null) return false;
         String[] parts = orderInfo.split("\\|");
         return parts.length >= 3 && "eventfee".equalsIgnoreCase(parts[1].trim());
     }
 
-    /** Lấy ra ID (listingId hoặc depositId) từ chuỗi */
+    private boolean isTopUpPayment(String orderInfo) {
+        String[] parts = orderInfo.split("\\|");
+        return parts.length >= 3 && "topup".equalsIgnoreCase(parts[1].trim());
+    }
+
+    /** Lấy ra ID (listingId, depositId, hoặc eventBikeId) từ chuỗi */
     private int parseId(String orderInfo) {
         String[] parts = orderInfo.split("\\|");
         return Integer.parseInt(parts[2].trim());

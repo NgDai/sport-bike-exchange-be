@@ -166,9 +166,9 @@ public class PostingService {
         }
     }
 
-    // --- HÀM XỬ LÝ KHI VNPAY TRẢ VỀ THÀNH CÔNG (ĐƯỢC GỌI TỪ PAYMENT CONTROLLER) ---
+    // --- ĐÃ ĐỔI TÊN HÀM: CHO KHỚP VỚI PAYMENT CONTROLLER ---
     @Transactional
-    public void confirmPaymentAndPublish(int listingId, String username, double vnpayAmount) {
+    public void confirmPostingPayment(int listingId, String username, double vnpayAmount) {
         BikeListing bikeListing = bikeListingRepository.findById(listingId)
                 .orElseThrow(() -> new AppException(ErrorCode.BIKE_LISTING_NOT_FOUND));
 
