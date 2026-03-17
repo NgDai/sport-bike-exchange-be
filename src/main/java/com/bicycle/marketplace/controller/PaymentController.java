@@ -53,7 +53,6 @@ public class PaymentController {
 
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
 
-        // Gắn tag "topup" để phân biệt với cọc (deposit) và phí (postfee/eventfee)
         String secureOrderInfo = username + "|topup|" + request.getOrderInfo();
 
         String clientIp = VNPayConfig.getIpAddress(httpRequest);
@@ -94,6 +93,9 @@ public class PaymentController {
             if (isDepositPayment(orderInfo)) {
                 depositService.confirmDepositPayment(targetId, username, amount);
                 response.setMessage("Đặt cọc xe thành công.");
+            } else if (isEventDepositPayment(orderInfo)) {
+                depositService.confirmDepositPaymentForEvent(targetId, username, amount);
+                response.setMessage("Đặt cọc xe sự kiện thành công.");
             } else if (isPostFeePayment(orderInfo)) {
                 postingService.confirmPostingPayment(targetId, username, amount);
                 response.setMessage("Thanh toán phí đăng bài thành công.");
@@ -105,8 +107,7 @@ public class PaymentController {
                 response.setMessage("Nạp tiền vào ví thành công.");
             }
         } else {
-            // Xử lý hủy ngầm
-            if (isDepositPayment(orderInfo)) {
+            if (isDepositPayment(orderInfo) || isEventDepositPayment(orderInfo)) {
                 try { depositService.cancelDepositPayment(targetId); } catch (Exception e) { log.warn("Lỗi khi hủy cọc: {}", e.getMessage()); }
             } else if (isPostFeePayment(orderInfo)) {
                 try { postingService.cancelPostingPayment(targetId); } catch (Exception e) { log.warn("Lỗi khi hủy đăng bài: {}", e.getMessage()); }
@@ -140,26 +141,28 @@ public class PaymentController {
             double amount = (vnpAmountStr != null && !vnpAmountStr.isEmpty()) ? Double.parseDouble(vnpAmountStr) / 100 : 0;
 
             if (isDepositPayment(orderInfo)) {
-                // Đặt cọc thành công -> Về trang Quản lý giao dịch
                 depositService.confirmDepositPayment(targetId, username, amount);
                 response.sendRedirect(frontendBaseUrl + "/profile?tab=transaction-manage");
                 return;
 
+            } else if (isEventDepositPayment(orderInfo)) {
+                // ĐẶT CỌC XE SỰ KIỆN THÀNH CÔNG
+                depositService.confirmDepositPaymentForEvent(targetId, username, amount);
+                response.sendRedirect(frontendBaseUrl + "/profile?tab=transaction-manage");
+                return;
+
             } else if (isPostFeePayment(orderInfo)) {
-                // Đăng bán xe thành công -> Về trang Quản lý xe của tôi
                 postingService.confirmPostingPayment(targetId, username, amount);
                 response.sendRedirect(frontendBaseUrl + "/profile?tab=my-bikes");
                 return;
 
             } else if (isEventFeePayment(orderInfo)) {
-                // Đăng ký sự kiện thành công -> Về trang Chi tiết sự kiện đó
                 int eventId = eventBicycleService.getEventIdByEventBikeId(targetId);
                 eventBicycleService.confirmEventBicyclePayment(targetId, username, amount);
                 response.sendRedirect(frontendBaseUrl + "/events/" + eventId);
                 return;
 
             } else if (isTopUpPayment(orderInfo)) {
-                // Nạp ví thành công -> Về trang Quản lý ví
                 walletService.addFundsToUserWallet(amount, username);
                 response.sendRedirect(frontendBaseUrl + "/profile?tab=wallet");
                 return;
@@ -181,6 +184,22 @@ public class PaymentController {
                     response.sendRedirect(frontendBaseUrl + "/bikes/" + listingId);
                 } else {
                     response.sendRedirect(frontendBaseUrl + "/bikes");
+                }
+                return;
+
+            } else if (isEventDepositPayment(orderInfo)) {
+                // HỦY ĐẶT CỌC XE SỰ KIỆN
+                Integer eventId = depositService.getEventIdByDepositId(targetId);
+                try {
+                    depositService.cancelDepositPayment(targetId);
+                } catch (Exception e) {
+                    log.warn("Lỗi khi hủy cọc sự kiện: {}", e.getMessage());
+                }
+
+                if (eventId != null) {
+                    response.sendRedirect(frontendBaseUrl + "/events/" + eventId);
+                } else {
+                    response.sendRedirect(frontendBaseUrl + "/events");
                 }
                 return;
 
@@ -209,13 +228,11 @@ public class PaymentController {
                 return;
 
             } else {
-                // Nếu là Topup thất bại
                 response.sendRedirect(frontendBaseUrl + "/profile?tab=wallet");
                 return;
             }
         }
 
-        // Fallback cuối cùng
         response.sendRedirect(frontendBaseUrl);
     }
 
@@ -223,7 +240,6 @@ public class PaymentController {
     // CÁC HÀM HỖ TRỢ XỬ LÝ CHUỖI ORDER_INFO
     // ==========================================
 
-    /** Format mẫu: "username|type|id" */
     private String parseUsername(String orderInfo) {
         return orderInfo.split("\\|")[0].trim();
     }
@@ -238,6 +254,12 @@ public class PaymentController {
         return parts.length >= 3 && "deposit".equalsIgnoreCase(parts[1].trim());
     }
 
+    // --- THÊM HÀM KIỂM TRA TAG eventdeposit ---
+    private boolean isEventDepositPayment(String orderInfo) {
+        String[] parts = orderInfo.split("\\|");
+        return parts.length >= 3 && "eventdeposit".equalsIgnoreCase(parts[1].trim());
+    }
+
     private boolean isEventFeePayment(String orderInfo) {
         String[] parts = orderInfo.split("\\|");
         return parts.length >= 3 && "eventfee".equalsIgnoreCase(parts[1].trim());
@@ -248,7 +270,6 @@ public class PaymentController {
         return parts.length >= 3 && "topup".equalsIgnoreCase(parts[1].trim());
     }
 
-    /** Lấy ra ID (listingId, depositId, hoặc eventBikeId) từ chuỗi */
     private int parseId(String orderInfo) {
         String[] parts = orderInfo.split("\\|");
         return Integer.parseInt(parts[2].trim());

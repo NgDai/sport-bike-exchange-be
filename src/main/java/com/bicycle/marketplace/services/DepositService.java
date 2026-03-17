@@ -54,6 +54,13 @@ public class DepositService {
         return price * depositPercent / 100.0;
     }
 
+    public Integer getEventIdByDepositId(int depositId) {
+        return depositRepository.findById(depositId)
+                .map(deposit -> (deposit.getEventBicycle() != null && deposit.getEventBicycle().getEvent() != null)
+                        ? deposit.getEventBicycle().getEvent().getEventId() : null)
+                .orElse(null);
+    }
+
     // ==========================================
     // HÀM MỚI THÊM ĐỂ ĐIỀU HƯỚNG VỀ BIKEDETAIL
     // ==========================================
@@ -239,14 +246,21 @@ public class DepositService {
             return;
         }
 
-        // Nhả lại xe cho người khác mua
+        // 1. Nhả lại xe trên sàn (Nếu xe có tồn tại trên sàn)
         BikeListing listing = deposit.getListing();
-        if ("Waiting_Payment".equals(listing.getStatus())) {
+        if (listing != null && "Waiting_Payment".equals(listing.getStatus())) {
             listing.setStatus("Available");
             bikeListingRepository.save(listing);
         }
 
-        // Xóa các record rác
+        // 2. Nhả lại xe trong sự kiện (Nếu xe đang tham gia sự kiện)
+        EventBicycle eventBicycle = deposit.getEventBicycle();
+        if (eventBicycle != null && "Waiting_Payment".equals(eventBicycle.getStatus())) {
+            eventBicycle.setStatus("Available");
+            eventBicycleRepository.save(eventBicycle);
+        }
+
+        // 3. Xóa các record rác (Hóa đơn, Cọc tạm)
         transactionRepository.findByDeposit_DepositId(depositId).ifPresent(transactionRepository::delete);
         reservationRepository.findByDeposit_DepositId(depositId).ifPresent(reservationRepository::delete);
         depositRepository.delete(deposit);
@@ -310,7 +324,7 @@ public class DepositService {
             String customReturnUrl = vnpayReturnUrl + "?depositId=" + deposit.getDepositId();
             String paymentUrl = vnPayService.createOrder(
                     amountNeeded,
-                    username + "|deposit|" + deposit.getDepositId(),
+                    username + "|eventdeposit|" + deposit.getDepositId(),
                     customReturnUrl, null
             );
 
