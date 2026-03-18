@@ -270,8 +270,16 @@ public class PaymentController {
         return parts.length >= 3 && "topup".equalsIgnoreCase(parts[1].trim());
     }
 
+    // Sửa lại hàm parseId ở cuối file PaymentController.java
     private int parseId(String orderInfo) {
-        String[] parts = orderInfo.split("\\|");
-        return Integer.parseInt(parts[2].trim());
+        try {
+            String[] parts = orderInfo.split("\\|");
+            if (parts.length >= 3) {
+                return Integer.parseInt(parts[2].trim());
+            }
+        } catch (NumberFormatException e) {
+            return 0;
+        }
+        return 0;
     }
 }
