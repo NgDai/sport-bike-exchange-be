@@ -12,7 +12,7 @@ import java.util.Date;
 @NoArgsConstructor
 public class InspectionReportResponse {
     private int reportId;
-    private int disputeId;
+    private Integer reservationId;
     private int inspectorId;
     private String result;
     private String reason;

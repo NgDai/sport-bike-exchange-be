@@ -16,6 +16,7 @@ import com.bicycle.marketplace.repository.IReservationRepository;
 import com.bicycle.marketplace.repository.IDepositRepository;
 import com.bicycle.marketplace.repository.ITransactionRepository;
 import com.bicycle.marketplace.repository.IUserRepository;
+import com.bicycle.marketplace.services.WalletService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -38,6 +39,8 @@ public class ReservationService {
     private ITransactionRepository transactionRepository;
     @Autowired
     private IDepositRepository depositRepository;
+    @Autowired
+    private WalletService walletService;
 
     public ReservationResponse createReservation(int bikeListingId, ReservationCreationRequest request) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -55,7 +58,7 @@ public class ReservationService {
         reservation.setListing(bikeListing);
         reservation.setStatus("Reserved");
         reservation.setReservedAt(request.getReservedAt());
-        return reservationMapper.toReservationResponse(reservationRepository.save(reservation));
+        return toReservationResponseSafe(reservationRepository.save(reservation));
     }
 
     public ReservationResponse updateReservation(int reservationId, ReservationUpdateRequest request) {
@@ -66,7 +69,7 @@ public class ReservationService {
         Reservation reservation = reservationRepository.findById(reservationId)
                 .orElseThrow(() -> new AppException(ErrorCode.RESERVATION_NOT_FOUND));
         reservationMapper.updateReservation(reservation, request);
-        return reservationMapper.toReservationResponse(reservationRepository.save(reservation));
+        return toReservationResponseSafe(reservationRepository.save(reservation));
     }
 
     public ReservationResponse updateReservationStatus(int reservationId, ReservationUpdateRequest request) {
@@ -77,7 +80,7 @@ public class ReservationService {
         Reservation reservation = reservationRepository.findById(reservationId)
                 .orElseThrow(() -> new AppException(ErrorCode.RESERVATION_NOT_FOUND));
         reservation.setStatus(request.getStatus());
-        return reservationMapper.toReservationResponse(reservationRepository.save(reservation));
+        return toReservationResponseSafe(reservationRepository.save(reservation));
     }
 
     // --- HÀM MỚI: ADMIN LÊN LỊCH & GÁN INSPECTOR ---
@@ -114,7 +117,7 @@ public class ReservationService {
             transactionRepository.save(transaction);
         });
 
-        return reservationMapper.toReservationResponse(reservationRepository.save(reservation));
+        return toReservationResponseSafe(reservationRepository.save(reservation));
     }
 
     public List<ReservationResponse> getMyReservations() {
@@ -131,7 +134,7 @@ public class ReservationService {
                 .findByBuyer_UserIdAndStatusNotOrderByReservedAtDesc(user.getUserId(), "Cancelled");
 
         return reservations.stream()
-                .map(reservationMapper::toReservationResponse)
+                .map(this::toReservationResponseSafe)
                 .toList();
     }
 
@@ -142,7 +145,7 @@ public class ReservationService {
     public ReservationResponse findReservationById(int reservationId) {
         Reservation reservation = reservationRepository.findById(reservationId)
                 .orElseThrow(() -> new AppException(ErrorCode.RESERVATION_NOT_FOUND));
-        return reservationMapper.toReservationResponse(reservation);
+        return toReservationResponseSafe(reservation);
     }
 
     public String deleteReservation(int reservationId) {
@@ -162,7 +165,7 @@ public class ReservationService {
 
     public List<ReservationResponse> findAllReservationResponses() {
         return reservationRepository.findAllByStatusNot("Cancelled").stream()
-                .map(reservationMapper::toReservationResponse)
+                .map(this::toReservationResponseSafe)
                 .toList();
     }
 
@@ -184,12 +187,18 @@ public class ReservationService {
         BikeListing listing = bikeListingRepository.findById(reservation.getListing().getListingId())
                 .orElseThrow(() -> new AppException(ErrorCode.BIKE_LISTING_NOT_FOUND));
 
-        // 1. Xóa Transaction liên quan (nếu có) và Deposit trước khi xóa Reservation
+        // 1. Cập nhật Transaction liên quan (nếu có) và xóa Deposit trước khi xóa Reservation
         transactionRepository.findByReservation_ReservationId(reservationId)
                 .ifPresent(transaction -> {
-                    // Lấy Deposit từ Transaction rồi xóa sau khi xóa Transaction
+                    // Lấy Deposit từ Transaction rồi xóa
                     var deposit = transaction.getDeposit();
-                    transactionRepository.delete(transaction);
+                    
+                    // Giữ lại transaction làm lịch sử, cập nhật status và xóa reference
+                    transaction.setStatus("Cancelled");
+                    transaction.setReservation(null);
+                    transaction.setDeposit(null);
+                    transactionRepository.save(transaction);
+                    
                     if (deposit != null) {
                         depositRepository.delete(deposit);
                     }
@@ -202,7 +211,7 @@ public class ReservationService {
         listing.setStatus("Available");
         bikeListingRepository.save(listing);
 
-        return "Reservation, Transaction và Deposit đã được xóa, xe đã trở về trạng thái Available.";
+        return "Reservation và Deposit đã được xóa, Transaction được giữ lại làm lịch sử, xe đã trở về trạng thái Available.";
     }
 
     @Transactional
@@ -230,6 +239,7 @@ public class ReservationService {
 
         reservation.setStatus("Pending_Cancel");
         reservation.setCancelDescription(request.getCancelDescription());
+        reservation.setCancelImage(request.getCancelImage());
         reservationRepository.save(reservation);
 
         // Đồng bộ Transaction nếu có (chờ admin duyệt nên đổi status của transation cũng hợp lý, hoặc giữ nguyên nhưng đổi Reservation là đủ)
@@ -263,7 +273,13 @@ public class ReservationService {
         transactionRepository.findByReservation_ReservationId(reservationId)
                 .ifPresent(transaction -> {
                     var deposit = transaction.getDeposit();
-                    transactionRepository.delete(transaction);
+                    
+                    // Giữ lại transaction làm lịch sử, cập nhật status và xóa reference
+                    transaction.setStatus("Cancelled");
+                    transaction.setReservation(null);
+                    transaction.setDeposit(null);
+                    transactionRepository.save(transaction);
+                    
                     if (deposit != null) {
                         depositRepository.delete(deposit);
                     }
@@ -274,7 +290,7 @@ public class ReservationService {
         listing.setStatus("Available");
         bikeListingRepository.save(listing);
 
-        return "Yêu cầu hủy giao dịch đã được duyệt. Đã hủy Reservation, Transaction và Deposit.";
+        return "Yêu cầu hủy giao dịch đã được duyệt. Đã hủy Reservation và Deposit, Transaction được giữ lại làm lịch sử.";
     }
 
     @Transactional
@@ -304,6 +320,7 @@ public class ReservationService {
         
         reservation.setStatus(restoredStatus);
         reservation.setCancelDescription(null);
+        reservation.setCancelImage(null);
         reservationRepository.save(reservation);
 
         final String finalRestoredStatus = restoredStatus;
@@ -313,5 +330,53 @@ public class ReservationService {
         });
 
         return "Yêu cầu hủy giao dịch đã bị từ chối. Trạng thái đã được khôi phục về " + restoredStatus + ".";
+    }
+
+    @Transactional
+    public String refundDepositAfterInspectionFail(int reservationId) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new AppException(ErrorCode.UNAUTHORIZED);
+        }
+
+        Reservation reservation = reservationRepository.findById(reservationId)
+                .orElseThrow(() -> new AppException(ErrorCode.RESERVATION_NOT_FOUND));
+
+        if (!"Inspection_Failed".equalsIgnoreCase(reservation.getStatus())) {
+            throw new RuntimeException("Chỉ có thể hoàn tiền cho giao dịch có trạng thái Inspection_Failed");
+        }
+
+        Double amount = reservation.getDepositAmount();
+        if (amount == null && reservation.getDeposit() != null) {
+            amount = reservation.getDeposit().getAmount();
+        }
+
+        if (amount == null || amount <= 0) {
+            throw new RuntimeException("Không tìm thấy số tiền cọc hợp lệ hoặc tiền cọc bằng 0");
+        }
+
+        walletService.refundToUserWallet(amount, reservation.getBuyer().getUsername(), "Hoàn tiền cọc do kiểm định thất bại - Giao dịch #" + reservationId);
+
+        reservation.setStatus("Refunded");
+        reservationRepository.save(reservation);
+
+        transactionRepository.findByReservation_ReservationId(reservationId).ifPresent(transaction -> {
+            transaction.setStatus("Refunded");
+            transactionRepository.save(transaction);
+        });
+
+        return "Đã hoàn tiền cọc thành công cho người mua.";
+    }
+
+    private ReservationResponse toReservationResponseSafe(Reservation reservation) {
+        ReservationResponse response = reservationMapper.toReservationResponse(reservation);
+        
+        if (reservation.getListing() != null && reservation.getDepositAmount() != null) {
+            double listingPrice = reservation.getListing().getPrice();
+            double depositAmount = reservation.getDepositAmount();
+            response.setRemainingAmount(listingPrice - depositAmount);
+        }
+        
+        return response;
     }
 }

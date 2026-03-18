@@ -18,9 +18,9 @@ public class InspectionReport {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     int reportId;
-    @OneToOne
-    @JoinColumn(name = "dispute_id")
-    Dispute dispute;
+    @ManyToOne
+    @JoinColumn(name = "reservation_id", nullable = true)
+    Reservation reservation;
     @ManyToOne
     @JoinColumn(name = "inspector_id")
     Users inspector;

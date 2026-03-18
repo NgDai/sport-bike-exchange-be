@@ -153,4 +153,13 @@ public class ReservationController {
         return apiResponse;
     }
 
+    @PostMapping("/{reservationId}/refund-inspection-fail")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('USER')")
+    public ApiResponse<String> refundDepositAfterInspectionFail(@PathVariable int reservationId) {
+        ApiResponse<String> apiResponse = new ApiResponse<>();
+        apiResponse.setResult(reservationService.refundDepositAfterInspectionFail(reservationId));
+        apiResponse.setMessage("Yêu cầu hoàn tiền cọc sau kiểm định thất bại đã được xử lý");
+        return apiResponse;
+    }
+
 }

@@ -21,5 +21,10 @@ public interface ReservationEventMapper {
     @Mapping(source = "latitude", target = "latitude")
     @Mapping(source = "longitude", target = "longitude")
     @Mapping(source = "cancelDescription", target = "cancelDescription")
+    @Mapping(source = "cancelImage", target = "cancelImage")
+    @Mapping(target = "remainingAmount", ignore = true)
+    @Mapping(target = "listingId", ignore = true)
+    @Mapping(target = "listingTitle", ignore = true)
+    @Mapping(target = "listingImage", ignore = true)
     ReservationResponse toReservationResponse(Reservation reservation);
 }

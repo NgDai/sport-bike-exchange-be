@@ -10,12 +10,14 @@ import org.mapstruct.MappingTarget;
 
 @Mapper(componentModel = "spring")
 public interface InspectionReportMapper {
-    @Mapping(source = "dispute.disputeId", target = "disputeId")
+    @Mapping(source = "reservation.reservationId", target = "reservationId")
     @Mapping(source = "inspector.userId", target = "inspectorId")
     InspectionReportResponse toInspectorReportResponse(InspectionReport inspectionReport);
 
-    @Mapping(target = "dispute", ignore = true)
+    @Mapping(target = "reportId", ignore = true)
+    @Mapping(target = "reservation", ignore = true)
     @Mapping(target = "inspector", ignore = true)
+    @Mapping(target = "createdAt", ignore = true)
     InspectionReport toInspectionReport(InspectionReportCreationRequest request);
     void updateInspectionReport(@MappingTarget InspectionReport inspectionReport, InspectionReportUpdateRequest request);
 }

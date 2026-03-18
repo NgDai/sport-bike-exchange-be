@@ -25,6 +25,11 @@ public interface TransactionMapper {
     @Mapping(target = "description", source = "description", defaultExpression = "java(\"\")")
     @Mapping(target = "type", source = "type", defaultExpression = "java(\"\")")
     @Mapping(target = "status", source = "status", defaultExpression = "java(\"\")")
+    @Mapping(source = "buyer.fullName", target = "buyerName")
+    @Mapping(source = "seller.fullName", target = "sellerName")
+    @Mapping(source = "eventBicycle.eventBikeId", target = "eventBicycleId")
+    @Mapping(source = "eventBicycle.title", target = "eventBicycleTitle")
+    @Mapping(source = "eventBicycle.image_url", target = "eventBicycleImage")
     TransactionResponse toTransactionResponse(Transaction transaction);
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)

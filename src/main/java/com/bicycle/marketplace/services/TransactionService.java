@@ -194,12 +194,19 @@ public class TransactionService {
         TransactionResponse r = new TransactionResponse();
         r.setTransactionId(t.getTransactionId());
         r.setBuyerId(t.getBuyer() != null ? t.getBuyer().getUserId() : 0);
+        r.setBuyerName(t.getBuyer() != null ? (t.getBuyer().getFullName() != null && !t.getBuyer().getFullName().isEmpty() ? t.getBuyer().getFullName() : t.getBuyer().getUsername()) : "");
         r.setSellerId(t.getSeller() != null ? t.getSeller().getUserId() : 0);
+        r.setSellerName(t.getSeller() != null ? (t.getSeller().getFullName() != null && !t.getSeller().getFullName().isEmpty() ? t.getSeller().getFullName() : t.getSeller().getUsername()) : "");
         r.setEventId(t.getEvent() != null ? t.getEvent().getEventId() : 0);
         r.setListingId(t.getListing() != null ? t.getListing().getListingId() : 0);
         if (t.getListing() != null) {
             r.setListingTitle(t.getListing().getTitle());
             r.setListingImage(t.getListing().getImage_url());
+        }
+        r.setEventBicycleId(t.getEventBicycle() != null ? t.getEventBicycle().getEventBikeId() : 0);
+        if (t.getEventBicycle() != null) {
+            r.setEventBicycleTitle(t.getEventBicycle().getTitle());
+            r.setEventBicycleImage(t.getEventBicycle().getImage_url());
         }
         r.setDepositId(t.getDeposit() != null ? t.getDeposit().getDepositId() : 0);
         r.setReservationId(t.getReservation() != null ? t.getReservation().getReservationId() : 0);

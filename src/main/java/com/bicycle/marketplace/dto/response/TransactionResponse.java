@@ -14,10 +14,12 @@ import java.util.Date;
 public class TransactionResponse {
     private int transactionId;
     private int buyerId;
+    private String buyerName;
     private int depositId;
     private int eventId;
     private int reservationId;
     private int sellerId;
+    private String sellerName;
     private int listingId;
     private String listingTitle; // Thêm
     private String listingImage;
