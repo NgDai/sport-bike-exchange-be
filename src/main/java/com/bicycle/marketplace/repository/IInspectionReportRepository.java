@@ -6,4 +6,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface IInspectionReportRepository extends JpaRepository<InspectionReport, Integer> {
+    java.util.Optional<InspectionReport> findByReservation_ReservationId(int reservationId);
 }

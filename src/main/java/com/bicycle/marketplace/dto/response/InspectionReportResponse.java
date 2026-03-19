@@ -17,5 +17,6 @@ public class InspectionReportResponse {
     private String result;
     private String reason;
     private String note;
+    private String checklistItems; // JSON string
     private Date createAt;
 }

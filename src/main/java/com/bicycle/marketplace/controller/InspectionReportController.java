@@ -44,6 +44,15 @@ public class InspectionReportController {
         return apiResponse;
     }
 
+    // Endpoint dành cho USER (buyer/seller) xem report của giao dịch của mình
+    @GetMapping("/reservation/{reservationId}/report")
+    ApiResponse<InspectionReportResponse> getReportByReservationId(@PathVariable int reservationId) {
+        ApiResponse<InspectionReportResponse> apiResponse = new ApiResponse<>();
+        apiResponse.setResult(inspectionReportService.getReportByReservationId(reservationId));
+        apiResponse.setMessage("Inspection report fetched successfully");
+        return apiResponse;
+    }
+
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
     ApiResponse<java.util.List<InspectionReport>> getAllInspectionReports() {

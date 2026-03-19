@@ -12,12 +12,20 @@ import org.mapstruct.MappingTarget;
 public interface InspectionReportMapper {
     @Mapping(source = "reservation.reservationId", target = "reservationId")
     @Mapping(source = "inspector.userId", target = "inspectorId")
+    @Mapping(source = "createdAt", target = "createAt")
     InspectionReportResponse toInspectorReportResponse(InspectionReport inspectionReport);
 
     @Mapping(target = "reportId", ignore = true)
     @Mapping(target = "reservation", ignore = true)
     @Mapping(target = "inspector", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
+    @Mapping(target = "checklistItems", ignore = true)
     InspectionReport toInspectionReport(InspectionReportCreationRequest request);
+
+    @Mapping(target = "checklistItems", ignore = true)
+    @Mapping(target = "reportId", ignore = true)
+    @Mapping(target = "reservation", ignore = true)
+    @Mapping(target = "inspector", ignore = true)
+    @Mapping(target = "createdAt", ignore = true)
     void updateInspectionReport(@MappingTarget InspectionReport inspectionReport, InspectionReportUpdateRequest request);
 }

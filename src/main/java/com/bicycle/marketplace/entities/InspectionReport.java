@@ -27,6 +27,8 @@ public class InspectionReport {
     String result;
     String reason;
     String note;
+    @Column(columnDefinition = "TEXT")
+    String checklistItems; // JSON array: [{"name":"...","status":"PASS/FAIL/NOT_CHECKED","note":"..."}]
     @CreationTimestamp
     Date createdAt;
 }
