@@ -26,6 +26,32 @@ public class TransactionResponse {
     private int eventBicycleId;
     private String eventBicycleTitle; // Thêm
     private String eventBicycleImage;
+
+    // Bicycle basic info
+    private int bikeId;
+    private String brandName;
+    private String categoryName;
+
+    // Bicycle specs
+    private String bikeType;
+    private String wheelSize;
+    private String numberOfGears;
+    private String brakeType;
+    private int yearManufacture;
+    private String frameSize;
+    private String drivetrain;
+    private String forkType;
+    private String color;
+    private String frameMaterial;
+    private String condition;
+    private Double weight;
+    private String saddle;
+    private String chainring;
+    private String chain;
+    private String handlebar;
+    private String rim;
+    private String shockAbsorber;
+
     private double amount;
     private double actualPrice;
     private double fee;

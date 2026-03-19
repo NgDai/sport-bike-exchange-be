@@ -1,17 +1,13 @@
 package com.bicycle.marketplace.services;
 
-import com.bicycle.marketplace.entities.Events;
-import com.bicycle.marketplace.entities.Users;
-import com.bicycle.marketplace.repository.ICheckInRepository;
+import com.bicycle.marketplace.entities.*;
+import com.bicycle.marketplace.repository.*;
 import com.bicycle.marketplace.dto.request.CheckInCreationRequest;
 import com.bicycle.marketplace.dto.request.CheckInUpdateRequest;
 import com.bicycle.marketplace.dto.response.CheckInResponse;
-import com.bicycle.marketplace.entities.CheckIn;
 import com.bicycle.marketplace.exception.AppException;
 import com.bicycle.marketplace.exception.ErrorCode;
 import com.bicycle.marketplace.mapper.CheckInMapper;
-import com.bicycle.marketplace.repository.IEventRepository;
-import com.bicycle.marketplace.repository.IUserRepository;
 import com.google.zxing.WriterException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -28,6 +24,8 @@ public class CheckInService {
     @Autowired
     private ICheckInRepository checkInRepository;
     @Autowired
+    private IEventBicycleRepository eventBicycleRepository;
+    @Autowired
     private CheckInMapper checkInMapper;
     @Autowired
     private QRService qrService;
@@ -35,24 +33,38 @@ public class CheckInService {
     private IUserRepository userRepository;
     @Autowired
     private IEventRepository eventRepository;
+    @Autowired
+    private IReservationRepository reservationRepository;
 
-    public CheckInResponse createCheckIn(int eventId, CheckInCreationRequest request) {
+    public CheckInResponse createCheckIn(int reservationId) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated()) {
             throw new AppException(ErrorCode.UNAUTHORIZED);
         }
-        String username = authentication.getName();
-        Users user = userRepository.findByUsername(username).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
-        Events event = eventRepository.findById(eventId).orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
-        CheckIn checkIn = new CheckIn();
-        String token = UUID.randomUUID().toString();
-//        checkIn.setUser(user);
-//        checkIn.setEvent(event);
-//        checkIn.setToken(token);
-//        checkIn.setRole(request.getRole());
-//        checkIn.setStatus(request.getStatus());
-//        checkIn.setCheckInTime(request.getCheckInTime());
+        Reservation reservation = reservationRepository.findById(reservationId)
+                .orElseThrow(() -> new AppException(ErrorCode.RESERVATION_NOT_FOUND));
 
+        String token = UUID.randomUUID().toString();
+        CheckIn checkIn = new CheckIn();
+        checkIn.setReservation(reservation);
+        checkIn.setBuyer(reservation.getBuyer());
+        checkIn.setBuyerName(reservation.getBuyer().getFullName());
+        checkIn.setBuyerPhone(reservation.getBuyer().getPhone());
+        if (reservation.getEventBicycle() != null) {
+            checkIn.setEventBicycle(reservation.getEventBicycle());
+            Users seller = reservation.getEventBicycle().getSeller();
+            checkIn.setSeller(seller);
+            checkIn.setSellerName(seller.getFullName());
+            checkIn.setSellerPhone(seller.getPhone());
+        } else if (reservation.getListing() != null) {
+            checkIn.setEventBicycle(null);
+            Users seller = reservation.getListing().getSeller();
+            checkIn.setSeller(seller);
+            checkIn.setSellerName(seller.getFullName());
+            checkIn.setSellerPhone(seller.getPhone());
+        }
+
+        checkIn.setToken(token);
         return checkInMapper.toCheckInResponse(checkInRepository.save(checkIn));
     }
 
@@ -89,10 +101,10 @@ public class CheckInService {
         return "Check-In deleted successfully";
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
-    public List<CheckIn> findCheckInsByStatus(String status) {
-        return checkInRepository.findByStatus(status);
-    }
+//    @PreAuthorize("hasRole('ADMIN')")
+//    public List<CheckIn> findCheckInsByStatus(String status) {
+//        return checkInRepository.findByStatus(status);
+//    }
 
     public byte[] createCheckInQRCode(int checkInId) throws IOException, WriterException {
         CheckIn checkIn = checkInRepository.findById(checkInId)

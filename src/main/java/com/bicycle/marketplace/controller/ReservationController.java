@@ -22,10 +22,10 @@ public class ReservationController {
 
     @PostMapping("/{listingId}/create")
     @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
-    ApiResponse<ReservationResponse> createReservation(@PathVariable int listingId,
+    ApiResponse<ReservationResponse> createReservation(@PathVariable int listingId, @PathVariable int eventBikeId,
             @RequestBody ReservationCreationRequest request) {
         ApiResponse<ReservationResponse> apiResponse = new ApiResponse<>();
-        apiResponse.setResult(reservationService.createReservation(listingId, request));
+        apiResponse.setResult(reservationService.createReservation(listingId, eventBikeId, request));
         apiResponse.setMessage("Reservation created successfully");
         return apiResponse;
     }

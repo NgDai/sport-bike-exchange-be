@@ -208,6 +208,37 @@ public class TransactionService {
             r.setEventBicycleTitle(t.getEventBicycle().getTitle());
             r.setEventBicycleImage(t.getEventBicycle().getImage_url());
         }
+        r.setEventBicycleId(t.getEventBicycle() != null ? t.getEventBicycle().getEventBikeId() : 0);
+        if (t.getEventBicycle() != null) {
+            EventBicycle eb = t.getEventBicycle();
+            r.setEventBicycleTitle(eb.getTitle());
+            r.setEventBicycleImage(eb.getImage_url());
+            r.setSellerName(eb.getSellerName());
+            r.setCondition(eb.getCondition());
+            if (eb.getBicycle() != null) {
+                Bicycle b = eb.getBicycle();
+                r.setBikeId(b.getBikeId());
+                r.setBrandName(b.getBrand() != null ? b.getBrand().getName() : "");
+                r.setCategoryName(b.getCategory() != null ? b.getCategory().getName() : "");
+                r.setBikeType(b.getBikeType());
+                r.setWheelSize(b.getWheelSize());
+                r.setNumberOfGears(b.getNumberOfGears());
+                r.setBrakeType(b.getBrakeType());
+                r.setYearManufacture(b.getYearManufacture());
+                r.setFrameSize(b.getFrameSize());
+                r.setDrivetrain(b.getDrivetrain());
+                r.setForkType(b.getForkType());
+                r.setColor(b.getColor());
+                r.setFrameMaterial(b.getFrameMaterial());
+                r.setWeight(b.getWeight());
+                r.setSaddle(b.getSaddle());
+                r.setChainring(b.getChainring());
+                r.setChain(b.getChain());
+                r.setHandlebar(b.getHandlebar());
+                r.setRim(b.getRim());
+                r.setShockAbsorber(b.getShockAbsorber());
+            }
+        }
         r.setDepositId(t.getDeposit() != null ? t.getDeposit().getDepositId() : 0);
         r.setReservationId(t.getReservation() != null ? t.getReservation().getReservationId() : 0);
         r.setAmount(t.getAmount());

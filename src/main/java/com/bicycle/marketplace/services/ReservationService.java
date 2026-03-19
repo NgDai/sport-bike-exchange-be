@@ -6,16 +6,13 @@ import com.bicycle.marketplace.dto.request.ReservationUpdateRequest;
 import com.bicycle.marketplace.dto.request.CancelReservationRequest;
 import com.bicycle.marketplace.dto.response.ReservationResponse;
 import com.bicycle.marketplace.entities.BikeListing;
+import com.bicycle.marketplace.entities.EventBicycle;
 import com.bicycle.marketplace.entities.Reservation;
 import com.bicycle.marketplace.entities.Users;
 import com.bicycle.marketplace.exception.AppException;
 import com.bicycle.marketplace.exception.ErrorCode;
 import com.bicycle.marketplace.mapper.ReservationMapper;
-import com.bicycle.marketplace.repository.IBikeListingRepository;
-import com.bicycle.marketplace.repository.IReservationRepository;
-import com.bicycle.marketplace.repository.IDepositRepository;
-import com.bicycle.marketplace.repository.ITransactionRepository;
-import com.bicycle.marketplace.repository.IUserRepository;
+import com.bicycle.marketplace.repository.*;
 import com.bicycle.marketplace.services.WalletService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
@@ -41,8 +38,10 @@ public class ReservationService {
     private IDepositRepository depositRepository;
     @Autowired
     private WalletService walletService;
+    @Autowired
+    private IEventBicycleRepository eventBicycleRepository;
 
-    public ReservationResponse createReservation(int bikeListingId, ReservationCreationRequest request) {
+    public ReservationResponse createReservation(int bikeListingId, int eventBikeId, ReservationCreationRequest request) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated()) {
             throw new AppException(ErrorCode.UNAUTHORIZED);
@@ -52,11 +51,14 @@ public class ReservationService {
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
         BikeListing bikeListing = bikeListingRepository.findById(bikeListingId)
                 .orElseThrow(() -> new AppException(ErrorCode.BIKE_LISTING_NOT_FOUND));
+        EventBicycle eventBicycle = eventBicycleRepository.findById(eventBikeId)
+                .orElseThrow(() -> new AppException(ErrorCode.EVENT_BICYCLE_NOT_FOUND));
 
         Reservation reservation = new Reservation();
         reservation.setBuyer(buyer);
         reservation.setListing(bikeListing);
         reservation.setStatus("Reserved");
+        reservation.setEventBicycle(eventBicycle);
         reservation.setReservedAt(request.getReservedAt());
         return toReservationResponseSafe(reservationRepository.save(reservation));
     }
@@ -375,6 +377,22 @@ public class ReservationService {
             double listingPrice = reservation.getListing().getPrice();
             double depositAmount = reservation.getDepositAmount();
             response.setRemainingAmount(listingPrice - depositAmount);
+        } else if (reservation.getEventBicycle() != null && reservation.getDepositAmount() != null) {
+            double eventPrice = reservation.getEventBicycle().getPrice();
+            double depositAmount = reservation.getDepositAmount();
+            response.setRemainingAmount(eventPrice - depositAmount);
+        }
+
+        // Bổ sung seller info từ EventBicycle khi listing null
+        if (reservation.getEventBicycle() != null && reservation.getListing() == null) {
+            EventBicycle eb = reservation.getEventBicycle();
+            if (eb.getSeller() != null) {
+                response.setSellerName(eb.getSeller().getFullName() != null
+                    ? eb.getSeller().getFullName() : eb.getSellerName());
+                response.setSellerId(eb.getSeller().getUserId());
+            } else if (eb.getSellerName() != null) {
+                response.setSellerName(eb.getSellerName());
+            }
         }
         
         return response;

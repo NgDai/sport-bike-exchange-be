@@ -18,6 +18,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -47,6 +48,8 @@ public class EventBicycleService {
     private IBicycleRepository bicycleRepository;
     @Autowired
     private IWalletRepository walletRepository;
+    @Autowired
+    private IDepositRepository depositRepository;
     @Autowired
     private WalletTransactionService walletTransactionService;
     @Autowired
@@ -317,6 +320,7 @@ public class EventBicycleService {
         return eventBicycleRepository.findAll();
     }
 
+    @Transactional
     public String deleteEventBicycle(int eventBikeId) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated()) {
@@ -324,6 +328,9 @@ public class EventBicycleService {
         }
         EventBicycle eventBicycle = eventBicycleRepository.findById(eventBikeId)
                 .orElseThrow(() -> new AppException(ErrorCode.EVENT_BICYCLE_NOT_FOUND));
+//        if(depositRepository.existsByEventBicycle(eventBicycle)) {
+//            depositRepository.deleteByEventBicycle(eventBicycle);
+//        }
         eventBicycleRepository.delete(eventBicycle);
         return "Event Bicycle deleted successfully";
     }

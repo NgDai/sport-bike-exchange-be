@@ -29,3 +29,4 @@ public class EventBicycleResponse {
     private String image_url;
     private LocalDate createDate;
 }
+
