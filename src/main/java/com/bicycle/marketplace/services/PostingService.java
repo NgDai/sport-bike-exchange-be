@@ -92,7 +92,7 @@ public class PostingService {
 
             String paymentUrl = vnPayService.createOrder(
                     amountNeeded,
-                    username + "|fee|" + savedListing.getListingId(),
+                    username + "|postfee|" + savedListing.getListingId(),
                     customReturnUrl, null
             );
 
@@ -147,7 +147,7 @@ public class PostingService {
             String customReturnUrl = vnpayReturnUrl + "?listingId=" + listingId;
             String paymentUrl = vnPayService.createOrder(
                     amountNeeded,
-                    username + "|fee|" + listingId,
+                    username + "|postfee|" + listingId,
                     customReturnUrl, null
             );
             return CreatePostingResponse.builder().paymentUrl(paymentUrl).build();
