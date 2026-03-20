@@ -56,8 +56,10 @@ public class CheckInService {
             checkIn.setSeller(seller);
             checkIn.setSellerName(seller.getFullName());
             checkIn.setSellerPhone(seller.getPhone());
-        } else if (reservation.getListing() != null) {
-            checkIn.setEventBicycle(null);
+        }
+
+        if (reservation.getListing() != null) {
+            checkIn.setListing(reservation.getListing());
             Users seller = reservation.getListing().getSeller();
             checkIn.setSeller(seller);
             checkIn.setSellerName(seller.getFullName());
