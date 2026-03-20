@@ -13,8 +13,6 @@ import java.util.List;
 @NoArgsConstructor
 public class InspectionReportUpdateRequest {
     private String result;
-    private String reason;
-    private String note;
     private Date createAt;
     private List<ChecklistItemRequest> checklistItems;
 }

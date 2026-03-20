@@ -15,8 +15,6 @@ public class InspectionReportResponse {
     private Integer reservationId;
     private int inspectorId;
     private String result;
-    private String reason;
-    private String note;
     private String checklistItems; // JSON string
     private Date createAt;
 }

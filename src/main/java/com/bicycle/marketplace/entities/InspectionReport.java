@@ -24,9 +24,7 @@ public class InspectionReport {
     @ManyToOne
     @JoinColumn(name = "inspector_id")
     Users inspector;
-    String result;
-    String reason;
-    String note;
+    String result; // PASS, FAIL, PENDING
     @Column(columnDefinition = "TEXT")
     String checklistItems; // JSON array: [{"name":"...","status":"PASS/FAIL/NOT_CHECKED","note":"..."}]
     @CreationTimestamp
