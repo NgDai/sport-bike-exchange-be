@@ -52,6 +52,11 @@ public class TransactionResponse {
     private String rim;
     private String shockAbsorber;
 
+    private String inspectorName;
+    private String inspectorPhone;
+    private String meetingLocation;
+    private Date meetingTime;
+
     private double amount;
     private double actualPrice;
     private double fee;

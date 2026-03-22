@@ -246,7 +246,24 @@ public class TransactionService {
         r.setFee(t.getFee());
         r.setDescription(t.getDescription() != null ? t.getDescription() : "");
         r.setType(t.getType() != null ? t.getType() : "");
-        r.setStatus(t.getStatus() != null ? t.getStatus() : "");
+
+        if (t.getReservation() != null) {
+            Reservation res = t.getReservation();
+            r.setStatus(res.getStatus() != null ? res.getStatus() : (t.getStatus() != null ? t.getStatus() : ""));
+            r.setMeetingLocation(res.getMeetingLocation());
+            r.setMeetingTime(res.getMeetingTime());
+            if (res.getInspector() != null) {
+                Users inspector = res.getInspector();
+                r.setInspectorName((inspector.getFullName() != null && !inspector.getFullName().isEmpty()) 
+                    ? inspector.getFullName() : inspector.getUsername());
+                r.setInspectorPhone(inspector.getPhone());
+            }
+        } else if (t.getDeposit() != null && t.getDeposit().getStatus() != null && !t.getDeposit().getStatus().isBlank()) {
+            r.setStatus(t.getDeposit().getStatus());
+        } else {
+            r.setStatus(t.getStatus() != null ? t.getStatus() : "");
+        }
+
         r.setCreatedAt(t.getCreateAt() != null ? t.getCreateAt() : new Date(0));
         r.setUpdatedAt(t.getUpdateAt() != null ? t.getUpdateAt() : new Date(0));
         return r;
