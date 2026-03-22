@@ -60,6 +60,14 @@ public class ReservationController {
         return apiResponse;
     }
 
+    @GetMapping("/eventBicycle/my-reservations")
+    @PreAuthorize("isAuthenticated()")
+    public ApiResponse<List<ReservationResponse>> getMyReservationsWithEventBicycle() {
+        ApiResponse<List<ReservationResponse>> apiResponse = new ApiResponse<>();
+        apiResponse.setResult(reservationService.getMyReservationsWithEventBicycle());
+        return apiResponse;
+    }
+
     // --- API MỚI CHO ADMIN LÊN LỊCH ---
     @PutMapping("/{reservationId}/schedule")
     @PreAuthorize("hasRole('ADMIN')")

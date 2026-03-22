@@ -151,6 +151,21 @@ public class ReservationService {
                 .toList();
     }
 
+    public List<ReservationResponse> getMyReservationsWithEventBicycle() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new AppException(ErrorCode.UNAUTHORIZED);
+        }
+        String username = authentication.getName();
+        Users user =  userRepository.findByUsername(username)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+
+        List<Reservation> reservations = reservationRepository.findByBuyer_UserIdAndEventBicycleNotNull(user.getUserId());
+        return reservations.stream()
+                .map(this::toReservationResponseSafe)
+                .toList();
+    }
+
     public List<Reservation> findAllReservations() {
         return reservationRepository.findAllByStatusNot("Cancelled");
     }
