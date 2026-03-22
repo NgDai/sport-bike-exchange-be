@@ -572,7 +572,7 @@ public class ReservationService {
 
     private ReservationResponse toReservationResponseSafe(Reservation reservation) {
         ReservationResponse response = reservationMapper.toReservationResponse(reservation);
-        
+
         if (reservation.getListing() != null && reservation.getDepositAmount() != null) {
             double listingPrice = reservation.getListing().getPrice();
             double depositAmount = reservation.getDepositAmount();
@@ -583,18 +583,27 @@ public class ReservationService {
             response.setRemainingAmount(eventPrice - depositAmount);
         }
 
-        // Bổ sung seller info từ EventBicycle khi listing null
+        // Bổ sung seller info và fallback ảnh/tên từ EventBicycle khi listing null
         if (reservation.getEventBicycle() != null && reservation.getListing() == null) {
             EventBicycle eb = reservation.getEventBicycle();
+
+            // Gán dự phòng thông tin để UI luôn hiển thị được
+            if (response.getListingTitle() == null) {
+                response.setListingTitle(eb.getTitle());
+            }
+            if (response.getListingImage() == null) {
+                response.setListingImage(eb.getImage_url());
+            }
+
             if (eb.getSeller() != null) {
                 response.setSellerName(eb.getSeller().getFullName() != null
-                    ? eb.getSeller().getFullName() : eb.getSellerName());
+                        ? eb.getSeller().getFullName() : eb.getSellerName());
                 response.setSellerId(eb.getSeller().getUserId());
             } else if (eb.getSellerName() != null) {
                 response.setSellerName(eb.getSellerName());
             }
         }
-        
+
         return response;
     }
 }

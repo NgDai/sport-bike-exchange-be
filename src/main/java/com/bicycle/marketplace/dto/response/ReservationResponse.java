@@ -19,11 +19,9 @@ public class ReservationResponse {
     private String listingTitle;
     private String listingImage;
 
-    // Thông tin sản phẩm ở sự kiện
-    private int eventBikeId;
-    private String eventBikeTitle;
-    private String eventBikeImage;
-
+    private int eventBicycleId;
+    private String eventBicycleTitle;
+    private String eventBicycleImage;
 
     // Người mua
     private int buyerId;
@@ -49,7 +47,7 @@ public class ReservationResponse {
     private Double depositAmount;
     private Double remainingAmount;
     private Date reservedAt;
-    
+
     private String cancelDescription;
     private String cancelImage;
 }
