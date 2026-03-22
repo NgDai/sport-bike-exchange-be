@@ -233,6 +233,7 @@ public class WalletService {
                                 request.getDescription());
         }
 
+        @Transactional
         public WalletTransactionResponse refundToUserWallet(double amount, String username, String description) {
                 Wallet wallet = walletRepository.findByUsername(username)
                                 .orElseThrow(() -> new AppException(ErrorCode.WALLET_NOT_FOUND));

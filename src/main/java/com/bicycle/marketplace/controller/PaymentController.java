@@ -6,6 +6,7 @@ import com.bicycle.marketplace.dto.response.VNPayResponse;
 import com.bicycle.marketplace.services.DepositService;
 import com.bicycle.marketplace.services.EventBicycleService;
 import com.bicycle.marketplace.services.PostingService;
+import com.bicycle.marketplace.services.ReservationService;
 import com.bicycle.marketplace.services.VNPayService;
 import com.bicycle.marketplace.services.WalletService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -40,6 +41,9 @@ public class PaymentController {
 
     @Autowired
     private EventBicycleService eventBicycleService;
+
+    @Autowired
+    private ReservationService reservationService;
 
     // Đọc Base URL của Frontend từ file properties (Hỗ trợ Local & Vercel)
     @Value("${frontend.url:http://localhost:5173}")
@@ -102,6 +106,9 @@ public class PaymentController {
             } else if (isEventFeePayment(orderInfo)) {
                 eventBicycleService.confirmEventBicyclePayment(targetId, username, amount);
                 response.setMessage("Thanh toán phí đăng ký event thành công.");
+            } else if (isFinalPayment(orderInfo)) {
+                reservationService.confirmFinalPayment(targetId, username, amount);
+                response.setMessage("Thanh toán cuối giao dịch thành công.");
             } else if (isTopUpPayment(orderInfo)) {
                 walletService.addFundsToUserWallet(amount, username);
                 response.setMessage("Nạp tiền vào ví thành công.");
@@ -113,6 +120,8 @@ public class PaymentController {
                 try { postingService.cancelPostingPayment(targetId); } catch (Exception e) { log.warn("Lỗi khi hủy đăng bài: {}", e.getMessage()); }
             } else if (isEventFeePayment(orderInfo)) {
                 try { eventBicycleService.cancelEventBicyclePayment(targetId); } catch (Exception e) { log.warn("Lỗi khi hủy event bicycle: {}", e.getMessage()); }
+            } else if (isFinalPayment(orderInfo)) {
+                try { reservationService.cancelFinalPayment(targetId); } catch (Exception e) { log.warn("Lỗi khi hủy thanh toán cuối: {}", e.getMessage()); }
             }
             throw new RuntimeException("Giao dịch thanh toán không thành công hoặc đã bị hủy.");
         }
@@ -162,6 +171,10 @@ public class PaymentController {
                 response.sendRedirect(frontendBaseUrl + "/events/" + eventId);
                 return;
 
+            } else if (isFinalPayment(orderInfo)) {
+                reservationService.confirmFinalPayment(targetId, username, amount);
+                response.sendRedirect(frontendBaseUrl + "/profile?tab=transaction-manage");
+                return;
             } else if (isTopUpPayment(orderInfo)) {
                 walletService.addFundsToUserWallet(amount, username);
                 response.sendRedirect(frontendBaseUrl + "/profile?tab=wallet");
@@ -227,6 +240,11 @@ public class PaymentController {
                 }
                 return;
 
+            } else if (isFinalPayment(orderInfo)) {
+                // Người dùng hủy hoặc thoát VNPay — giữ nguyên Waiting_Payment để thử lại
+                try { reservationService.cancelFinalPayment(targetId); } catch (Exception e) { log.warn("Lỗi khi xử lý hủy thanh toán cuối: {}", e.getMessage()); }
+                response.sendRedirect(frontendBaseUrl + "/profile?tab=transaction-manage");
+                return;
             } else {
                 response.sendRedirect(frontendBaseUrl + "/profile?tab=wallet");
                 return;
@@ -263,6 +281,11 @@ public class PaymentController {
     private boolean isEventFeePayment(String orderInfo) {
         String[] parts = orderInfo.split("\\|");
         return parts.length >= 3 && "eventfee".equalsIgnoreCase(parts[1].trim());
+    }
+
+    private boolean isFinalPayment(String orderInfo) {
+        String[] parts = orderInfo.split("\\|");
+        return parts.length >= 3 && "finalpayment".equalsIgnoreCase(parts[1].trim());
     }
 
     private boolean isTopUpPayment(String orderInfo) {
