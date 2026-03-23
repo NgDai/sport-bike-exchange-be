@@ -17,5 +17,6 @@ public interface IReservationRepository extends JpaRepository<Reservation, Integ
     List<Reservation> findByBuyer_UserIdAndStatusNotOrderByReservedAtDesc(int userId, String status);
     java.util.Optional<Reservation> findByDeposit_DepositId(int depositId);
     List<Reservation> findByInspectorAndStatusIn(Users inspector, List<String> statuses);
+    List<Reservation> findByBuyer_UserIdAndEventBicycleNotNull(int userId);
 
 }

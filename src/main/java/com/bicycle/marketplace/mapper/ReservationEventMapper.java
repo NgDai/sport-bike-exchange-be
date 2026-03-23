@@ -7,11 +7,11 @@ import org.mapstruct.Mapping;
 
 @Mapper(componentModel = "spring")
 public interface ReservationEventMapper {
-    @Mapping(source = "eventBicycle.eventBikeId", target = "eventBikeId")
-    @Mapping(source = "eventBicycle.title", target = "eventBikeTitle")
+    @Mapping(source = "eventBicycle.eventBikeId", target = "eventBicycleId")
+    @Mapping(source = "eventBicycle.title", target = "eventBicycleTitle")
     @Mapping(source = "buyer.userId", target = "buyerId")
     @Mapping(source = "buyer.fullName", target = "buyerName")
-    @Mapping(source = "eventBicycle.image_url", target = "eventBikeImage")
+    @Mapping(source = "eventBicycle.image_url", target = "eventBicycleImage")
     @Mapping(source = "eventBicycle.seller.userId", target = "sellerId")
     @Mapping(source = "eventBicycle.seller.fullName", target = "sellerName")
     @Mapping(source = "inspector.userId", target = "inspectorId")
