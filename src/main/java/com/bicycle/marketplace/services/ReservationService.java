@@ -513,6 +513,78 @@ public class ReservationService {
         completeReservation(reservation, listing, remainingAmount, username);
     }
 
+    // ==========================================
+    // ADMIN CHUYỂN TIỀN CHO SELLER SAU KHI BUYER THANH TOÁN XONG
+    // ==========================================
+
+    @Transactional
+    public String payoutToSeller(int reservationId) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new AppException(ErrorCode.UNAUTHORIZED);
+        }
+
+        Reservation reservation = reservationRepository.findById(reservationId)
+                .orElseThrow(() -> new AppException(ErrorCode.RESERVATION_NOT_FOUND));
+
+        if (!"Completed".equalsIgnoreCase(reservation.getStatus())) {
+            throw new RuntimeException(
+                    "Chỉ có thể chuyển tiền cho seller khi giao dịch đã hoàn thành (Completed). "
+                    + "Trạng thái hiện tại: " + reservation.getStatus());
+        }
+
+        // Kiểm tra đã payout chưa
+        var txnOpt = transactionRepository.findByReservation_ReservationId(reservationId);
+        if (txnOpt.isPresent() && "Paid_Out".equalsIgnoreCase(txnOpt.get().getStatus())) {
+            if (!"Paid_Out".equalsIgnoreCase(reservation.getStatus())) {
+                reservation.setStatus("Paid_Out");
+                reservationRepository.save(reservation);
+            }
+            return "Trạng thái đã được đồng bộ: Seller đã nhận được tiền trước đó.";
+        }
+
+        // Xác định Seller: ưu tiên từ listing, sau đó từ eventBicycle
+        Users seller = null;
+        double totalAmount = 0;
+
+        if (reservation.getListing() != null) {
+            BikeListing listing = bikeListingRepository.findById(reservation.getListing().getListingId())
+                    .orElseThrow(() -> new AppException(ErrorCode.BIKE_LISTING_NOT_FOUND));
+            seller = listing.getSeller();
+            totalAmount = listing.getPrice();
+        } else if (reservation.getEventBicycle() != null) {
+            EventBicycle eb = reservation.getEventBicycle();
+            seller = eb.getSeller();
+            totalAmount = eb.getPrice() != null ? eb.getPrice() : 0;
+        }
+
+        if (seller == null) {
+            throw new RuntimeException("Không tìm thấy thông tin seller để chuyển tiền.");
+        }
+        if (totalAmount <= 0) {
+            throw new RuntimeException("Số tiền chuyển cho seller không hợp lệ: " + totalAmount);
+        }
+
+        // Chuyển tiền từ System Wallet → Seller Wallet (dùng hàm refundToUserWallet)
+        walletService.refundToUserWallet(
+                totalAmount,
+                seller.getUsername(),
+                "Thanh toán từ hệ thống cho người bán - Giao dịch đặt chỗ #" + reservationId
+        );
+
+        // Cập nhật Transaction status → Paid_Out
+        transactionRepository.findByReservation_ReservationId(reservationId).ifPresent(txn -> {
+            txn.setStatus("Paid_Out");
+            transactionRepository.save(txn);
+        });
+
+        reservation.setStatus("Paid_Out");
+        reservationRepository.save(reservation);
+
+        return "Đã chuyển " + (long) totalAmount + " VND từ ví hệ thống sang ví seller ("
+                + seller.getUsername() + ") thành công.";
+    }
+
     public void cancelFinalPayment(int reservationId) {
         // Không làm gì cả — reservation vẫn giữ nguyên status Waiting_Payment
         // để người dùng có thể thanh toán lại sau.

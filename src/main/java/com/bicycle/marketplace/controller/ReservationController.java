@@ -172,4 +172,13 @@ public class ReservationController {
         return apiResponse;
     }
 
-}
+    @PostMapping("/{reservationId}/payout-seller")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ApiResponse<String> payoutToSeller(@PathVariable int reservationId) {
+        ApiResponse<String> apiResponse = new ApiResponse<>();
+        apiResponse.setResult(reservationService.payoutToSeller(reservationId));
+        apiResponse.setMessage("Chuyển tiền cho seller thành công");
+        return apiResponse;
+    }
+
+}

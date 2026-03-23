@@ -12,7 +12,7 @@ import org.springframework.web.servlet.mvc.method.annotation.ExceptionHandlerExc
 public class GlobalExceptionHandle {
 
     @ExceptionHandler(value = Exception.class)
-    ResponseEntity<ApiResponse> handleException(AppException exception) {
+    ResponseEntity<ApiResponse> handleException(Exception exception) {
         ApiResponse apiResponse = new ApiResponse();
 
         apiResponse.setCode(ErrorCode.UNCATEGORIZED_EXCEPTION.getCode());
