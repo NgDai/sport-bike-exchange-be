@@ -59,6 +59,8 @@ public class InspectorTaskService {
                 .buyerPhone(reservation.getBuyer().getPhone())
                 .sellerName(reservation.getListing().getSeller().getFullName())
                 .sellerPhone(reservation.getListing().getSeller().getPhone())
+                .buyerAvatar(reservation.getBuyer().getAvatar())
+                .sellerAvatar(reservation.getListing().getSeller().getAvatar())
                 .location(reservation.getMeetingLocation())
                 .scheduledTime(reservation.getMeetingTime())
                 .status(reservation.getStatus())

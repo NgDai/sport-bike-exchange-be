@@ -1,19 +1,16 @@
 package com.bicycle.marketplace.services;
 
-import com.bicycle.marketplace.entities.BikeListing;
-import com.bicycle.marketplace.entities.Users;
-import com.bicycle.marketplace.repository.IReservationRepository;
-import com.bicycle.marketplace.repository.IInspectionReportRepository;
 import com.bicycle.marketplace.dto.request.InspectionReportCreationRequest;
 import com.bicycle.marketplace.dto.request.InspectionReportUpdateRequest;
 import com.bicycle.marketplace.dto.response.InspectionReportResponse;
-import com.bicycle.marketplace.entities.InspectionReport;
+import com.bicycle.marketplace.entities.*;
 import com.bicycle.marketplace.exception.AppException;
 import com.bicycle.marketplace.exception.ErrorCode;
 import com.bicycle.marketplace.mapper.InspectionReportMapper;
-import com.bicycle.marketplace.repository.IUserRepository;
 import com.bicycle.marketplace.repository.IBikeListingRepository;
-import com.bicycle.marketplace.entities.Reservation;
+import com.bicycle.marketplace.repository.IInspectionReportRepository;
+import com.bicycle.marketplace.repository.IReservationRepository;
+import com.bicycle.marketplace.repository.IUserRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,11 +32,36 @@ public class InspectionReportService {
     @Autowired
     private IUserRepository userRepository;
     @Autowired
+    private IBikeListingRepository bikeListingRepository;
+    @Autowired
     private IReservationRepository reservationRepository;
     @Autowired
-    private IBikeListingRepository bikeListingRepository;
+    private ReservationService reservationService; // Used for refund in NO_SHOW
+
 
     private final ObjectMapper objectMapper = new ObjectMapper();
+
+    private InspectionReportResponse toResponseEnriched(InspectionReport report) {
+        InspectionReportResponse response = inspectionReportMapper.toInspectorReportResponse(report);
+        if (report.getReservation() != null) {
+            Reservation res = report.getReservation();
+            if (res.getBuyer() != null) {
+                response.setBuyerName(res.getBuyer().getFullName() != null ? res.getBuyer().getFullName() : res.getBuyer().getUsername());
+            }
+            if (res.getListing() != null && res.getListing().getSeller() != null) {
+                Users seller = res.getListing().getSeller();
+                response.setSellerName(seller.getFullName() != null ? seller.getFullName() : seller.getUsername());
+            } else if (res.getEventBicycle() != null) {
+                EventBicycle eb = res.getEventBicycle();
+                if (eb.getSeller() != null) {
+                    response.setSellerName(eb.getSeller().getFullName() != null ? eb.getSeller().getFullName() : eb.getSeller().getUsername());
+                } else if (eb.getSellerName() != null) {
+                    response.setSellerName(eb.getSellerName());
+                }
+            }
+        }
+        return response;
+    }
 
     @PreAuthorize("hasAnyRole('INSPECTOR', 'ADMIN')")
     @Transactional
@@ -82,15 +104,32 @@ public class InspectionReportService {
         if ("SUCCESS".equalsIgnoreCase(request.getResult())) {
             reservation.setStatus("Waiting_Payment");
             listing.setStatus("Waiting_Payment");
+            reservationRepository.save(reservation);
+            bikeListingRepository.save(listing);
+        } else if ("SELLER_NO_SHOW".equalsIgnoreCase(request.getResult())) {
+            reservation.setStatus("Inspection_Failed"); // Trạng thái trung gian để refundDeposit được gọi
+            listing.setStatus("Hidden");
+            reservationRepository.save(reservation);
+            bikeListingRepository.save(listing);
+            // Kích hoạt hoàn tiền cho người mua
+            try {
+                reservationService.refundDepositAfterInspectionFail(reservationId);
+            } catch (Exception e) {
+                log.error("Lỗi khi hoàn tiền cho SELLER_NO_SHOW: {}", e.getMessage());
+            }
+        } else if ("BUYER_NO_SHOW".equalsIgnoreCase(request.getResult())) {
+            reservation.setStatus("Cancelled");
+            listing.setStatus("Available");
+            reservationRepository.save(reservation);
+            bikeListingRepository.save(listing);
         } else {
             reservation.setStatus("Inspection_Failed");
             listing.setStatus("Available");
+            reservationRepository.save(reservation);
+            bikeListingRepository.save(listing);
         }
 
-        reservationRepository.save(reservation);
-        bikeListingRepository.save(listing);
-
-        return inspectionReportMapper.toInspectorReportResponse(inspectionReport);
+        return toResponseEnriched(inspectionReport);
     }
 
     @PreAuthorize("hasAnyRole('INSPECTOR', 'ADMIN')")
@@ -114,7 +153,7 @@ public class InspectionReportService {
             }
         }
 
-        return inspectionReportMapper.toInspectorReportResponse(inspectionReportRepository.save(inspectionReport));
+        return toResponseEnriched(inspectionReportRepository.save(inspectionReport));
     }
 
     public List<InspectionReport> findAllInspectionReports() {
@@ -124,7 +163,7 @@ public class InspectionReportService {
     public InspectionReportResponse findInspectionReportById(int inspectionReportId) {
         InspectionReport inspectionReport = inspectionReportRepository.findById(inspectionReportId)
                 .orElseThrow(() -> new AppException(ErrorCode.INSPECTIONREPORT_NOT_FOUND));
-        return inspectionReportMapper.toInspectorReportResponse(inspectionReport);
+        return toResponseEnriched(inspectionReport);
     }
 
     // Cho phép buyer hoặc seller của reservation xem report (không cần role INSPECTOR)
@@ -153,7 +192,7 @@ public class InspectionReportService {
                 .findByReservation_ReservationId(reservationId)
                 .orElseThrow(() -> new RuntimeException("Chưa có báo cáo kiểm định cho giao dịch này."));
 
-        return inspectionReportMapper.toInspectorReportResponse(report);
+        return toResponseEnriched(report);
     }
 
     @PreAuthorize("hasAnyRole('INSPECTOR', 'ADMIN')")

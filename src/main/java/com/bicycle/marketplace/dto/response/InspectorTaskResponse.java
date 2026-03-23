@@ -20,6 +20,8 @@ public class InspectorTaskResponse {
     private String buyerPhone;
     private String sellerName;
     private String sellerPhone;
+    private String buyerAvatar;
+    private String sellerAvatar;
     private String location;
     private Date scheduledTime;
     private String status;

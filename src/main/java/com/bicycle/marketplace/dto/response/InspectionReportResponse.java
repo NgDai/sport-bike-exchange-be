@@ -17,4 +17,6 @@ public class InspectionReportResponse {
     private String result;
     private String checklistItems; // JSON string
     private Date createAt;
+    private String buyerName;
+    private String sellerName;
 }
