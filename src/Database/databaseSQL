@@ -1,0 +1,566 @@
+Database trong supabase:
+-- WARNING: This schema is for context only and is not meant to be run.
+-- Table order and constraints may not be valid for execution.
+
+CREATE TABLE public.bicycle (
+  bike_id integer NOT NULL DEFAULT nextval('bicycle_bike_id_seq'::regclass),
+  bike_type character varying,
+  brake_type character varying,
+  color character varying,
+  drivetrain character varying,
+  fork_type character varying,
+  frame_material character varying,
+  frame_size character varying,
+  number_of_gears character varying NOT NULL,
+  wheel_size character varying,
+  year_manufacture integer NOT NULL,
+  brand_id integer,
+  category_id integer,
+  chain character varying,
+  chainring character varying,
+  fork character varying,
+  handlebar character varying,
+  rim character varying,
+  saddle character varying,
+  shock_absorber character varying,
+  weight double precision,
+  bike_condition integer,
+  CONSTRAINT bicycle_pkey PRIMARY KEY (bike_id),
+  CONSTRAINT fkgy3vigivf48vf5vouh1jbk95d FOREIGN KEY (brand_id) REFERENCES public.brand(brand_id),
+  CONSTRAINT fka3qpmw7s68387rypnbo215veq FOREIGN KEY (category_id) REFERENCES public.category(category_id)
+);
+CREATE TABLE public.bicycle_library (
+  id integer NOT NULL DEFAULT nextval('bicycle_library_id_seq'::regclass),
+  bike_type character varying,
+  brake_type character varying,
+  chain character varying,
+  chainring character varying,
+  color character varying,
+  drivetrain character varying,
+  fork_type character varying,
+  frame_material character varying,
+  frame_size character varying,
+  handlebar character varying,
+  model character varying,
+  number_of_gears character varying,
+  rim character varying,
+  saddle character varying,
+  shock_absorber character varying,
+  weight double precision,
+  wheel_size character varying,
+  year_manufacture integer NOT NULL,
+  brand_id integer,
+  category_id integer,
+  CONSTRAINT bicycle_library_pkey PRIMARY KEY (id),
+  CONSTRAINT fknt300mgxxq0v2sse6ix6oh3qt FOREIGN KEY (brand_id) REFERENCES public.brand(brand_id),
+  CONSTRAINT fk5uie735bwnb0ys9mvrkm8inuj FOREIGN KEY (category_id) REFERENCES public.category(category_id)
+);
+CREATE TABLE public.bike_listing (
+  listing_id integer NOT NULL DEFAULT nextval('bike_listing_listing_id_seq'::regclass),
+  created_at timestamp without time zone,
+  description character varying,
+  image_url character varying,
+  price double precision NOT NULL,
+  status character varying,
+  title character varying,
+  updated_at timestamp without time zone,
+  bicycle_id integer UNIQUE,
+  seller_id integer,
+  condition character varying,
+  CONSTRAINT bike_listing_pkey PRIMARY KEY (listing_id),
+  CONSTRAINT fk5mak91pbf1om4fvtjoboemsev FOREIGN KEY (bicycle_id) REFERENCES public.bicycle(bike_id),
+  CONSTRAINT fk804168s5b3mwc5qp7dav5ndfp FOREIGN KEY (seller_id) REFERENCES public.users(user_id)
+);
+CREATE TABLE public.brand (
+  brand_id integer NOT NULL,
+  name character varying,
+  CONSTRAINT brand_pkey PRIMARY KEY (brand_id)
+);
+CREATE TABLE public.category (
+  category_id integer NOT NULL,
+  bicycle_type character varying,
+  name character varying,
+  CONSTRAINT category_pkey PRIMARY KEY (category_id)
+);
+CREATE TABLE public.check_in (
+  check_in_id integer NOT NULL,
+  buyer_name character varying,
+  buyer_phone character varying,
+  seller_name character varying,
+  seller_phone character varying,
+  token character varying,
+  buyer_id integer,
+  event_bike_id integer,
+  reservation_id integer,
+  seller_id integer,
+  listing_id integer,
+  status character varying,
+  CONSTRAINT check_in_pkey PRIMARY KEY (check_in_id),
+  CONSTRAINT fkivgi9u2habtl3qsi4q80lbkje FOREIGN KEY (buyer_id) REFERENCES public.users(user_id),
+  CONSTRAINT fkheau7blnbwrmwl0lsbib0bd6s FOREIGN KEY (event_bike_id) REFERENCES public.event_bicycle(event_bike_id),
+  CONSTRAINT fkkqe7on6pja6s8ed0rg7nsvl0h FOREIGN KEY (reservation_id) REFERENCES public.reservation(reservation_id),
+  CONSTRAINT fk6w7hdj8tl4406am494dsp0u4u FOREIGN KEY (seller_id) REFERENCES public.users(user_id),
+  CONSTRAINT fk8sioot7q5puedpn71nc206afh FOREIGN KEY (listing_id) REFERENCES public.bike_listing(listing_id),
+  CONSTRAINT fk3507ow6go2lvd13cgulm109nx FOREIGN KEY (event_bike_id) REFERENCES public.events(event_id)
+);
+CREATE TABLE public.deposit (
+  deposit_id integer NOT NULL,
+  amount double precision NOT NULL,
+  created_at timestamp without time zone,
+  status character varying,
+  type character varying,
+  listing_id integer,
+  user_id integer,
+  event_bike_id integer,
+  CONSTRAINT deposit_pkey PRIMARY KEY (deposit_id),
+  CONSTRAINT fkmkp4p66q9jvgix50e683w7f1f FOREIGN KEY (listing_id) REFERENCES public.bike_listing(listing_id),
+  CONSTRAINT fkp6wbohlcqmewmm4g57qkd8si3 FOREIGN KEY (user_id) REFERENCES public.users(user_id),
+  CONSTRAINT fk2y0jkx42mfs0abo8nsvwoia7i FOREIGN KEY (event_bike_id) REFERENCES public.event_bicycle(event_bike_id)
+);
+CREATE TABLE public.dispute (
+  dispute_id integer NOT NULL,
+  created_at timestamp without time zone,
+  reason character varying,
+  status character varying,
+  raised_by integer,
+  transaction_id integer UNIQUE,
+  reason_category character varying CHECK (reason_category::text = ANY (ARRAY['MISDESCRIPTION'::character varying, 'NON_DELIVERY'::character varying, 'BUYER_DEFAULT'::character varying, 'DAMAGE_ON_DELIVERY'::character varying, 'PAYMENT_ISSUE'::character varying, 'CANCELLATION'::character varying, 'OTHER'::character varying]::text[])),
+  assigned_inspector_id integer,
+  CONSTRAINT dispute_pkey PRIMARY KEY (dispute_id),
+  CONSTRAINT fkqw5k09fgjqlcr73ur6khq6h84 FOREIGN KEY (raised_by) REFERENCES public.users(user_id),
+  CONSTRAINT fkmtlxi0oxbr7fg6qoigcsc39i7 FOREIGN KEY (transaction_id) REFERENCES public.transaction(transaction_id),
+  CONSTRAINT fki795d9tt8umn8472acinfxr3j FOREIGN KEY (assigned_inspector_id) REFERENCES public.users(user_id)
+);
+CREATE TABLE public.event_bicycle (
+  event_bike_id integer NOT NULL,
+  create_date date,
+  seller_name character varying,
+  type character varying,
+  event_id integer,
+  listing_id integer,
+  user_id integer,
+  status character varying,
+  bike_id integer,
+  bike_type character varying,
+  title character varying,
+  price double precision,
+  condition character varying,
+  image_url character varying,
+  update_date date,
+  CONSTRAINT event_bicycle_pkey PRIMARY KEY (event_bike_id),
+  CONSTRAINT fkhfc72vymykoj3u9qpx56g7vr4 FOREIGN KEY (event_id) REFERENCES public.events(event_id),
+  CONSTRAINT fknrll4o22yosequty1wkgcapfi FOREIGN KEY (listing_id) REFERENCES public.bike_listing(listing_id),
+  CONSTRAINT fk8fiu39uq6xnmsha277c02xgno FOREIGN KEY (user_id) REFERENCES public.users(user_id),
+  CONSTRAINT fk76wav1ke03sv3cnion4hr7ngt FOREIGN KEY (bike_id) REFERENCES public.bicycle(bike_id)
+);
+CREATE TABLE public.event_inspector (
+  inspec_id integer NOT NULL,
+  create_date timestamp without time zone,
+  status character varying,
+  event_id integer,
+  user_id integer,
+  CONSTRAINT event_inspector_pkey PRIMARY KEY (inspec_id),
+  CONSTRAINT fkrpiqrdfxs5ogkugopicv4jgd2 FOREIGN KEY (event_id) REFERENCES public.events(event_id),
+  CONSTRAINT fkdie8esns3hl8i82d0xxj5hp1t FOREIGN KEY (user_id) REFERENCES public.users(user_id)
+);
+CREATE TABLE public.events (
+  event_id integer NOT NULL,
+  address character varying,
+  bike_type character varying,
+  create_date date,
+  end_date date,
+  location character varying,
+  name character varying,
+  public_date date,
+  start_date date,
+  status character varying,
+  update_date date,
+  create_by integer,
+  latitude double precision,
+  longitude double precision,
+  type character varying,
+  CONSTRAINT events_pkey PRIMARY KEY (event_id),
+  CONSTRAINT fk1pmy2ttgr093jvxhk9tyw9yh8 FOREIGN KEY (create_by) REFERENCES public.users(user_id)
+);
+CREATE TABLE public.inspection_report (
+  report_id integer NOT NULL,
+  created_at timestamp without time zone,
+  result character varying,
+  inspector_id integer,
+  reservation_id integer,
+  checklist_items text,
+  note character varying,
+  reason character varying,
+  dispute_id integer UNIQUE,
+  CONSTRAINT inspection_report_pkey PRIMARY KEY (report_id),
+  CONSTRAINT fkksy9wf9lctjimnav65nn8m532 FOREIGN KEY (inspector_id) REFERENCES public.users(user_id),
+  CONSTRAINT fknqq6kpox55q3far4ib45ps2dx FOREIGN KEY (reservation_id) REFERENCES public.reservation(reservation_id),
+  CONSTRAINT fki4cgmqjl2cuoi44n5r2nn86p2 FOREIGN KEY (dispute_id) REFERENCES public.dispute(dispute_id)
+);
+CREATE TABLE public.invalidate_token (
+  id character varying NOT NULL,
+  expiry_date timestamp without time zone,
+  CONSTRAINT invalidate_token_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.reservation (
+  reservation_id integer NOT NULL,
+  reserved_at timestamp without time zone,
+  status character varying,
+  buyer_id integer,
+  listing_id integer,
+  deposit_amount double precision,
+  deposit_id integer UNIQUE,
+  meeting_location character varying,
+  meeting_time timestamp without time zone,
+  inspector_id integer,
+  latitude double precision,
+  longitude double precision,
+  cancel_description character varying,
+  event_bike_id integer,
+  cancel_image character varying,
+  CONSTRAINT reservation_pkey PRIMARY KEY (reservation_id),
+  CONSTRAINT fkfu6dn86lqt2qgo15927c8jnc2 FOREIGN KEY (buyer_id) REFERENCES public.users(user_id),
+  CONSTRAINT fk1sawkxy6uxj7pfnaqmv06dt2g FOREIGN KEY (listing_id) REFERENCES public.bike_listing(listing_id),
+  CONSTRAINT fkj8pdc21uhcqwvqhjv9hiei73r FOREIGN KEY (inspector_id) REFERENCES public.users(user_id),
+  CONSTRAINT fkrsarc4flqdjbf07intvnb64b3 FOREIGN KEY (event_bike_id) REFERENCES public.event_bicycle(event_bike_id),
+  CONSTRAINT fk40oj80ku3aurlcwjjxex7ej2l FOREIGN KEY (deposit_id) REFERENCES public.deposit(deposit_id)
+);
+CREATE TABLE public.system_config (
+  config_id integer NOT NULL,
+  description character varying,
+  key character varying,
+  value double precision NOT NULL,
+  CONSTRAINT system_config_pkey PRIMARY KEY (config_id)
+);
+CREATE TABLE public.transaction (
+  transaction_id integer NOT NULL,
+  actual_price double precision NOT NULL,
+  amount double precision NOT NULL,
+  create_at timestamp without time zone,
+  status character varying,
+  update_at timestamp without time zone,
+  buyer_id integer,
+  deposit_id integer UNIQUE,
+  event_id integer,
+  listing_id integer,
+  reservation_id integer UNIQUE,
+  seller_id integer,
+  fee double precision NOT NULL,
+  description character varying,
+  type character varying,
+  event_bike_id integer,
+  CONSTRAINT transaction_pkey PRIMARY KEY (transaction_id),
+  CONSTRAINT fklri5uh1w3mea6fdu8ho7ccq5m FOREIGN KEY (buyer_id) REFERENCES public.users(user_id),
+  CONSTRAINT fkrd39vh4o2w9fxiti4jujbbtgk FOREIGN KEY (deposit_id) REFERENCES public.deposit(deposit_id),
+  CONSTRAINT fkbmfun627lx4rj4ob1t5q2exi7 FOREIGN KEY (event_id) REFERENCES public.events(event_id),
+  CONSTRAINT fk11rwhw2a6i82b3ljrp9s4olkw FOREIGN KEY (listing_id) REFERENCES public.bike_listing(listing_id),
+  CONSTRAINT fk7nt3gdkmakj3g2m8s6pulwa45 FOREIGN KEY (reservation_id) REFERENCES public.reservation(reservation_id),
+  CONSTRAINT fkr9xwpmvtk2y214bdbgbi8n749 FOREIGN KEY (seller_id) REFERENCES public.users(user_id),
+  CONSTRAINT fknbvnkywg8wya5il2bqisncwgq FOREIGN KEY (event_bike_id) REFERENCES public.event_bicycle(event_bike_id)
+);
+CREATE TABLE public.users (
+  user_id integer NOT NULL,
+  created_at date,
+  email character varying,
+  full_name character varying,
+  password character varying,
+  phone character varying,
+  role character varying,
+  status character varying,
+  username character varying,
+  create_date date,
+  address character varying,
+  avatar character varying,
+  google_id character varying,
+  CONSTRAINT users_pkey PRIMARY KEY (user_id)
+);
+CREATE TABLE public.wallet (
+  wallet_id integer NOT NULL,
+  balance double precision NOT NULL,
+  user_id integer UNIQUE,
+  username character varying,
+  type character varying,
+  updated_at timestamp without time zone,
+  CONSTRAINT wallet_pkey PRIMARY KEY (wallet_id),
+  CONSTRAINT fkgbusavqq0bdaodex4ee6v0811 FOREIGN KEY (user_id) REFERENCES public.users(user_id)
+);
+CREATE TABLE public.wallet_transaction (
+  wallet_trans_id integer NOT NULL,
+  amount double precision NOT NULL,
+  description character varying,
+  type character varying,
+  wallet_id integer,
+  balance double precision,
+  create_at timestamp without time zone,
+  CONSTRAINT wallet_transaction_pkey PRIMARY KEY (wallet_trans_id),
+  CONSTRAINT fk6cnvafp3a0xhbs0eh9w26sett FOREIGN KEY (wallet_id) REFERENCES public.wallet(wallet_id)
+);
+CREATE TABLE public.wishlist (
+  wishlist_id integer NOT NULL,
+  listing_id integer,
+  user_id integer,
+  CONSTRAINT wishlist_pkey PRIMARY KEY (wishlist_id),
+  CONSTRAINT fk6by3cjd0w6bmsvc4jkqqjr37q FOREIGN KEY (listing_id) REFERENCES public.bike_listing(listing_id),
+  CONSTRAINT fktrd6335blsefl2gxpb8lr0gr7 FOREIGN KEY (user_id) REFERENCES public.users(user_id)
+);
+
+Database khi chuyen sang dbdiagram:
+// BicycleExchange Database Schema
+// Paste this into https://dbdiagram.io/
+
+Table users {
+  user_id integer [primary key]
+  username varchar
+  password varchar
+  full_name varchar
+  phone varchar
+  email varchar
+  role varchar
+  status varchar
+  address varchar
+  avatar varchar
+  google_id varchar
+  created_at date
+  create_date date
+}
+
+Table brand {
+  brand_id integer [primary key]
+  name varchar
+}
+
+Table category {
+  category_id integer [primary key]
+  name varchar
+  bicycle_type varchar
+}
+
+Table bicycle {
+  bike_id integer [primary key]
+  bike_type varchar
+  brake_type varchar
+  color varchar
+  drivetrain varchar
+  fork_type varchar
+  frame_material varchar
+  frame_size varchar
+  number_of_gears varchar [not null]
+  wheel_size varchar
+  year_manufacture integer [not null]
+  chain varchar
+  chainring varchar
+  fork varchar
+  handlebar varchar
+  rim varchar
+  saddle varchar
+  shock_absorber varchar
+  weight double
+  bike_condition integer
+  brand_id integer [ref: > brand.brand_id]
+  category_id integer [ref: > category.category_id]
+}
+
+Table bicycle_library {
+  id integer [primary key]
+  bike_type varchar
+  brake_type varchar
+  chain varchar
+  chainring varchar
+  color varchar
+  drivetrain varchar
+  fork_type varchar
+  frame_material varchar
+  frame_size varchar
+  handlebar varchar
+  model varchar
+  number_of_gears varchar
+  rim varchar
+  saddle varchar
+  shock_absorber varchar
+  weight double
+  wheel_size varchar
+  year_manufacture integer [not null]
+  brand_id integer [ref: > brand.brand_id]
+  category_id integer [ref: > category.category_id]
+}
+
+Table bike_listing {
+  listing_id integer [primary key]
+  title varchar
+  description varchar
+  image_url varchar
+  price double [not null]
+  condition varchar
+  status varchar
+  created_at timestamp
+  updated_at timestamp
+  bicycle_id integer [unique, ref: - bicycle.bike_id]
+  seller_id integer [ref: > users.user_id]
+}
+
+Table events {
+  event_id integer [primary key]
+  name varchar
+  type varchar
+  bike_type varchar
+  location varchar
+  address varchar
+  latitude double
+  longitude double
+  status varchar
+  create_date date
+  public_date date
+  start_date date
+  end_date date
+  update_date date
+  create_by integer [ref: > users.user_id]
+}
+
+Table event_bicycle {
+  event_bike_id integer [primary key]
+  title varchar
+  bike_type varchar
+  type varchar
+  seller_name varchar
+  price double
+  condition varchar
+  image_url varchar
+  status varchar
+  create_date date
+  update_date date
+  event_id integer [ref: > events.event_id]
+  listing_id integer [ref: > bike_listing.listing_id]
+  bike_id integer [ref: > bicycle.bike_id]
+  user_id integer [ref: > users.user_id]
+}
+
+Table event_inspector {
+  inspec_id integer [primary key]
+  status varchar
+  create_date timestamp
+  event_id integer [ref: > events.event_id]
+  user_id integer [ref: > users.user_id]
+}
+
+Table deposit {
+  deposit_id integer [primary key]
+  amount double [not null]
+  type varchar
+  status varchar
+  created_at timestamp
+  listing_id integer [ref: > bike_listing.listing_id]
+  event_bike_id integer [ref: > event_bicycle.event_bike_id]
+  user_id integer [ref: > users.user_id]
+}
+
+Table reservation {
+  reservation_id integer [primary key]
+  status varchar
+  deposit_amount double
+  meeting_location varchar
+  meeting_time timestamp
+  latitude double
+  longitude double
+  cancel_description varchar
+  cancel_image varchar
+  reserved_at timestamp
+  buyer_id integer [ref: > users.user_id]
+  inspector_id integer [ref: > users.user_id]
+  listing_id integer [ref: > bike_listing.listing_id]
+  event_bike_id integer [ref: > event_bicycle.event_bike_id]
+  deposit_id integer [unique, ref: - deposit.deposit_id]
+}
+
+Table check_in {
+  check_in_id integer [primary key]
+  buyer_name varchar
+  buyer_phone varchar
+  seller_name varchar
+  seller_phone varchar
+  token varchar
+  status varchar
+  buyer_id integer [ref: > users.user_id]
+  seller_id integer [ref: > users.user_id]
+  reservation_id integer [ref: > reservation.reservation_id]
+  event_bike_id integer [ref: > event_bicycle.event_bike_id]
+  listing_id integer [ref: > bike_listing.listing_id]
+}
+
+Table transaction {
+  transaction_id integer [primary key]
+  actual_price double [not null]
+  amount double [not null]
+  fee double [not null]
+  type varchar
+  status varchar
+  description varchar
+  create_at timestamp
+  update_at timestamp
+  buyer_id integer [ref: > users.user_id]
+  seller_id integer [ref: > users.user_id]
+  listing_id integer [ref: > bike_listing.listing_id]
+  event_id integer [ref: > events.event_id]
+  event_bike_id integer [ref: > event_bicycle.event_bike_id]
+  deposit_id integer [unique, ref: - deposit.deposit_id]
+  reservation_id integer [unique, ref: - reservation.reservation_id]
+}
+
+Table dispute {
+  dispute_id integer [primary key]
+  reason varchar
+  reason_category varchar
+  status varchar
+  created_at timestamp
+  raised_by integer [ref: > users.user_id]
+  assigned_inspector_id integer [ref: > users.user_id]
+  transaction_id integer [unique, ref: - transaction.transaction_id]
+}
+
+Table inspection_report {
+  report_id integer [primary key]
+  result varchar
+  checklist_items text
+  note varchar
+  reason varchar
+  created_at timestamp
+  inspector_id integer [ref: > users.user_id]
+  reservation_id integer [ref: > reservation.reservation_id]
+  dispute_id integer [unique, ref: - dispute.dispute_id]
+}
+
+Table wallet {
+  wallet_id integer [primary key]
+  balance double [not null]
+  username varchar
+  type varchar
+  updated_at timestamp
+  user_id integer [unique, ref: - users.user_id]
+}
+
+Table wallet_transaction {
+  wallet_trans_id integer [primary key]
+  amount double [not null]
+  type varchar
+  description varchar
+  balance double
+  create_at timestamp
+  wallet_id integer [ref: > wallet.wallet_id]
+}
+
+Table wishlist {
+  wishlist_id integer [primary key]
+  listing_id integer [ref: > bike_listing.listing_id]
+  user_id integer [ref: > users.user_id]
+}
+
+Table system_config {
+  config_id integer [primary key]
+  key varchar
+  value double [not null]
+  description varchar
+}
+
+Table invalidate_token {
+  id varchar [primary key]
+  expiry_date timestamp
+}
