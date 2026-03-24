@@ -1,0 +1,1111 @@
+BicycleExchange
+Database Design Document
+Version 1.0  |  March 2026
+
+1. Overview
+BicycleExchange is a peer-to-peer used bicycle marketplace platform that supports both online listings and physical marketplace events. The database is hosted on Supabase (PostgreSQL) and consists of 20 tables organized into six functional groups: User & Authentication, Bicycle Catalog, Listings & Wishlist, Events, Transaction Lifecycle, and Platform Management.
+
+2. Database Summary
+The following table provides a high-level summary of all 20 tables in the schema.
+
+Table Name	Group	Purpose
+users	User & Auth	All platform users: buyers, sellers, inspectors, admins
+wallet	User & Auth	User balance wallet (1-to-1 with users)
+wallet_transaction	User & Auth	Ledger of all wallet balance changes
+invalidate_token	User & Auth	Blacklisted JWT tokens for logout enforcement
+brand	Bicycle Catalog	Bicycle brand reference table
+category	Bicycle Catalog	Bicycle category reference table
+bicycle	Bicycle Catalog	Physical bicycle asset specifications
+bicycle_library	Bicycle Catalog	Standard model reference library
+bike_listing	Listings	Marketplace sale listings posted by sellers
+wishlist	Listings	User saved/favorited listings
+events	Events	Physical marketplace events organized by admins
+event_bicycle	Events	Bicycles registered for a specific event
+event_inspector	Events	Inspector assignments to events
+deposit	Transactions	Buyer deposit payments for reservations
+reservation	Transactions	Confirmed buyer-seller meeting reservations
+check_in	Transactions	Physical check-in records at meeting point
+transaction	Transactions	Final sale transaction records
+dispute	Transactions	Buyer/seller disputes on transactions
+inspection_report	Transactions	Inspector evaluation reports
+system_config	Platform Mgmt	Platform-wide configuration key-value store
+
+3. Key Relationships
+The schema follows a hub-and-spoke model centered around the users, bike_listing, and events tables. Below are the primary relationship chains that drive the transaction lifecycle:
+
+Relationship	Type	Description
+users -> wallet	1 : 1	Each user has exactly one wallet
+users -> bike_listing	1 : N	A seller can post multiple listings
+bicycle -> bike_listing	1 : 1	Each listing is linked to one bicycle asset
+brand / category -> bicycle	1 : N	Bicycles reference brand and category
+bike_listing -> reservation	1 : N	A listing can have multiple reservations
+reservation -> deposit	1 : 1	Each reservation is backed by one deposit
+reservation -> transaction	1 : 1	Each reservation results in one transaction
+transaction -> dispute	1 : 1	A transaction can have at most one dispute
+dispute -> inspection_report	1 : 1	A dispute can have one inspection report
+events -> event_bicycle	1 : N	An event hosts multiple bicycles
+events -> event_inspector	1 : N	An event has multiple assigned inspectors
+wallet -> wallet_transaction	1 : N	A wallet has many balance change records
+
+4. Table Definitions
+Detailed column-level documentation for all 20 tables.
+
+users
+Stores all platform user accounts including buyers, sellers, inspectors, and administrators.
+
+Column Name	Data Type	Constraints	Description
+user_id	integer	PK	Unique user identifier
+username	varchar		Login username
+password	varchar		Hashed password
+full_name	varchar		Display full name
+phone	varchar		Contact phone number
+email	varchar		Email address
+role	varchar		User role: BUYER, SELLER, INSPECTOR, ADMIN
+status	varchar		Account status: ACTIVE, INACTIVE, BANNED
+address	varchar		Physical address
+avatar	varchar		Profile picture URL
+google_id	varchar		Google OAuth ID for social login
+created_at	date		Account creation date
+create_date	date		Alternative creation date field
+
+brand
+Reference table for bicycle brands/manufacturers.
+
+Column Name	Data Type	Constraints	Description
+brand_id	integer	PK	Unique brand identifier
+name	varchar		Brand name (e.g. Trek, Giant, Specialized)
+
+category
+Reference table for bicycle categories used to classify listings.
+
+Column Name	Data Type	Constraints	Description
+category_id	integer	PK	Unique category identifier
+name	varchar		Category display name
+bicycle_type	varchar		Type of bicycle: Road, Mountain, Hybrid, etc.
+
+bicycle
+Core table storing detailed specifications of each physical bicycle asset on the platform.
+
+Column Name	Data Type	Constraints	Description
+bike_id	integer	PK	Unique bicycle identifier
+bike_type	varchar		Bicycle type (Road, MTB, etc.)
+brake_type	varchar		Brake system type
+color	varchar		Bicycle color
+drivetrain	varchar		Drivetrain type
+fork_type	varchar		Fork type
+frame_material	varchar		Frame material (Aluminum, Carbon, Steel)
+frame_size	varchar		Frame size
+number_of_gears	varchar	NOT NULL	Number of gears
+wheel_size	varchar		Wheel diameter
+year_manufacture	integer	NOT NULL	Year of manufacture
+chain	varchar		Chain specification
+chainring	varchar		Chainring specification
+fork	varchar		Fork specification
+handlebar	varchar		Handlebar type
+rim	varchar		Rim specification
+saddle	varchar		Saddle type
+shock_absorber	varchar		Shock absorber type
+weight	double		Weight in kg
+bike_condition	integer		Condition rating score
+brand_id	integer	FK -> brand	Reference to brand
+category_id	integer	FK -> category	Reference to category
+
+bicycle_library
+A reference library of standard bicycle models used for lookup and auto-fill when creating listings.
+
+Column Name	Data Type	Constraints	Description
+id	integer	PK	Unique library entry ID
+model	varchar		Model name
+bike_type	varchar		Bicycle type
+brake_type	varchar		Brake type
+color	varchar		Color
+drivetrain	varchar		Drivetrain
+frame_material	varchar		Frame material
+frame_size	varchar		Frame size
+number_of_gears	varchar		Number of gears
+wheel_size	varchar		Wheel size
+year_manufacture	integer	NOT NULL	Year of manufacture
+weight	double		Weight in kg
+brand_id	integer	FK -> brand	Reference to brand
+category_id	integer	FK -> category	Reference to category
+
+bike_listing
+Represents a bicycle sale listing posted by a seller on the marketplace.
+
+Column Name	Data Type	Constraints	Description
+listing_id	integer	PK	Unique listing identifier
+title	varchar		Listing title
+description	varchar		Detailed listing description
+image_url	varchar		Primary image URL
+price	double	NOT NULL	Asking price (VND)
+condition	varchar		Bike condition description
+status	varchar		Listing status: AVAILABLE, RESERVED, SOLD, CLOSED
+created_at	timestamp		Creation timestamp
+updated_at	timestamp		Last update timestamp
+bicycle_id	integer	FK -> bicycle, UNIQUE	Reference to bicycle asset
+seller_id	integer	FK -> users	Reference to selling user
+
+events
+Physical marketplace events organized by admins where sellers can exhibit and sell bicycles.
+
+Column Name	Data Type	Constraints	Description
+event_id	integer	PK	Unique event identifier
+name	varchar		Event name
+type	varchar		Event type
+bike_type	varchar		Featured bicycle type
+location	varchar		Venue name
+address	varchar		Physical address
+latitude	double		GPS latitude
+longitude	double		GPS longitude
+status	varchar		Event status: DRAFT, PUBLISHED, ONGOING, COMPLETED
+create_date	date		Creation date
+public_date	date		Date event becomes publicly visible
+start_date	date		Event start date
+end_date	date		Event end date
+update_date	date		Last update date
+create_by	integer	FK -> users	Admin user who created the event
+
+event_bicycle
+Bicycles registered by sellers to be exhibited and sold at a specific event.
+
+Column Name	Data Type	Constraints	Description
+event_bike_id	integer	PK	Unique event-bicycle entry ID
+title	varchar		Display title at event
+bike_type	varchar		Bicycle type
+type	varchar		Entry type
+seller_name	varchar		Seller display name
+price	double		Listed price at event
+condition	varchar		Condition at time of event
+image_url	varchar		Image URL
+status	varchar		Status: PENDING, APPROVED, SOLD, CANCELLED
+create_date	date		Registration date
+update_date	date		Last update date
+event_id	integer	FK -> events	Reference to parent event
+listing_id	integer	FK -> bike_listing	Reference to the original listing
+bike_id	integer	FK -> bicycle	Reference to bicycle asset
+user_id	integer	FK -> users	Reference to seller
+
+event_inspector
+Assigns inspectors to events; tracks which inspectors are available at each event.
+
+Column Name	Data Type	Constraints	Description
+inspec_id	integer	PK	Unique assignment identifier
+status	varchar		Assignment status
+create_date	timestamp		Assignment creation timestamp
+event_id	integer	FK -> events	Reference to event
+user_id	integer	FK -> users	Reference to inspector user
+
+deposit
+Tracks deposit payments made by buyers to reserve a bicycle listing or event bicycle.
+
+Column Name	Data Type	Constraints	Description
+deposit_id	integer	PK	Unique deposit identifier
+amount	double	NOT NULL	Deposit amount (VND)
+type	varchar		Deposit type: LISTING or EVENT
+status	varchar		Status: PENDING, PAID, REFUNDED, FORFEITED
+created_at	timestamp		Creation timestamp
+listing_id	integer	FK -> bike_listing	Reference to listing (if non-event)
+event_bike_id	integer	FK -> event_bicycle	Reference to event bicycle (if event)
+user_id	integer	FK -> users	Reference to depositing buyer
+
+reservation
+Represents a confirmed reservation between a buyer and seller, including meeting logistics and inspector assignment.
+
+Column Name	Data Type	Constraints	Description
+reservation_id	integer	PK	Unique reservation identifier
+status	varchar		Status: PENDING, CONFIRMED, COMPLETED, CANCELLED
+deposit_amount	double		Deposit amount at time of reservation
+meeting_location	varchar		Agreed meeting location description
+meeting_time	timestamp		Scheduled meeting date and time
+latitude	double		Meeting point GPS latitude
+longitude	double		Meeting point GPS longitude
+cancel_description	varchar		Reason for cancellation
+cancel_image	varchar		Evidence image URL for cancellation
+reserved_at	timestamp		Reservation creation timestamp
+buyer_id	integer	FK -> users	Reference to buyer
+inspector_id	integer	FK -> users	Assigned inspector
+listing_id	integer	FK -> bike_listing	Reference to listing
+event_bike_id	integer	FK -> event_bicycle	Reference to event bicycle
+deposit_id	integer	FK -> deposit, UNIQUE	Reference to deposit
+
+check_in
+Records the physical check-in event when buyer and seller meet to complete the transaction.
+
+Column Name	Data Type	Constraints	Description
+check_in_id	integer	PK	Unique check-in record ID
+buyer_name	varchar		Buyer name at time of check-in
+buyer_phone	varchar		Buyer phone at time of check-in
+seller_name	varchar		Seller name at time of check-in
+seller_phone	varchar		Seller phone at time of check-in
+token	varchar		Verification token used for check-in
+status	varchar		Check-in status
+buyer_id	integer	FK -> users	Reference to buyer
+seller_id	integer	FK -> users	Reference to seller
+reservation_id	integer	FK -> reservation	Reference to reservation
+event_bike_id	integer	FK -> event_bicycle	Reference to event bicycle
+listing_id	integer	FK -> bike_listing	Reference to listing
+
+transaction
+Records the final financial transaction when a bicycle sale is completed.
+
+Column Name	Data Type	Constraints	Description
+transaction_id	integer	PK	Unique transaction identifier
+actual_price	double	NOT NULL	Final agreed sale price
+amount	double	NOT NULL	Amount transferred
+fee	double	NOT NULL	Platform service fee
+type	varchar		Transaction type: LISTING or EVENT
+status	varchar		Status: PENDING, COMPLETED, CANCELLED, REFUNDED
+description	varchar		Transaction description
+create_at	timestamp		Creation timestamp
+update_at	timestamp		Last update timestamp
+buyer_id	integer	FK -> users	Reference to buyer
+seller_id	integer	FK -> users	Reference to seller
+listing_id	integer	FK -> bike_listing	Reference to listing
+event_id	integer	FK -> events	Reference to event
+event_bike_id	integer	FK -> event_bicycle	Reference to event bicycle
+deposit_id	integer	FK -> deposit, UNIQUE	Reference to deposit
+reservation_id	integer	FK -> reservation, UNIQUE	Reference to reservation
+
+dispute
+Tracks disputes raised by buyers or sellers on a completed or in-progress transaction.
+
+Column Name	Data Type	Constraints	Description
+dispute_id	integer	PK	Unique dispute identifier
+reason	varchar		Free-text reason for dispute
+reason_category	varchar	CHECK	Category: MISDESCRIPTION, NON_DELIVERY, BUYER_DEFAULT, DAMAGE_ON_DELIVERY, PAYMENT_ISSUE, CANCELLATION, OTHER
+status	varchar		Status: OPEN, UNDER_REVIEW, RESOLVED, CLOSED
+created_at	timestamp		Dispute creation timestamp
+raised_by	integer	FK -> users	User who raised the dispute
+assigned_inspector_id	integer	FK -> users	Inspector assigned to resolve the dispute
+transaction_id	integer	FK -> transaction, UNIQUE	Reference to disputed transaction
+
+inspection_report
+Inspection reports submitted by inspectors after evaluating a bicycle during a reservation or dispute.
+
+Column Name	Data Type	Constraints	Description
+report_id	integer	PK	Unique report identifier
+result	varchar		Inspection result: PASS, FAIL, CONDITIONAL
+checklist_items	text		JSON checklist of inspection items and results
+note	varchar		Inspector notes
+reason	varchar		Reason for result
+created_at	timestamp		Report creation timestamp
+inspector_id	integer	FK -> users	Inspector who submitted the report
+reservation_id	integer	FK -> reservation	Reference to reservation
+dispute_id	integer	FK -> dispute, UNIQUE	Reference to dispute (if dispute-related)
+
+wallet
+Each user has one wallet for holding platform balance used in transactions and deposits.
+
+Column Name	Data Type	Constraints	Description
+wallet_id	integer	PK	Unique wallet identifier
+balance	double	NOT NULL	Current balance (VND)
+username	varchar		Denormalized username for display
+type	varchar		Wallet type
+updated_at	timestamp		Last balance update timestamp
+user_id	integer	FK -> users, UNIQUE	Reference to owner (one-to-one)
+
+wallet_transaction
+Ledger of all wallet balance changes — deposits, withdrawals, refunds, and fee deductions.
+
+Column Name	Data Type	Constraints	Description
+wallet_trans_id	integer	PK	Unique wallet transaction ID
+amount	double	NOT NULL	Transaction amount (VND)
+type	varchar		Type: DEPOSIT, WITHDRAWAL, REFUND, FEE, TRANSFER
+description	varchar		Transaction description
+balance	double		Wallet balance after this transaction
+create_at	timestamp		Creation timestamp
+wallet_id	integer	FK -> wallet	Reference to wallet
+
+wishlist
+Users can save listings to their wishlist for future reference.
+
+Column Name	Data Type	Constraints	Description
+wishlist_id	integer	PK	Unique wishlist entry ID
+listing_id	integer	FK -> bike_listing	Reference to saved listing
+user_id	integer	FK -> users	Reference to user
+
+system_config
+Key-value store for platform-wide configuration parameters such as fee rates and deposit rules.
+
+Column Name	Data Type	Constraints	Description
+config_id	integer	PK	Unique config entry ID
+key	varchar		Configuration key name
+value	double	NOT NULL	Configuration numeric value
+description	varchar		Human-readable description of the config
+
+invalidate_token
+Blacklist of invalidated JWT tokens used to enforce logout and token revocation.
+
+Column Name	Data Type	Constraints	Description
+id	varchar	PK	JWT token string (primary key)
+expiry_date	timestamp		Token expiry timestamp for cleanup
+
+5. Naming Conventions & Standards
+The schema follows these consistent conventions:
+
+Convention	Rule / Example
+Primary Keys	All PKs are named <table_singular>_id (e.g. user_id, listing_id)
+Foreign Keys	FK columns mirror the PK name of the referenced table
+Timestamps	created_at / create_at for creation; updated_at / update_at for updates
+Status fields	varchar ENUM-like columns (ACTIVE, PENDING, COMPLETED, CANCELLED, etc.)
+Table naming	Lowercase snake_case (bike_listing, wallet_transaction)
+Column naming	Lowercase snake_case (full_name, year_manufacture)
+Unique FKs	UNIQUE constraint on FK = enforces 1-to-1 relationship
+Double precision	Used for all monetary amounts and GPS coordinates
+
+Generated from Supabase schema export  |  BicycleExchange SP26SWP06  |  March 2026
+
+Here's the full relationship description you can copy:
+
+BicycleExchange — Table Relationship Description
+
+1. users (Central Hub)
+users is the most connected table in the schema. Almost every table references it directly.
+
+users → wallet (1:1) — Each user owns exactly one wallet. wallet.user_id is UNIQUE, enforcing the one-to-one constraint.
+users → bike_listing (1:N) — A user acting as a seller can post many listings. bike_listing.seller_id → users.user_id.
+users → events (1:N) — An admin user can create many events. events.create_by → users.user_id.
+users → event_bicycle (1:N) — A seller registers their bicycles into events. event_bicycle.user_id → users.user_id.
+users → event_inspector (1:N) — An inspector user can be assigned to many events. event_inspector.user_id → users.user_id.
+users → reservation (1:N, twice) — A user appears as buyer_id (buyer side) and as inspector_id (assigned inspector) in the same reservation table.
+users → check_in (1:N, twice) — A user appears as both buyer_id and seller_id in the check-in record.
+users → transaction (1:N, twice) — A user appears as both buyer_id and seller_id in a transaction.
+users → deposit (1:N) — A buyer user makes deposits. deposit.user_id → users.user_id.
+users → dispute (1:N, twice) — A user can raise a dispute (raised_by) and also be the assigned inspector (assigned_inspector_id).
+users → inspection_report (1:N) — An inspector submits reports. inspection_report.inspector_id → users.user_id.
+users → wishlist (1:N) — A user can save many listings to their wishlist.
+
+
+2. Bicycle Catalog Group
+
+brand → bicycle (1:N) — A brand can have many bicycles. bicycle.brand_id → brand.brand_id.
+category → bicycle (1:N) — A category classifies many bicycles. bicycle.category_id → category.category_id.
+brand → bicycle_library (1:N) — A brand also appears in the reference library. bicycle_library.brand_id → brand.brand_id.
+category → bicycle_library (1:N) — A category also classifies library entries. bicycle_library.category_id → category.category_id.
+bicycle → bike_listing (1:1) — One bicycle asset backs exactly one listing. bike_listing.bicycle_id is UNIQUE.
+bicycle → event_bicycle (1:N) — The same physical bicycle can be registered in multiple events over time. event_bicycle.bike_id → bicycle.bike_id.
+
+
+bicycle_library is a standalone reference/lookup table — it does not participate in the transaction lifecycle. It exists purely to help users auto-fill bicycle specs when creating listings.
+
+
+3. Listing & Wishlist Group
+
+bike_listing → wishlist (1:N) — A listing can be saved by many users. wishlist.listing_id → bike_listing.listing_id.
+bike_listing → reservation (1:N) — A listing can receive multiple reservation requests (though only one should be active at a time). reservation.listing_id → bike_listing.listing_id.
+bike_listing → deposit (1:N) — Deposits are tied to a listing for non-event purchases. deposit.listing_id → bike_listing.listing_id.
+bike_listing → event_bicycle (1:N) — A listing can be brought into multiple events. event_bicycle.listing_id → bike_listing.listing_id.
+bike_listing → check_in (1:N) — Check-in records reference the listing being transacted. check_in.listing_id → bike_listing.listing_id.
+bike_listing → transaction (1:N) — Completed transactions reference the original listing. transaction.listing_id → bike_listing.listing_id.
+
+
+4. Events Group
+
+events → event_bicycle (1:N) — An event hosts many bicycles registered by sellers. event_bicycle.event_id → events.event_id.
+events → event_inspector (1:N) — An event has multiple inspectors assigned to it. event_inspector.event_id → events.event_id.
+events → transaction (1:N) — Transactions completed at an event reference the event. transaction.event_id → events.event_id.
+event_bicycle → reservation (1:N) — A bicycle at an event can be reserved by a buyer. reservation.event_bike_id → event_bicycle.event_bike_id.
+event_bicycle → deposit (1:N) — Deposits for event bicycles reference event_bicycle. deposit.event_bike_id → event_bicycle.event_bike_id.
+event_bicycle → check_in (1:N) — Check-ins can be linked to an event bicycle. check_in.event_bike_id → event_bicycle.event_bike_id.
+event_bicycle → transaction (1:N) — Event-based transactions reference the event bicycle. transaction.event_bike_id → event_bicycle.event_bike_id.
+
+
+5. Transaction Lifecycle (Core Flow)
+This is the most critical chain in the entire schema. A sale flows through these tables in order:
+bike_listing / event_bicycle
+        ↓
+     deposit  ←── created when buyer expresses intent
+        ↓
+   reservation ←── confirmed meeting between buyer & seller
+        ↓
+    check_in   ←── both parties physically meet
+        ↓
+  transaction  ←── sale is finalized
+        ↓
+    dispute    ←── (optional) raised if something goes wrong
+        ↓
+inspection_report ←── (optional) inspector evaluates the case
+Detailed relationships:
+
+deposit → reservation (1:1) — A deposit is linked to exactly one reservation. reservation.deposit_id is UNIQUE.
+deposit → transaction (1:1) — A deposit is consumed by exactly one transaction. transaction.deposit_id is UNIQUE.
+reservation → transaction (1:1) — Each completed reservation produces exactly one transaction. transaction.reservation_id is UNIQUE.
+reservation → check_in (1:N) — A reservation can have check-in records associated with it.
+reservation → inspection_report (1:N) — An inspector can file reports against a reservation.
+transaction → dispute (1:1) — A transaction can have at most one dispute raised against it. dispute.transaction_id is UNIQUE.
+dispute → inspection_report (1:1) — A dispute can have one inspection report resolving it. inspection_report.dispute_id is UNIQUE.
+
+
+6. Wallet Group
+
+users → wallet (1:1) — Strictly one wallet per user.
+wallet → wallet_transaction (1:N) — Every balance change (top-up, withdrawal, fee, refund) is recorded as a wallet_transaction. wallet_transaction.wallet_id → wallet.wallet_id.
+
+
+7. Platform Management (Standalone Tables)
+
+system_config — No foreign keys in or out. Stores global platform settings like deposit percentage rates, service fee rates, etc. Read-only by the application at runtime.
+invalidate_token — No foreign keys. Stores revoked JWT tokens as a blacklist. The application checks this table on every authenticated request.
+
+
+Summary Diagram (Text)
+brand ──┐
+        ├──> bicycle ──> bike_listing ──> wishlist
+category┘         │              │
+                  │              ├──> reservation ──> transaction ──> dispute
+bicycle_library   │              │         │               │               │
+(standalone)      │              │       deposit        check_in    inspection_report
+                  │              │                                         │
+                  └──> event_bicycle ──> events ──> event_inspector        │
+                                 │                                         │
+                                 └──────────────────────────────── (also refs dispute)
+
+users ──────────────────────────────────────────────────────────────────────────
+  (connected to: wallet, bike_listing, events, event_bicycle, event_inspector,
+   reservation×2, check_in×2, transaction×2, deposit, dispute×2,
+   inspection_report, wishlist)
+
+wallet ──> wallet_transaction
+
+system_config    (standalone)
+invalidate_token (standalone)
+
+BicycleExchange
+Field-Level Data Dictionary
+Describes the purpose and function of every field in all 20 tables  |  March 2026
+
+Introduction
+This document provides a field-level data dictionary for the BicycleExchange database. For each of the 20 tables, every column is documented with its data type, key/constraint status, and a detailed description of its business function — what it stores, why it exists, and how it is used by the application.
+
+Group 1: User & Authentication
+1. users
+Central user account table. Every actor on the platform — buyer, seller, inspector, and admin — has a record here. The role field determines what actions a user is permitted to perform.
+
+Field Name	Data Type	Key / Constraint	Field Function & Description
+user_id	integer	PK	Auto-incremented unique identifier for each user. Used as the primary reference key across all tables that involve a user.
+username	varchar		The unique login handle chosen by the user. Used for authentication and display purposes.
+password	varchar		Stores the bcrypt-hashed password. Never stored in plain text. Used during credential-based login.
+full_name	varchar		The user's real full name as registered. Displayed on listings, reservations, and check-in records.
+phone	varchar		Contact phone number. Used for buyer-seller communication coordination and check-in verification.
+email	varchar		Email address used for account registration, notifications, and password recovery.
+role	varchar		Defines the user's permission level on the platform. Accepted values: BUYER, SELLER, INSPECTOR, ADMIN. Controls what features and endpoints the user can access.
+status	varchar		Current account status. Accepted values: ACTIVE (normal), INACTIVE (self-deactivated), BANNED (admin-suspended). Controls login eligibility.
+address	varchar		Physical address of the user. Used for profile display and optionally for logistics.
+avatar	varchar		URL pointing to the user's profile picture stored in object storage. Displayed throughout the UI.
+google_id	varchar		Google OAuth2 subject ID. Populated when user registers or logs in via Google Sign-In. NULL for credential-only accounts.
+created_at	date		Date the account was first created. Used for analytics and audit purposes.
+create_date	date		Alternative creation date field. May reflect the date the profile was completed as opposed to initial registration.
+
+2. wallet
+Each user has exactly one wallet record. The wallet holds the user's platform balance which is used to pay deposits, receive sale proceeds, and pay/receive refunds.
+
+Field Name	Data Type	Key / Constraint	Field Function & Description
+wallet_id	integer	PK	Unique identifier for the wallet record.
+balance	double	NOT NULL	Current available balance in VND. Updated atomically whenever a wallet_transaction is recorded. This is the authoritative balance figure.
+username	varchar		Denormalized copy of the owner's username. Stored here for fast display without joining to users.
+type	varchar		Wallet type indicator. Distinguishes between USER wallets and the platform's own SYSTEM wallet used to hold service fees.
+updated_at	timestamp		Timestamp of the last balance change. Used to detect stale data and for audit trails.
+user_id	integer	FK, UNIQUE	References users.user_id. The UNIQUE constraint enforces the 1-to-1 relationship — each user can have only one wallet.
+
+3. wallet_transaction
+Immutable ledger of every balance movement in every wallet. Each row represents one atomic change — a top-up, withdrawal, fee deduction, refund, or transfer. The running balance is stored for quick balance reconstruction.
+
+Field Name	Data Type	Key / Constraint	Field Function & Description
+wallet_trans_id	integer	PK	Unique identifier for the ledger entry.
+amount	double	NOT NULL	The monetary amount involved in this transaction (VND). Always a positive number; the type field determines direction.
+type	varchar		Direction and reason for the balance change. Values: DEPOSIT (top-up), WITHDRAWAL, REFUND, FEE (platform fee deducted), TRANSFER (peer payment).
+description	varchar		Human-readable explanation of this entry, e.g. 'Deposit for listing #42' or 'Platform fee for sale #7'.
+balance	double		Wallet balance immediately after this transaction was applied. Enables balance reconstruction without summing all rows.
+create_at	timestamp		Exact timestamp this entry was created. Used for chronological ledger display and auditing.
+wallet_id	integer	FK	References wallet.wallet_id. Identifies which wallet this entry belongs to.
+
+4. invalidate_token
+JWT token blacklist. When a user logs out or a token is revoked, the token string is inserted here. The authentication middleware checks this table on every request to reject invalidated tokens before they naturally expire.
+
+Field Name	Data Type	Key / Constraint	Field Function & Description
+id	varchar	PK	The raw JWT token string used as the primary key. Allows O(1) lookup by the auth middleware to determine if a token has been revoked.
+expiry_date	timestamp		The token's original expiry timestamp. A background cleanup job uses this to purge rows that are already past expiry, keeping the table small.
+
+Group 2: Bicycle Catalog
+5. brand
+Simple reference table for bicycle manufacturers. Normalized to avoid duplicating brand names across listings and to enable brand-based filtering.
+
+Field Name	Data Type	Key / Constraint	Field Function & Description
+brand_id	integer	PK	Unique identifier for the brand.
+name	varchar		Brand name (e.g. Trek, Giant, Specialized, Merida). Displayed on listing pages and used as a search/filter dimension.
+
+6. category
+Reference table for bicycle categories. Enables consistent classification of bicycles for browsing, filtering, and event organization.
+
+Field Name	Data Type	Key / Constraint	Field Function & Description
+category_id	integer	PK	Unique identifier for the category.
+name	varchar		Category display name shown to users (e.g. Road Bike, Mountain Bike, Folding Bike).
+bicycle_type	varchar		Machine-readable bicycle type code used internally for filtering and event bike_type matching.
+
+7. bicycle
+Stores the complete technical specification of each physical bicycle registered on the platform. One bicycle asset = one row. This table is the source of truth for what the bike actually is, independent of its listing status.
+
+Field Name	Data Type	Key / Constraint	Field Function & Description
+bike_id	integer	PK	Unique identifier for the bicycle asset.
+bike_type	varchar		Category of bicycle: Road, Mountain (MTB), Hybrid, Folding, BMX, etc.
+brake_type	varchar		Brake system: Rim, Disc Hydraulic, Disc Mechanical, V-Brake, Coaster, etc.
+color	varchar		Primary color of the bicycle frame. Used for display and buyer filtering.
+drivetrain	varchar		Drivetrain configuration: Single Speed, 1x, 2x, 3x, or specific groupset name.
+fork_type	varchar		Fork classification: Rigid, Suspension (travel in mm), Carbon, etc.
+frame_material	varchar		Material the frame is made of: Aluminum, Carbon Fiber, Steel, Titanium, Chromoly.
+frame_size	varchar		Frame size in cm or S/M/L/XL notation. Critical for buyer fit.
+number_of_gears	varchar	NOT NULL	Total number of gear combinations (e.g. 21, 18, 1 for single speed). Required field for all listings.
+wheel_size	varchar		Wheel diameter in inches or mm (e.g. 26", 27.5", 700c, 29"). Important for compatibility.
+year_manufacture	integer	NOT NULL	Year the bicycle was manufactured. Required. Used to calculate age and affects pricing suggestions.
+chain	varchar		Chain brand and spec (e.g. KMC X11, Shimano CN-HG601). Indicates drivetrain compatibility.
+chainring	varchar		Chainring tooth count or brand/model (e.g. 50/34T, FSA Gossamer). Indicates gearing.
+fork	varchar		Specific fork brand/model name (e.g. Fox 32 Rhythm, RockShox Judy). More detailed than fork_type.
+handlebar	varchar		Handlebar type and spec: Drop Bar, Flat Bar, Riser Bar, brand/model name.
+rim	varchar		Rim brand and model (e.g. Mavic Open Pro, DT Swiss R470). Indicates wheel quality.
+saddle	varchar		Saddle brand and model (e.g. Selle Italia X1, Fizik Aliante). Affects comfort assessment.
+shock_absorber	varchar		Rear shock details for full-suspension bikes (e.g. Fox Float DPS, RockShox Monarch). NULL for hardtails.
+weight	double		Total bicycle weight in kilograms. Important buying consideration for road and performance bikes.
+bike_condition	integer		Numeric condition score (e.g. 1–10 or 1–5 scale). Set by seller or inspector; affects listing visibility and price.
+brand_id	integer	FK -> brand	References brand.brand_id. Associates this bicycle with a manufacturer brand.
+category_id	integer	FK -> category	References category.category_id. Classifies this bicycle into a browsable category.
+
+8. bicycle_library
+A curated reference library of standard bicycle models. Used as an auto-fill source when sellers create new listings — they can pick a model from this library and have the spec fields pre-populated, reducing data entry errors.
+
+Field Name	Data Type	Key / Constraint	Field Function & Description
+id	integer	PK	Unique identifier for the library entry.
+model	varchar		Official model name of the bicycle (e.g. Trek Domane SL 6, Giant TCR Advanced 1). The primary search field in this table.
+bike_type	varchar		Bicycle category type for this model.
+brake_type	varchar		Factory default brake system for this model.
+color	varchar		Standard colorway(s) available for this model.
+drivetrain	varchar		Stock drivetrain configuration.
+fork_type	varchar		Stock fork type.
+frame_material	varchar		Frame material as shipped from the factory.
+frame_size	varchar		Available frame sizes for this model.
+number_of_gears	varchar		Stock gear count.
+wheel_size	varchar		Stock wheel size.
+year_manufacture	integer	NOT NULL	Model year this library entry represents. Required to differentiate between annual revisions of the same model.
+chain	varchar		Stock chain spec.
+chainring	varchar		Stock chainring spec.
+fork	varchar		Stock fork brand/model.
+handlebar	varchar		Stock handlebar type.
+rim	varchar		Stock rim brand/model.
+saddle	varchar		Stock saddle brand/model.
+shock_absorber	varchar		Stock rear shock (if applicable).
+weight	double		Official manufacturer-stated weight in kg.
+brand_id	integer	FK -> brand	References brand.brand_id. Associates this library entry with a manufacturer.
+category_id	integer	FK -> category	References category.category_id. Classifies this model.
+
+Group 3: Listings & Wishlist
+9. bike_listing
+The marketplace listing created by a seller to advertise a bicycle for sale. A listing wraps a bicycle asset with commercial details (price, description, images) and a lifecycle status. The core entity of the online marketplace.
+
+Field Name	Data Type	Key / Constraint	Field Function & Description
+listing_id	integer	PK	Unique identifier for the listing.
+title	varchar		Seller-written headline for the listing (e.g. '2021 Trek Emonda SL 5 - Excellent Condition'). The primary text shown in search results.
+description	varchar		Detailed free-text description written by the seller. Covers condition, history, included accessories, reason for selling, etc.
+image_url	varchar		URL of the primary listing photo. May be a comma-separated list or a JSON array if multiple images are supported.
+price	double	NOT NULL	Asking price in VND set by the seller. Required. Displayed prominently and used as the basis for deposit calculation.
+condition	varchar		Seller-stated condition label: NEW, LIKE NEW, GOOD, FAIR, POOR. Supplements the numeric bike_condition score.
+status	varchar		Listing lifecycle status: AVAILABLE (open for offers), RESERVED (deposit paid, pending transaction), SOLD (completed), CLOSED (delisted by seller).
+created_at	timestamp		Timestamp when the listing was first published.
+updated_at	timestamp		Timestamp of the most recent edit to listing details.
+bicycle_id	integer	FK, UNIQUE	References bicycle.bike_id. The UNIQUE constraint means one bicycle can only have one active listing at a time.
+seller_id	integer	FK -> users	References users.user_id. Identifies the seller who owns and is responsible for this listing.
+
+10. wishlist
+Records which listings a user has saved/favorited. Enables buyers to track bicycles they are interested in without committing to a reservation.
+
+Field Name	Data Type	Key / Constraint	Field Function & Description
+wishlist_id	integer	PK	Unique identifier for the wishlist entry.
+listing_id	integer	FK -> bike_listing	References bike_listing.listing_id. The listing that was saved.
+user_id	integer	FK -> users	References users.user_id. The user who saved this listing.
+
+Group 4: Events
+11. events
+Physical bicycle marketplace events organized by platform admins. Events provide a venue where multiple sellers exhibit their bicycles simultaneously and buyers can inspect them in person before purchasing.
+
+Field Name	Data Type	Key / Constraint	Field Function & Description
+event_id	integer	PK	Unique identifier for the event.
+name	varchar		Public-facing event name (e.g. 'HCM Bike Fair – Q1 2026'). Displayed in event listings.
+type	varchar		Event format type, e.g. OPEN_MARKET, AUCTION, EXHIBITION. Controls event workflow.
+bike_type	varchar		The primary bicycle category the event focuses on (e.g. Road, MTB, All). Used for buyer targeting.
+location	varchar		Venue name or landmark description (e.g. 'Tao Dan Park, District 1').
+address	varchar		Full street address of the event venue.
+latitude	double		GPS latitude of the venue. Used to render the event on a map.
+longitude	double		GPS longitude of the venue. Used to render the event on a map.
+status	varchar		Event lifecycle status: DRAFT (being prepared), PUBLISHED (visible to public), ONGOING (currently happening), COMPLETED, CANCELLED.
+create_date	date		Date the event record was created by the admin.
+public_date	date		Date the event becomes visible to sellers and buyers on the platform. Allows advance scheduling.
+start_date	date		Official start date of the physical event.
+end_date	date		Official end date of the physical event.
+update_date	date		Date of the last modification to the event record.
+create_by	integer	FK -> users	References users.user_id of the admin who created this event. Establishes accountability.
+
+12. event_bicycle
+Represents a bicycle that a seller has registered to exhibit and sell at a specific event. A bridge between a seller's existing listing and an event, with event-specific pricing and status.
+
+Field Name	Data Type	Key / Constraint	Field Function & Description
+event_bike_id	integer	PK	Unique identifier for this event-bicycle registration.
+title	varchar		Display title for this bicycle at the event. May differ from the original listing title.
+bike_type	varchar		Bicycle type, copied from the listing for quick filtering at the event level.
+type	varchar		Entry type, e.g. SALE (available for purchase), DISPLAY (exhibition only).
+seller_name	varchar		Seller's display name, denormalized here for quick rendering on event booth displays.
+price	double		Event-specific asking price. May differ from the original listing price — sellers can set a special event price.
+condition	varchar		Condition label at the time of event registration.
+image_url	varchar		Primary image URL for display at the event.
+status	varchar		Registration status: PENDING (awaiting admin approval), APPROVED, REJECTED, SOLD, CANCELLED.
+create_date	date		Date the seller submitted this registration.
+update_date	date		Date the registration was last updated.
+event_id	integer	FK -> events	References events.event_id. Identifies which event this bicycle is registered for.
+listing_id	integer	FK -> bike_listing	References bike_listing.listing_id. Links back to the original online listing.
+bike_id	integer	FK -> bicycle	References bicycle.bike_id. Direct link to the physical bicycle asset.
+user_id	integer	FK -> users	References users.user_id. The seller who registered this bicycle for the event.
+
+13. event_inspector
+Manages inspector assignments to events. Inspectors assigned here are available at the event venue to evaluate bicycles during check-in and resolve disputes on-site.
+
+Field Name	Data Type	Key / Constraint	Field Function & Description
+inspec_id	integer	PK	Unique identifier for this inspector assignment.
+status	varchar		Assignment status: PENDING (invited), CONFIRMED (accepted), DECLINED, COMPLETED.
+create_date	timestamp		Timestamp when the assignment was created.
+event_id	integer	FK -> events	References events.event_id. The event this inspector is assigned to.
+user_id	integer	FK -> users	References users.user_id of the inspector. The user must have role = INSPECTOR.
+
+Group 5: Transaction Lifecycle
+14. deposit
+Records a deposit payment made by a buyer to express serious intent to purchase. The deposit locks the listing or event bicycle and triggers the reservation process. It can later be applied to the final sale, refunded (if seller cancels), or forfeited (if buyer cancels).
+
+Field Name	Data Type	Key / Constraint	Field Function & Description
+deposit_id	integer	PK	Unique identifier for this deposit record.
+amount	double	NOT NULL	Deposit amount in VND. Typically a percentage of the asking price, defined by system_config.
+type	varchar		Deposit context: LISTING (for a direct marketplace purchase) or EVENT (for a purchase at an event).
+status	varchar		Current state: PENDING (initiated), PAID (funds held), APPLIED (used in final transaction), REFUNDED (returned to buyer), FORFEITED (transferred to seller).
+created_at	timestamp		Timestamp when the deposit was initiated.
+listing_id	integer	FK -> bike_listing	References bike_listing.listing_id. Populated for non-event deposits. NULL for event deposits.
+event_bike_id	integer	FK -> event_bicycle	References event_bicycle.event_bike_id. Populated for event deposits. NULL for listing deposits.
+user_id	integer	FK -> users	References users.user_id. The buyer who made this deposit.
+
+15. reservation
+A confirmed meeting arrangement between buyer and seller. Created after a deposit is paid. Captures all logistics of the in-person meeting including location, time, and assigned inspector.
+
+Field Name	Data Type	Key / Constraint	Field Function & Description
+reservation_id	integer	PK	Unique identifier for the reservation.
+status	varchar		Reservation lifecycle: PENDING (waiting for confirmation), CONFIRMED (both parties agreed), COMPLETED (meeting happened), CANCELLED.
+deposit_amount	double		Snapshot of the deposit amount at the time of reservation creation. Preserved for record even if deposit record changes.
+meeting_location	varchar		Text description of the agreed meeting location, e.g. '1st floor, Landmark 81, Binh Thanh'.
+meeting_time	timestamp		Scheduled date and time for the buyer-seller meeting.
+latitude	double		GPS latitude of the meeting point. Enables map display of the meeting location.
+longitude	double		GPS longitude of the meeting point.
+cancel_description	varchar		Free-text explanation provided when a reservation is cancelled. Required on cancellation.
+cancel_image	varchar		URL of an uploaded evidence image supporting the cancellation reason.
+reserved_at	timestamp		Timestamp when the reservation was first created.
+buyer_id	integer	FK -> users	References users.user_id. The buyer who initiated this reservation.
+inspector_id	integer	FK -> users	References users.user_id of the assigned inspector. The inspector who will be present at the meeting to verify the bicycle.
+listing_id	integer	FK -> bike_listing	References bike_listing.listing_id. The listing this reservation is for (for non-event purchases).
+event_bike_id	integer	FK -> event_bicycle	References event_bicycle.event_bike_id. The event bicycle this reservation is for (for event purchases).
+deposit_id	integer	FK, UNIQUE	References deposit.deposit_id. The UNIQUE constraint enforces 1-to-1: one reservation = one deposit.
+
+16. check_in
+Records the physical verification event when buyer and seller arrive at the agreed meeting point. The inspector verifies identities using a shared token before the sale proceeds.
+
+Field Name	Data Type	Key / Constraint	Field Function & Description
+check_in_id	integer	PK	Unique identifier for this check-in record.
+buyer_name	varchar		Buyer's name as verified at check-in time. Snapshotted for audit purposes.
+buyer_phone	varchar		Buyer's phone number verified at check-in.
+seller_name	varchar		Seller's name as verified at check-in time.
+seller_phone	varchar		Seller's phone number verified at check-in.
+token	varchar		One-time verification token generated for this meeting. Both buyer and seller must present this token to the inspector to confirm their identities.
+status	varchar		Check-in status: PENDING, BUYER_CHECKED (buyer arrived), COMPLETED (both arrived), FAILED (one party no-showed).
+buyer_id	integer	FK -> users	References users.user_id. The buyer participating in this check-in.
+seller_id	integer	FK -> users	References users.user_id. The seller participating in this check-in.
+reservation_id	integer	FK -> reservation	References reservation.reservation_id. The reservation this check-in belongs to.
+event_bike_id	integer	FK -> event_bicycle	References event_bicycle.event_bike_id. The event bicycle being checked in (for event transactions).
+listing_id	integer	FK -> bike_listing	References bike_listing.listing_id. The listing being checked in (for non-event transactions).
+
+17. transaction
+The final financial record of a completed bicycle sale. Created when both buyer and seller confirm the check-in and the inspector approves the bicycle. The platform fee is deducted and proceeds are released to the seller's wallet.
+
+Field Name	Data Type	Key / Constraint	Field Function & Description
+transaction_id	integer	PK	Unique identifier for the transaction.
+actual_price	double	NOT NULL	The final agreed sale price in VND. May differ from the original listing price if negotiated.
+amount	double	NOT NULL	Amount transferred from buyer's wallet to seller's wallet (actual_price minus fee).
+fee	double	NOT NULL	Platform service fee deducted from the transaction amount. Calculated based on system_config fee rate.
+type	varchar		Transaction context: LISTING (direct online sale) or EVENT (sale at a physical event).
+status	varchar		Transaction status: PENDING, COMPLETED, CANCELLED, REFUNDED.
+description	varchar		Auto-generated or manually set description summarizing the transaction.
+create_at	timestamp		Timestamp when the transaction was initiated.
+update_at	timestamp		Timestamp of the most recent status update.
+buyer_id	integer	FK -> users	References users.user_id. The buyer in this transaction.
+seller_id	integer	FK -> users	References users.user_id. The seller receiving payment.
+listing_id	integer	FK -> bike_listing	References bike_listing.listing_id. The listing that was sold.
+event_id	integer	FK -> events	References events.event_id. The event where the sale occurred (NULL for non-event sales).
+event_bike_id	integer	FK -> event_bicycle	References event_bicycle.event_bike_id. The event bicycle record (NULL for non-event sales).
+deposit_id	integer	FK, UNIQUE	References deposit.deposit_id. UNIQUE — links this transaction to the deposit that initiated the process.
+reservation_id	integer	FK, UNIQUE	References reservation.reservation_id. UNIQUE — one transaction per reservation.
+
+18. dispute
+Records a formal dispute raised by either the buyer or seller against a transaction. An inspector is assigned to investigate and resolve the issue. Disputes can result in refunds, forfeitures, or confirmation of the original transaction.
+
+Field Name	Data Type	Key / Constraint	Field Function & Description
+dispute_id	integer	PK	Unique identifier for the dispute.
+reason	varchar		Free-text explanation written by the user who raised the dispute describing what went wrong.
+reason_category	varchar	CHECK	Standardized category of the dispute issue. Allowed values: MISDESCRIPTION, NON_DELIVERY, BUYER_DEFAULT, DAMAGE_ON_DELIVERY, PAYMENT_ISSUE, CANCELLATION, OTHER. The CHECK constraint enforces this enum.
+status	varchar		Dispute resolution status: OPEN (just raised), UNDER_REVIEW (inspector assigned), RESOLVED (decision made), CLOSED.
+created_at	timestamp		Timestamp when the dispute was raised.
+raised_by	integer	FK -> users	References users.user_id. The user (buyer or seller) who initiated the dispute.
+assigned_inspector_id	integer	FK -> users	References users.user_id of the inspector assigned to investigate and resolve this dispute.
+transaction_id	integer	FK, UNIQUE	References transaction.transaction_id. UNIQUE — each transaction can have at most one dispute.
+
+19. inspection_report
+The formal evaluation report submitted by an inspector. Can be filed during a reservation (pre-sale bicycle check) or as part of a dispute resolution investigation.
+
+Field Name	Data Type	Key / Constraint	Field Function & Description
+report_id	integer	PK	Unique identifier for the inspection report.
+result	varchar		Overall inspection outcome: PASS (bicycle matches description, sale proceeds), FAIL (significant issues found, sale halted), CONDITIONAL (minor issues noted, sale may proceed with disclosure).
+checklist_items	text		JSON-encoded array of individual checklist items and their pass/fail status. Covers frame, brakes, drivetrain, wheels, saddle, handlebars, etc.
+note	varchar		Inspector's free-text notes and observations during the inspection.
+reason	varchar		Specific reason for the inspection result, especially used when result is FAIL or CONDITIONAL.
+created_at	timestamp		Timestamp when the inspector submitted this report.
+inspector_id	integer	FK -> users	References users.user_id. The inspector who performed the inspection and authored this report.
+reservation_id	integer	FK -> reservation	References reservation.reservation_id. Links this report to the reservation it was filed for (pre-sale inspection).
+dispute_id	integer	FK, UNIQUE	References dispute.dispute_id. UNIQUE — one inspection report per dispute. Populated only for dispute-related inspections.
+
+Group 6: Platform Management
+20. system_config
+A key-value store for platform-wide numeric configuration parameters. Allows admins to tune business rules without code changes — for example, adjusting the deposit percentage or platform fee rate.
+
+Field Name	Data Type	Key / Constraint	Field Function & Description
+config_id	integer	PK	Unique identifier for the configuration entry.
+key	varchar		Machine-readable configuration key name (e.g. DEPOSIT_RATE, PLATFORM_FEE_RATE, MIN_LISTING_PRICE). Read by application services at runtime.
+value	double	NOT NULL	Numeric value for this configuration. For rates, stored as decimal (e.g. 0.10 = 10%). For amounts, stored in VND.
+description	varchar		Human-readable explanation of what this config key controls and what the value represents. Displayed in the admin panel.
+
+21. invalidate_token
+JWT token blacklist used to enforce logout and token revocation without waiting for natural token expiry.
+
+Field Name	Data Type	Key / Constraint	Field Function & Description
+id	varchar	PK	The raw JWT token string stored as the primary key. On every authenticated API request, the auth middleware checks if the incoming token exists here. If found, the request is rejected as unauthorized.
+expiry_date	timestamp		The expiry timestamp embedded in the JWT. A scheduled background job periodically deletes rows where expiry_date is in the past, keeping this table lean.
+
+BicycleExchange SP26SWP06  |  Field-Level Data Dictionary  |  March 2026
+
+BicycleExchange
+Field-Level Data Dictionary
+Describes the purpose and function of every field in all 20 tables  |  March 2026
+
+Introduction
+This document provides a field-level data dictionary for the BicycleExchange database. For each of the 20 tables, every column is documented with its data type, key/constraint status, and a detailed description of its business function — what it stores, why it exists, and how it is used by the application.
+
+Group 1: User & Authentication
+1. users
+Central user account table. Every actor on the platform — buyer, seller, inspector, and admin — has a record here. The role field determines what actions a user is permitted to perform.
+
+Field Name	Data Type	Key / Constraint	Field Function & Description
+user_id	integer	PK	Auto-incremented unique identifier for each user. Used as the primary reference key across all tables that involve a user.
+username	varchar		The unique login handle chosen by the user. Used for authentication and display purposes.
+password	varchar		Stores the bcrypt-hashed password. Never stored in plain text. Used during credential-based login.
+full_name	varchar		The user's real full name as registered. Displayed on listings, reservations, and check-in records.
+phone	varchar		Contact phone number. Used for buyer-seller communication coordination and check-in verification.
+email	varchar		Email address used for account registration, notifications, and password recovery.
+role	varchar		Defines the user's permission level on the platform. Accepted values: BUYER, SELLER, INSPECTOR, ADMIN. Controls what features and endpoints the user can access.
+status	varchar		Current account status. Accepted values: ACTIVE (normal), INACTIVE (self-deactivated), BANNED (admin-suspended). Controls login eligibility.
+address	varchar		Physical address of the user. Used for profile display and optionally for logistics.
+avatar	varchar		URL pointing to the user's profile picture stored in object storage. Displayed throughout the UI.
+google_id	varchar		Google OAuth2 subject ID. Populated when user registers or logs in via Google Sign-In. NULL for credential-only accounts.
+created_at	date		Date the account was first created. Used for analytics and audit purposes.
+create_date	date		Alternative creation date field. May reflect the date the profile was completed as opposed to initial registration.
+
+2. wallet
+Each user has exactly one wallet record. The wallet holds the user's platform balance which is used to pay deposits, receive sale proceeds, and pay/receive refunds.
+
+Field Name	Data Type	Key / Constraint	Field Function & Description
+wallet_id	integer	PK	Unique identifier for the wallet record.
+balance	double	NOT NULL	Current available balance in VND. Updated atomically whenever a wallet_transaction is recorded. This is the authoritative balance figure.
+username	varchar		Denormalized copy of the owner's username. Stored here for fast display without joining to users.
+type	varchar		Wallet type indicator. Distinguishes between USER wallets and the platform's own SYSTEM wallet used to hold service fees.
+updated_at	timestamp		Timestamp of the last balance change. Used to detect stale data and for audit trails.
+user_id	integer	FK, UNIQUE	References users.user_id. The UNIQUE constraint enforces the 1-to-1 relationship — each user can have only one wallet.
+
+3. wallet_transaction
+Immutable ledger of every balance movement in every wallet. Each row represents one atomic change — a top-up, withdrawal, fee deduction, refund, or transfer. The running balance is stored for quick balance reconstruction.
+
+Field Name	Data Type	Key / Constraint	Field Function & Description
+wallet_trans_id	integer	PK	Unique identifier for the ledger entry.
+amount	double	NOT NULL	The monetary amount involved in this transaction (VND). Always a positive number; the type field determines direction.
+type	varchar		Direction and reason for the balance change. Values: DEPOSIT (top-up), WITHDRAWAL, REFUND, FEE (platform fee deducted), TRANSFER (peer payment).
+description	varchar		Human-readable explanation of this entry, e.g. 'Deposit for listing #42' or 'Platform fee for sale #7'.
+balance	double		Wallet balance immediately after this transaction was applied. Enables balance reconstruction without summing all rows.
+create_at	timestamp		Exact timestamp this entry was created. Used for chronological ledger display and auditing.
+wallet_id	integer	FK	References wallet.wallet_id. Identifies which wallet this entry belongs to.
+
+4. invalidate_token
+JWT token blacklist. When a user logs out or a token is revoked, the token string is inserted here. The authentication middleware checks this table on every request to reject invalidated tokens before they naturally expire.
+
+Field Name	Data Type	Key / Constraint	Field Function & Description
+id	varchar	PK	The raw JWT token string used as the primary key. Allows O(1) lookup by the auth middleware to determine if a token has been revoked.
+expiry_date	timestamp		The token's original expiry timestamp. A background cleanup job uses this to purge rows that are already past expiry, keeping the table small.
+
+Group 2: Bicycle Catalog
+5. brand
+Simple reference table for bicycle manufacturers. Normalized to avoid duplicating brand names across listings and to enable brand-based filtering.
+
+Field Name	Data Type	Key / Constraint	Field Function & Description
+brand_id	integer	PK	Unique identifier for the brand.
+name	varchar		Brand name (e.g. Trek, Giant, Specialized, Merida). Displayed on listing pages and used as a search/filter dimension.
+
+6. category
+Reference table for bicycle categories. Enables consistent classification of bicycles for browsing, filtering, and event organization.
+
+Field Name	Data Type	Key / Constraint	Field Function & Description
+category_id	integer	PK	Unique identifier for the category.
+name	varchar		Category display name shown to users (e.g. Road Bike, Mountain Bike, Folding Bike).
+bicycle_type	varchar		Machine-readable bicycle type code used internally for filtering and event bike_type matching.
+
+7. bicycle
+Stores the complete technical specification of each physical bicycle registered on the platform. One bicycle asset = one row. This table is the source of truth for what the bike actually is, independent of its listing status.
+
+Field Name	Data Type	Key / Constraint	Field Function & Description
+bike_id	integer	PK	Unique identifier for the bicycle asset.
+bike_type	varchar		Category of bicycle: Road, Mountain (MTB), Hybrid, Folding, BMX, etc.
+brake_type	varchar		Brake system: Rim, Disc Hydraulic, Disc Mechanical, V-Brake, Coaster, etc.
+color	varchar		Primary color of the bicycle frame. Used for display and buyer filtering.
+drivetrain	varchar		Drivetrain configuration: Single Speed, 1x, 2x, 3x, or specific groupset name.
+fork_type	varchar		Fork classification: Rigid, Suspension (travel in mm), Carbon, etc.
+frame_material	varchar		Material the frame is made of: Aluminum, Carbon Fiber, Steel, Titanium, Chromoly.
+frame_size	varchar		Frame size in cm or S/M/L/XL notation. Critical for buyer fit.
+number_of_gears	varchar	NOT NULL	Total number of gear combinations (e.g. 21, 18, 1 for single speed). Required field for all listings.
+wheel_size	varchar		Wheel diameter in inches or mm (e.g. 26", 27.5", 700c, 29"). Important for compatibility.
+year_manufacture	integer	NOT NULL	Year the bicycle was manufactured. Required. Used to calculate age and affects pricing suggestions.
+chain	varchar		Chain brand and spec (e.g. KMC X11, Shimano CN-HG601). Indicates drivetrain compatibility.
+chainring	varchar		Chainring tooth count or brand/model (e.g. 50/34T, FSA Gossamer). Indicates gearing.
+fork	varchar		Specific fork brand/model name (e.g. Fox 32 Rhythm, RockShox Judy). More detailed than fork_type.
+handlebar	varchar		Handlebar type and spec: Drop Bar, Flat Bar, Riser Bar, brand/model name.
+rim	varchar		Rim brand and model (e.g. Mavic Open Pro, DT Swiss R470). Indicates wheel quality.
+saddle	varchar		Saddle brand and model (e.g. Selle Italia X1, Fizik Aliante). Affects comfort assessment.
+shock_absorber	varchar		Rear shock details for full-suspension bikes (e.g. Fox Float DPS, RockShox Monarch). NULL for hardtails.
+weight	double		Total bicycle weight in kilograms. Important buying consideration for road and performance bikes.
+bike_condition	integer		Numeric condition score (e.g. 1–10 or 1–5 scale). Set by seller or inspector; affects listing visibility and price.
+brand_id	integer	FK -> brand	References brand.brand_id. Associates this bicycle with a manufacturer brand.
+category_id	integer	FK -> category	References category.category_id. Classifies this bicycle into a browsable category.
+
+8. bicycle_library
+A curated reference library of standard bicycle models. Used as an auto-fill source when sellers create new listings — they can pick a model from this library and have the spec fields pre-populated, reducing data entry errors.
+
+Field Name	Data Type	Key / Constraint	Field Function & Description
+id	integer	PK	Unique identifier for the library entry.
+model	varchar		Official model name of the bicycle (e.g. Trek Domane SL 6, Giant TCR Advanced 1). The primary search field in this table.
+bike_type	varchar		Bicycle category type for this model.
+brake_type	varchar		Factory default brake system for this model.
+color	varchar		Standard colorway(s) available for this model.
+drivetrain	varchar		Stock drivetrain configuration.
+fork_type	varchar		Stock fork type.
+frame_material	varchar		Frame material as shipped from the factory.
+frame_size	varchar		Available frame sizes for this model.
+number_of_gears	varchar		Stock gear count.
+wheel_size	varchar		Stock wheel size.
+year_manufacture	integer	NOT NULL	Model year this library entry represents. Required to differentiate between annual revisions of the same model.
+chain	varchar		Stock chain spec.
+chainring	varchar		Stock chainring spec.
+fork	varchar		Stock fork brand/model.
+handlebar	varchar		Stock handlebar type.
+rim	varchar		Stock rim brand/model.
+saddle	varchar		Stock saddle brand/model.
+shock_absorber	varchar		Stock rear shock (if applicable).
+weight	double		Official manufacturer-stated weight in kg.
+brand_id	integer	FK -> brand	References brand.brand_id. Associates this library entry with a manufacturer.
+category_id	integer	FK -> category	References category.category_id. Classifies this model.
+
+Group 3: Listings & Wishlist
+9. bike_listing
+The marketplace listing created by a seller to advertise a bicycle for sale. A listing wraps a bicycle asset with commercial details (price, description, images) and a lifecycle status. The core entity of the online marketplace.
+
+Field Name	Data Type	Key / Constraint	Field Function & Description
+listing_id	integer	PK	Unique identifier for the listing.
+title	varchar		Seller-written headline for the listing (e.g. '2021 Trek Emonda SL 5 - Excellent Condition'). The primary text shown in search results.
+description	varchar		Detailed free-text description written by the seller. Covers condition, history, included accessories, reason for selling, etc.
+image_url	varchar		URL of the primary listing photo. May be a comma-separated list or a JSON array if multiple images are supported.
+price	double	NOT NULL	Asking price in VND set by the seller. Required. Displayed prominently and used as the basis for deposit calculation.
+condition	varchar		Seller-stated condition label: NEW, LIKE NEW, GOOD, FAIR, POOR. Supplements the numeric bike_condition score.
+status	varchar		Listing lifecycle status: AVAILABLE (open for offers), RESERVED (deposit paid, pending transaction), SOLD (completed), CLOSED (delisted by seller).
+created_at	timestamp		Timestamp when the listing was first published.
+updated_at	timestamp		Timestamp of the most recent edit to listing details.
+bicycle_id	integer	FK, UNIQUE	References bicycle.bike_id. The UNIQUE constraint means one bicycle can only have one active listing at a time.
+seller_id	integer	FK -> users	References users.user_id. Identifies the seller who owns and is responsible for this listing.
+
+10. wishlist
+Records which listings a user has saved/favorited. Enables buyers to track bicycles they are interested in without committing to a reservation.
+
+Field Name	Data Type	Key / Constraint	Field Function & Description
+wishlist_id	integer	PK	Unique identifier for the wishlist entry.
+listing_id	integer	FK -> bike_listing	References bike_listing.listing_id. The listing that was saved.
+user_id	integer	FK -> users	References users.user_id. The user who saved this listing.
+
+Group 4: Events
+11. events
+Physical bicycle marketplace events organized by platform admins. Events provide a venue where multiple sellers exhibit their bicycles simultaneously and buyers can inspect them in person before purchasing.
+
+Field Name	Data Type	Key / Constraint	Field Function & Description
+event_id	integer	PK	Unique identifier for the event.
+name	varchar		Public-facing event name (e.g. 'HCM Bike Fair – Q1 2026'). Displayed in event listings.
+type	varchar		Event format type, e.g. OPEN_MARKET, AUCTION, EXHIBITION. Controls event workflow.
+bike_type	varchar		The primary bicycle category the event focuses on (e.g. Road, MTB, All). Used for buyer targeting.
+location	varchar		Venue name or landmark description (e.g. 'Tao Dan Park, District 1').
+address	varchar		Full street address of the event venue.
+latitude	double		GPS latitude of the venue. Used to render the event on a map.
+longitude	double		GPS longitude of the venue. Used to render the event on a map.
+status	varchar		Event lifecycle status: DRAFT (being prepared), PUBLISHED (visible to public), ONGOING (currently happening), COMPLETED, CANCELLED.
+create_date	date		Date the event record was created by the admin.
+public_date	date		Date the event becomes visible to sellers and buyers on the platform. Allows advance scheduling.
+start_date	date		Official start date of the physical event.
+end_date	date		Official end date of the physical event.
+update_date	date		Date of the last modification to the event record.
+create_by	integer	FK -> users	References users.user_id of the admin who created this event. Establishes accountability.
+
+12. event_bicycle
+Represents a bicycle that a seller has registered to exhibit and sell at a specific event. A bridge between a seller's existing listing and an event, with event-specific pricing and status.
+
+Field Name	Data Type	Key / Constraint	Field Function & Description
+event_bike_id	integer	PK	Unique identifier for this event-bicycle registration.
+title	varchar		Display title for this bicycle at the event. May differ from the original listing title.
+bike_type	varchar		Bicycle type, copied from the listing for quick filtering at the event level.
+type	varchar		Entry type, e.g. SALE (available for purchase), DISPLAY (exhibition only).
+seller_name	varchar		Seller's display name, denormalized here for quick rendering on event booth displays.
+price	double		Event-specific asking price. May differ from the original listing price — sellers can set a special event price.
+condition	varchar		Condition label at the time of event registration.
+image_url	varchar		Primary image URL for display at the event.
+status	varchar		Registration status: PENDING (awaiting admin approval), APPROVED, REJECTED, SOLD, CANCELLED.
+create_date	date		Date the seller submitted this registration.
+update_date	date		Date the registration was last updated.
+event_id	integer	FK -> events	References events.event_id. Identifies which event this bicycle is registered for.
+listing_id	integer	FK -> bike_listing	References bike_listing.listing_id. Links back to the original online listing.
+bike_id	integer	FK -> bicycle	References bicycle.bike_id. Direct link to the physical bicycle asset.
+user_id	integer	FK -> users	References users.user_id. The seller who registered this bicycle for the event.
+
+13. event_inspector
+Manages inspector assignments to events. Inspectors assigned here are available at the event venue to evaluate bicycles during check-in and resolve disputes on-site.
+
+Field Name	Data Type	Key / Constraint	Field Function & Description
+inspec_id	integer	PK	Unique identifier for this inspector assignment.
+status	varchar		Assignment status: PENDING (invited), CONFIRMED (accepted), DECLINED, COMPLETED.
+create_date	timestamp		Timestamp when the assignment was created.
+event_id	integer	FK -> events	References events.event_id. The event this inspector is assigned to.
+user_id	integer	FK -> users	References users.user_id of the inspector. The user must have role = INSPECTOR.
+
+Group 5: Transaction Lifecycle
+14. deposit
+Records a deposit payment made by a buyer to express serious intent to purchase. The deposit locks the listing or event bicycle and triggers the reservation process. It can later be applied to the final sale, refunded (if seller cancels), or forfeited (if buyer cancels).
+
+Field Name	Data Type	Key / Constraint	Field Function & Description
+deposit_id	integer	PK	Unique identifier for this deposit record.
+amount	double	NOT NULL	Deposit amount in VND. Typically a percentage of the asking price, defined by system_config.
+type	varchar		Deposit context: LISTING (for a direct marketplace purchase) or EVENT (for a purchase at an event).
+status	varchar		Current state: PENDING (initiated), PAID (funds held), APPLIED (used in final transaction), REFUNDED (returned to buyer), FORFEITED (transferred to seller).
+created_at	timestamp		Timestamp when the deposit was initiated.
+listing_id	integer	FK -> bike_listing	References bike_listing.listing_id. Populated for non-event deposits. NULL for event deposits.
+event_bike_id	integer	FK -> event_bicycle	References event_bicycle.event_bike_id. Populated for event deposits. NULL for listing deposits.
+user_id	integer	FK -> users	References users.user_id. The buyer who made this deposit.
+
+15. reservation
+A confirmed meeting arrangement between buyer and seller. Created after a deposit is paid. Captures all logistics of the in-person meeting including location, time, and assigned inspector.
+
+Field Name	Data Type	Key / Constraint	Field Function & Description
+reservation_id	integer	PK	Unique identifier for the reservation.
+status	varchar		Reservation lifecycle: PENDING (waiting for confirmation), CONFIRMED (both parties agreed), COMPLETED (meeting happened), CANCELLED.
+deposit_amount	double		Snapshot of the deposit amount at the time of reservation creation. Preserved for record even if deposit record changes.
+meeting_location	varchar		Text description of the agreed meeting location, e.g. '1st floor, Landmark 81, Binh Thanh'.
+meeting_time	timestamp		Scheduled date and time for the buyer-seller meeting.
+latitude	double		GPS latitude of the meeting point. Enables map display of the meeting location.
+longitude	double		GPS longitude of the meeting point.
+cancel_description	varchar		Free-text explanation provided when a reservation is cancelled. Required on cancellation.
+cancel_image	varchar		URL of an uploaded evidence image supporting the cancellation reason.
+reserved_at	timestamp		Timestamp when the reservation was first created.
+buyer_id	integer	FK -> users	References users.user_id. The buyer who initiated this reservation.
+inspector_id	integer	FK -> users	References users.user_id of the assigned inspector. The inspector who will be present at the meeting to verify the bicycle.
+listing_id	integer	FK -> bike_listing	References bike_listing.listing_id. The listing this reservation is for (for non-event purchases).
+event_bike_id	integer	FK -> event_bicycle	References event_bicycle.event_bike_id. The event bicycle this reservation is for (for event purchases).
+deposit_id	integer	FK, UNIQUE	References deposit.deposit_id. The UNIQUE constraint enforces 1-to-1: one reservation = one deposit.
+
+16. check_in
+Records the physical verification event when buyer and seller arrive at the agreed meeting point. The inspector verifies identities using a shared token before the sale proceeds.
+
+Field Name	Data Type	Key / Constraint	Field Function & Description
+check_in_id	integer	PK	Unique identifier for this check-in record.
+buyer_name	varchar		Buyer's name as verified at check-in time. Snapshotted for audit purposes.
+buyer_phone	varchar		Buyer's phone number verified at check-in.
+seller_name	varchar		Seller's name as verified at check-in time.
+seller_phone	varchar		Seller's phone number verified at check-in.
+token	varchar		One-time verification token generated for this meeting. Both buyer and seller must present this token to the inspector to confirm their identities.
+status	varchar		Check-in status: PENDING, BUYER_CHECKED (buyer arrived), COMPLETED (both arrived), FAILED (one party no-showed).
+buyer_id	integer	FK -> users	References users.user_id. The buyer participating in this check-in.
+seller_id	integer	FK -> users	References users.user_id. The seller participating in this check-in.
+reservation_id	integer	FK -> reservation	References reservation.reservation_id. The reservation this check-in belongs to.
+event_bike_id	integer	FK -> event_bicycle	References event_bicycle.event_bike_id. The event bicycle being checked in (for event transactions).
+listing_id	integer	FK -> bike_listing	References bike_listing.listing_id. The listing being checked in (for non-event transactions).
+
+17. transaction
+The final financial record of a completed bicycle sale. Created when both buyer and seller confirm the check-in and the inspector approves the bicycle. The platform fee is deducted and proceeds are released to the seller's wallet.
+
+Field Name	Data Type	Key / Constraint	Field Function & Description
+transaction_id	integer	PK	Unique identifier for the transaction.
+actual_price	double	NOT NULL	The final agreed sale price in VND. May differ from the original listing price if negotiated.
+amount	double	NOT NULL	Amount transferred from buyer's wallet to seller's wallet (actual_price minus fee).
+fee	double	NOT NULL	Platform service fee deducted from the transaction amount. Calculated based on system_config fee rate.
+type	varchar		Transaction context: LISTING (direct online sale) or EVENT (sale at a physical event).
+status	varchar		Transaction status: PENDING, COMPLETED, CANCELLED, REFUNDED.
+description	varchar		Auto-generated or manually set description summarizing the transaction.
+create_at	timestamp		Timestamp when the transaction was initiated.
+update_at	timestamp		Timestamp of the most recent status update.
+buyer_id	integer	FK -> users	References users.user_id. The buyer in this transaction.
+seller_id	integer	FK -> users	References users.user_id. The seller receiving payment.
+listing_id	integer	FK -> bike_listing	References bike_listing.listing_id. The listing that was sold.
+event_id	integer	FK -> events	References events.event_id. The event where the sale occurred (NULL for non-event sales).
+event_bike_id	integer	FK -> event_bicycle	References event_bicycle.event_bike_id. The event bicycle record (NULL for non-event sales).
+deposit_id	integer	FK, UNIQUE	References deposit.deposit_id. UNIQUE — links this transaction to the deposit that initiated the process.
+reservation_id	integer	FK, UNIQUE	References reservation.reservation_id. UNIQUE — one transaction per reservation.
+
+18. dispute
+Records a formal dispute raised by either the buyer or seller against a transaction. An inspector is assigned to investigate and resolve the issue. Disputes can result in refunds, forfeitures, or confirmation of the original transaction.
+
+Field Name	Data Type	Key / Constraint	Field Function & Description
+dispute_id	integer	PK	Unique identifier for the dispute.
+reason	varchar		Free-text explanation written by the user who raised the dispute describing what went wrong.
+reason_category	varchar	CHECK	Standardized category of the dispute issue. Allowed values: MISDESCRIPTION, NON_DELIVERY, BUYER_DEFAULT, DAMAGE_ON_DELIVERY, PAYMENT_ISSUE, CANCELLATION, OTHER. The CHECK constraint enforces this enum.
+status	varchar		Dispute resolution status: OPEN (just raised), UNDER_REVIEW (inspector assigned), RESOLVED (decision made), CLOSED.
+created_at	timestamp		Timestamp when the dispute was raised.
+raised_by	integer	FK -> users	References users.user_id. The user (buyer or seller) who initiated the dispute.
+assigned_inspector_id	integer	FK -> users	References users.user_id of the inspector assigned to investigate and resolve this dispute.
+transaction_id	integer	FK, UNIQUE	References transaction.transaction_id. UNIQUE — each transaction can have at most one dispute.
+
+19. inspection_report
+The formal evaluation report submitted by an inspector. Can be filed during a reservation (pre-sale bicycle check) or as part of a dispute resolution investigation.
+
+Field Name	Data Type	Key / Constraint	Field Function & Description
+report_id	integer	PK	Unique identifier for the inspection report.
+result	varchar		Overall inspection outcome: PASS (bicycle matches description, sale proceeds), FAIL (significant issues found, sale halted), CONDITIONAL (minor issues noted, sale may proceed with disclosure).
+checklist_items	text		JSON-encoded array of individual checklist items and their pass/fail status. Covers frame, brakes, drivetrain, wheels, saddle, handlebars, etc.
+note	varchar		Inspector's free-text notes and observations during the inspection.
+reason	varchar		Specific reason for the inspection result, especially used when result is FAIL or CONDITIONAL.
+created_at	timestamp		Timestamp when the inspector submitted this report.
+inspector_id	integer	FK -> users	References users.user_id. The inspector who performed the inspection and authored this report.
+reservation_id	integer	FK -> reservation	References reservation.reservation_id. Links this report to the reservation it was filed for (pre-sale inspection).
+dispute_id	integer	FK, UNIQUE	References dispute.dispute_id. UNIQUE — one inspection report per dispute. Populated only for dispute-related inspections.
+
+Group 6: Platform Management
+20. system_config
+A key-value store for platform-wide numeric configuration parameters. Allows admins to tune business rules without code changes — for example, adjusting the deposit percentage or platform fee rate.
+
+Field Name	Data Type	Key / Constraint	Field Function & Description
+config_id	integer	PK	Unique identifier for the configuration entry.
+key	varchar		Machine-readable configuration key name (e.g. DEPOSIT_RATE, PLATFORM_FEE_RATE, MIN_LISTING_PRICE). Read by application services at runtime.
+value	double	NOT NULL	Numeric value for this configuration. For rates, stored as decimal (e.g. 0.10 = 10%). For amounts, stored in VND.
+description	varchar		Human-readable explanation of what this config key controls and what the value represents. Displayed in the admin panel.
+
+21. invalidate_token
+JWT token blacklist used to enforce logout and token revocation without waiting for natural token expiry.
+
+Field Name	Data Type	Key / Constraint	Field Function & Description
+id	varchar	PK	The raw JWT token string stored as the primary key. On every authenticated API request, the auth middleware checks if the incoming token exists here. If found, the request is rejected as unauthorized.
+expiry_date	timestamp		The expiry timestamp embedded in the JWT. A scheduled background job periodically deletes rows where expiry_date is in the past, keeping this table lean.
+
+BicycleExchange SP26SWP06  |  Field-Level Data Dictionary  |  March 2026
