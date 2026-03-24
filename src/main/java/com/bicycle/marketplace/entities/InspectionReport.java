@@ -18,15 +18,15 @@ public class InspectionReport {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     int reportId;
-    @OneToOne
-    @JoinColumn(name = "dispute_id")
-    Dispute dispute;
+    @ManyToOne
+    @JoinColumn(name = "reservation_id", nullable = true)
+    Reservation reservation;
     @ManyToOne
     @JoinColumn(name = "inspector_id")
     Users inspector;
-    String result;
-    String reason;
-    String note;
+    String result; // PASS, FAIL, PENDING
+    @Column(columnDefinition = "TEXT")
+    String checklistItems; // JSON array: [{"name":"...","status":"PASS/FAIL/NOT_CHECKED","note":"..."}]
     @CreationTimestamp
     Date createdAt;
 }

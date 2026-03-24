@@ -5,6 +5,7 @@ import com.bicycle.marketplace.dto.request.ReservationScheduleRequest;
 import com.bicycle.marketplace.dto.request.ReservationUpdateRequest;
 import com.bicycle.marketplace.dto.request.CancelReservationRequest;
 import com.bicycle.marketplace.dto.response.ApiResponse;
+import com.bicycle.marketplace.dto.response.CreateDepositResponse;
 import com.bicycle.marketplace.dto.response.ReservationResponse;
 import com.bicycle.marketplace.entities.Reservation;
 import com.bicycle.marketplace.services.ReservationService;
@@ -22,10 +23,10 @@ public class ReservationController {
 
     @PostMapping("/{listingId}/create")
     @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
-    ApiResponse<ReservationResponse> createReservation(@PathVariable int listingId,
+    ApiResponse<ReservationResponse> createReservation(@PathVariable int listingId, @PathVariable int eventBikeId,
             @RequestBody ReservationCreationRequest request) {
         ApiResponse<ReservationResponse> apiResponse = new ApiResponse<>();
-        apiResponse.setResult(reservationService.createReservation(listingId, request));
+        apiResponse.setResult(reservationService.createReservation(listingId, eventBikeId, request));
         apiResponse.setMessage("Reservation created successfully");
         return apiResponse;
     }
@@ -153,4 +154,31 @@ public class ReservationController {
         return apiResponse;
     }
 
-}
+    @PostMapping("/{reservationId}/refund-inspection-fail")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('USER')")
+    public ApiResponse<String> refundDepositAfterInspectionFail(@PathVariable int reservationId) {
+        ApiResponse<String> apiResponse = new ApiResponse<>();
+        apiResponse.setResult(reservationService.refundDepositAfterInspectionFail(reservationId));
+        apiResponse.setMessage("Yêu cầu hoàn tiền cọc sau kiểm định thất bại đã được xử lý");
+        return apiResponse;
+    }
+
+    @PostMapping("/{reservationId}/final-payment")
+    @PreAuthorize("hasRole('USER')")
+    public ApiResponse<CreateDepositResponse> finalPayment(@PathVariable int reservationId) {
+        ApiResponse<CreateDepositResponse> apiResponse = new ApiResponse<>();
+        apiResponse.setResult(reservationService.finalPaymentForReservation(reservationId));
+        apiResponse.setMessage("Xử lý thanh toán cuối giao dịch thành công");
+        return apiResponse;
+    }
+
+    @PostMapping("/{reservationId}/payout-seller")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ApiResponse<String> payoutToSeller(@PathVariable int reservationId) {
+        ApiResponse<String> apiResponse = new ApiResponse<>();
+        apiResponse.setResult(reservationService.payoutToSeller(reservationId));
+        apiResponse.setMessage("Chuyển tiền cho seller thành công");
+        return apiResponse;
+    }
+
+}

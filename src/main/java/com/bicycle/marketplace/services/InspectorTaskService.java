@@ -33,7 +33,7 @@ public class InspectorTaskService {
         Users inspector = getCurrentUser();
         List<Reservation> tasks = reservationRepository.findByInspectorAndStatusIn(
                 inspector,
-                List.of("Scheduled", "Pending") // Chỉ lấy các nhiệm vụ đã được phân công
+                List.of("Scheduled", "Pending", "Waiting_Payment", "Inspection_Failed", "Completed") // Lấy cả nhiệm vụ cũ để xem report
         );
         return tasks.stream().map(this::mapToTaskResponse).collect(Collectors.toList());
     }
@@ -59,6 +59,8 @@ public class InspectorTaskService {
                 .buyerPhone(reservation.getBuyer().getPhone())
                 .sellerName(reservation.getListing().getSeller().getFullName())
                 .sellerPhone(reservation.getListing().getSeller().getPhone())
+                .buyerAvatar(reservation.getBuyer().getAvatar())
+                .sellerAvatar(reservation.getListing().getSeller().getAvatar())
                 .location(reservation.getMeetingLocation())
                 .scheduledTime(reservation.getMeetingTime())
                 .status(reservation.getStatus())

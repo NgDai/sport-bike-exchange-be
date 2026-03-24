@@ -9,7 +9,7 @@ import java.util.Optional;
 
 @Repository
 public interface ICheckInRepository extends JpaRepository<CheckIn, Integer> {
-    List<CheckIn> findByStatus(String status);
+//    List<CheckIn> findByStatus(String status);
 
     Optional<CheckIn> findByToken(String token);
 }

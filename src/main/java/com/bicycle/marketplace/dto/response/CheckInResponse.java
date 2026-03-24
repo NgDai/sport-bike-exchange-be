@@ -17,5 +17,11 @@ public class CheckInResponse {
     private int buyerId;
     private int sellerId;
     private int eventBikeId;
+    private int listingId;
+    private int reservationId;
+    private String sellerName;
+    private String sellerPhone;
+    private String buyerName;
+    private String buyerPhone;
     private String token;
 }

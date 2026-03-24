@@ -50,4 +50,7 @@ public class Reservation {
 
     @Column(name = "cancel_description")
     private String cancelDescription;
+
+    @Column(name = "cancel_image")
+    private String cancelImage;
 }

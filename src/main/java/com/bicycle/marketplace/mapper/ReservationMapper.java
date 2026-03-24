@@ -24,6 +24,11 @@ public interface ReservationMapper {
     @Mapping(source = "latitude", target = "latitude")
     @Mapping(source = "longitude", target = "longitude")
     @Mapping(source = "cancelDescription", target = "cancelDescription")
+    @Mapping(source = "cancelImage", target = "cancelImage")
+    @Mapping(source = "eventBicycle.eventBikeId", target = "eventBicycleId")
+    @Mapping(source = "eventBicycle.title", target = "eventBicycleTitle")
+    @Mapping(source = "eventBicycle.image_url", target = "eventBicycleImage")
+    @Mapping(target = "remainingAmount", ignore = true)
     ReservationResponse toReservationResponse(Reservation reservation);
 
     void updateReservation(@MappingTarget Reservation reservation, ReservationUpdateRequest request);

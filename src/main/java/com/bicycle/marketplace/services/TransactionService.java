@@ -194,12 +194,50 @@ public class TransactionService {
         TransactionResponse r = new TransactionResponse();
         r.setTransactionId(t.getTransactionId());
         r.setBuyerId(t.getBuyer() != null ? t.getBuyer().getUserId() : 0);
+        r.setBuyerName(t.getBuyer() != null ? (t.getBuyer().getFullName() != null && !t.getBuyer().getFullName().isEmpty() ? t.getBuyer().getFullName() : t.getBuyer().getUsername()) : "");
         r.setSellerId(t.getSeller() != null ? t.getSeller().getUserId() : 0);
+        r.setSellerName(t.getSeller() != null ? (t.getSeller().getFullName() != null && !t.getSeller().getFullName().isEmpty() ? t.getSeller().getFullName() : t.getSeller().getUsername()) : "");
         r.setEventId(t.getEvent() != null ? t.getEvent().getEventId() : 0);
         r.setListingId(t.getListing() != null ? t.getListing().getListingId() : 0);
         if (t.getListing() != null) {
             r.setListingTitle(t.getListing().getTitle());
             r.setListingImage(t.getListing().getImage_url());
+        }
+        r.setEventBicycleId(t.getEventBicycle() != null ? t.getEventBicycle().getEventBikeId() : 0);
+        if (t.getEventBicycle() != null) {
+            r.setEventBicycleTitle(t.getEventBicycle().getTitle());
+            r.setEventBicycleImage(t.getEventBicycle().getImage_url());
+        }
+        r.setEventBicycleId(t.getEventBicycle() != null ? t.getEventBicycle().getEventBikeId() : 0);
+        if (t.getEventBicycle() != null) {
+            EventBicycle eb = t.getEventBicycle();
+            r.setEventBicycleTitle(eb.getTitle());
+            r.setEventBicycleImage(eb.getImage_url());
+            r.setSellerName(eb.getSellerName());
+            r.setCondition(eb.getCondition());
+            if (eb.getBicycle() != null) {
+                Bicycle b = eb.getBicycle();
+                r.setBikeId(b.getBikeId());
+                r.setBrandName(b.getBrand() != null ? b.getBrand().getName() : "");
+                r.setCategoryName(b.getCategory() != null ? b.getCategory().getName() : "");
+                r.setBikeType(b.getBikeType());
+                r.setWheelSize(b.getWheelSize());
+                r.setNumberOfGears(b.getNumberOfGears());
+                r.setBrakeType(b.getBrakeType());
+                r.setYearManufacture(b.getYearManufacture());
+                r.setFrameSize(b.getFrameSize());
+                r.setDrivetrain(b.getDrivetrain());
+                r.setForkType(b.getForkType());
+                r.setColor(b.getColor());
+                r.setFrameMaterial(b.getFrameMaterial());
+                r.setWeight(b.getWeight());
+                r.setSaddle(b.getSaddle());
+                r.setChainring(b.getChainring());
+                r.setChain(b.getChain());
+                r.setHandlebar(b.getHandlebar());
+                r.setRim(b.getRim());
+                r.setShockAbsorber(b.getShockAbsorber());
+            }
         }
         r.setDepositId(t.getDeposit() != null ? t.getDeposit().getDepositId() : 0);
         r.setReservationId(t.getReservation() != null ? t.getReservation().getReservationId() : 0);
@@ -208,7 +246,24 @@ public class TransactionService {
         r.setFee(t.getFee());
         r.setDescription(t.getDescription() != null ? t.getDescription() : "");
         r.setType(t.getType() != null ? t.getType() : "");
-        r.setStatus(t.getStatus() != null ? t.getStatus() : "");
+
+        if (t.getReservation() != null) {
+            Reservation res = t.getReservation();
+            r.setStatus(res.getStatus() != null ? res.getStatus() : (t.getStatus() != null ? t.getStatus() : ""));
+            r.setMeetingLocation(res.getMeetingLocation());
+            r.setMeetingTime(res.getMeetingTime());
+            if (res.getInspector() != null) {
+                Users inspector = res.getInspector();
+                r.setInspectorName((inspector.getFullName() != null && !inspector.getFullName().isEmpty()) 
+                    ? inspector.getFullName() : inspector.getUsername());
+                r.setInspectorPhone(inspector.getPhone());
+            }
+        } else if (t.getDeposit() != null && t.getDeposit().getStatus() != null && !t.getDeposit().getStatus().isBlank()) {
+            r.setStatus(t.getDeposit().getStatus());
+        } else {
+            r.setStatus(t.getStatus() != null ? t.getStatus() : "");
+        }
+
         r.setCreatedAt(t.getCreateAt() != null ? t.getCreateAt() : new Date(0));
         r.setUpdatedAt(t.getUpdateAt() != null ? t.getUpdateAt() : new Date(0));
         return r;

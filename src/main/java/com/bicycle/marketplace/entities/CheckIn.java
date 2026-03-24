@@ -24,8 +24,18 @@ public class CheckIn {
     @JoinColumn(name = "seller_id")
     Users seller;
     @ManyToOne
-    @JoinColumn(name = "event_bike_id")
-    Events eventBikeId;
+    @JoinColumn(name = "event_bike_id", nullable = true)
+    EventBicycle eventBicycle;
+    @ManyToOne
+    @JoinColumn(name = "listing_id", nullable = true)
+    BikeListing listing;
+    @ManyToOne
+    @JoinColumn(name = "reservation_id")
+    Reservation reservation;
+    String buyerName;
+    String buyerPhone;
+    String sellerName;
+    String sellerPhone;
     String token;
-    String status;
+//    String status;
 }

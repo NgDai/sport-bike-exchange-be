@@ -22,10 +22,10 @@ public class CheckInController {
     @Autowired
     private QRService qrService;
 
-    @PostMapping("/{eventId}/create")
-    ApiResponse<CheckInResponse> createCheckIn(@PathVariable int eventId, @RequestBody CheckInCreationRequest request){
+    @PostMapping("/{reservationId}/create")
+    ApiResponse<CheckInResponse> createCheckIn(@PathVariable int reservationId){
         ApiResponse<CheckInResponse> apiResponse = new ApiResponse<>();
-        apiResponse.setResult(checkInService.createCheckIn(eventId, request));
+        apiResponse.setResult(checkInService.createCheckIn(reservationId));
         apiResponse.setMessage("Check-In created successfully");
         return apiResponse;
     }
@@ -61,14 +61,14 @@ public class CheckInController {
         return apiResponse;
     }
 
-    @GetMapping("/status/{status}")
-    @PreAuthorize("hasRole('ADMIN')")
-    ApiResponse<List<CheckIn>> getCheckInsByStatus(@PathVariable String status) {
-        ApiResponse<List<CheckIn>> apiResponse = new ApiResponse<>();
-        apiResponse.setResult(checkInService.findCheckInsByStatus(status));
-        apiResponse.setMessage("Check-Ins fetched successfully");
-        return apiResponse;
-    }
+//    @GetMapping("/status/{status}")
+//    @PreAuthorize("hasRole('ADMIN')")
+//    ApiResponse<List<CheckIn>> getCheckInsByStatus(@PathVariable String status) {
+//        ApiResponse<List<CheckIn>> apiResponse = new ApiResponse<>();
+//        apiResponse.setResult(checkInService.findCheckInsByStatus(status));
+//        apiResponse.setMessage("Check-Ins fetched successfully");
+//        return apiResponse;
+//    }
 
     @PostMapping(value = "/qr/create/{checkInId}", produces = MediaType.IMAGE_PNG_VALUE)
     public byte[] createCheckInQR(@PathVariable int checkInId) throws Exception {

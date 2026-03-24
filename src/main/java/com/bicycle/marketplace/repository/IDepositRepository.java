@@ -15,5 +15,7 @@ public interface IDepositRepository extends JpaRepository<Deposit, Integer> {
     List<Deposit> findAllByStatus(String status);
     Optional<Deposit> findByUserAndListing(Users user, BikeListing listing);
     Optional<Deposit> findByUserAndEventBicycle(Users user, EventBicycle eventBicycle);
+    boolean existsByEventBicycle(EventBicycle eventBicycle);
+    void deleteByEventBicycle(EventBicycle eventBicycle);
     List<Deposit> findByUser_UserIdOrderByCreatedAtDesc(int userId);
 }

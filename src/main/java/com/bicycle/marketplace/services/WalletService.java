@@ -233,9 +233,19 @@ public class WalletService {
                                 request.getDescription());
         }
 
+        @Transactional
         public WalletTransactionResponse refundToUserWallet(double amount, String username, String description) {
-                Wallet wallet = walletRepository.findByUsername(username)
-                                .orElseThrow(() -> new AppException(ErrorCode.WALLET_NOT_FOUND));
+                Wallet wallet = walletRepository.findByUsername(username).orElseGet(() -> {
+                        Users user = userRepository.findByUsername(username)
+                                        .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+                        Wallet newWallet = Wallet.builder()
+                                        .user(user)
+                                        .username(username)
+                                        .balance(0.0)
+                                        .type("User")
+                                        .build();
+                        return walletRepository.save(newWallet);
+                });
 
 
                 Wallet system = walletRepository.findByUsername("System")
