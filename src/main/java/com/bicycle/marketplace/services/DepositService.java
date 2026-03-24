@@ -136,7 +136,7 @@ public class DepositService {
             String customReturnUrl = vnpayReturnUrl + "?depositId=" + deposit.getDepositId();
             String paymentUrl = vnPayService.createOrder(
                     amountNeeded,
-                    username + "|depositEvent|" + deposit.getDepositId(),
+                    username + "|deposit|" + deposit.getDepositId(),
                     customReturnUrl, null);
 
             return CreateDepositResponse.builder()

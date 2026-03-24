@@ -432,6 +432,71 @@ public class ReservationService {
         return "Đã hoàn tiền cọc " + amount.longValue() + " VND thành công cho người mua. Giao dịch đã bị hủy.";
     }
 
+    @Transactional
+    public String refundDepositAfterPaymentForEventBicycle(int reservationId) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new AppException(ErrorCode.UNAUTHORIZED);
+        }
+        String username = authentication.getName();
+
+        Reservation reservation = reservationRepository.findById(reservationId)
+                .orElseThrow(() -> new AppException(ErrorCode.RESERVATION_NOT_FOUND));
+
+        // Kiểm tra quyền: chỉ buyer hoặc admin mới được thực hiện
+        boolean isAdmin = authentication.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+        if (!isAdmin) {
+            throw new RuntimeException("Bạn không có quyền thực hiện hoàn tiền cho giao dịch này.");
+        }
+
+        // Lấy số tiền cọc
+        Double amount = reservation.getDepositAmount();
+        if (amount == null && reservation.getDeposit() != null) {
+            amount = reservation.getDeposit().getAmount();
+        }
+        if (amount == null || amount <= 0) {
+            throw new RuntimeException("Không tìm thấy số tiền cọc hợp lệ hoặc tiền cọc bằng 0");
+        }
+
+        // Hoàn tiền từ System Wallet về ví buyer
+        walletService.refundToUserWallet(amount, reservation.getBuyer().getUsername(),
+                "Hoàn tiền cọc cho Giao dịch #" + reservationId);
+
+        // Cập nhật Transaction: tách reference, đặt status Refunded
+        transactionRepository.findByReservation_ReservationId(reservationId).ifPresent(transaction -> {
+            var deposit = transaction.getDeposit();
+            transaction.setStatus("Refunded");
+            transaction.setReservation(null);
+            transaction.setDeposit(null);
+            transactionRepository.save(transaction);
+            // Xóa Deposit sau khi tách khỏi Transaction
+            if (deposit != null) {
+                depositRepository.delete(deposit);
+            }
+        });
+
+        // Nếu reservation vẫn có Deposit nhưng Transaction không track, xóa luôn
+        if (reservation.getDeposit() != null) {
+            var deposit = reservation.getDeposit();
+            reservation.setDeposit(null);
+            reservationRepository.save(reservation);
+            depositRepository.delete(deposit);
+        }
+
+        EventBicycle eventBicycle = reservation.getEventBicycle();
+        if (eventBicycle != null) {
+            eventBicycle.setStatus("Sold");
+            eventBicycleRepository.save(eventBicycle);
+        }
+
+        // Đặt reservation thành Cancelled (đã hoàn tiền xong)
+        reservation.setStatus("Cancelled");
+        reservationRepository.save(reservation);
+
+        return "Đã hoàn tiền cọc " + amount.longValue() + " VND thành công cho người mua.";
+    }
+
     // ==========================================
     // THANH TOÁN CUỐI SAU KHI KIỂM ĐỊNH THÀNH CÔNG
     // ==========================================
