@@ -163,6 +163,15 @@ public class ReservationController {
         return apiResponse;
     }
 
+    @PostMapping("/{reservationId}/compensation-buyer-no-show")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('USER')")
+    public ApiResponse<String> transferDepositToSellerAfterBuyerNoShow(@PathVariable int reservationId) {
+        ApiResponse<String> apiResponse = new ApiResponse<>();
+        apiResponse.setResult(reservationService.transferDepositToSellerAfterBuyerNoShow(reservationId));
+        apiResponse.setMessage("Yêu cầu nhận tiền bồi thường đã được xử lý");
+        return apiResponse;
+    }
+
     @PostMapping("/{reservationId}/refund-success-transaction")
     @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse<String> refundDepositAfterTransaction(@PathVariable int reservationId) {

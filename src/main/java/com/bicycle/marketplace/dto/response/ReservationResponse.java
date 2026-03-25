@@ -26,10 +26,12 @@ public class ReservationResponse {
     // Người mua
     private int buyerId;
     private String buyerName;
+    private String buyerUrlImage;
 
     // Người bán
     private int sellerId;
     private String sellerName;
+    private String sellerUrlImage;
 
     // Inspector
     private Integer inspectorId;

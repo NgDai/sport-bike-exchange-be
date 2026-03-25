@@ -250,6 +250,7 @@ public class TransactionService {
         if (t.getReservation() != null) {
             Reservation res = t.getReservation();
             r.setStatus(res.getStatus() != null ? res.getStatus() : (t.getStatus() != null ? t.getStatus() : ""));
+            r.setCancelDescription(res.getCancelDescription()); // Thêm
             r.setMeetingLocation(res.getMeetingLocation());
             r.setMeetingTime(res.getMeetingTime());
             if (res.getInspector() != null) {
@@ -257,6 +258,20 @@ public class TransactionService {
                 r.setInspectorName((inspector.getFullName() != null && !inspector.getFullName().isEmpty()) 
                     ? inspector.getFullName() : inspector.getUsername());
                 r.setInspectorPhone(inspector.getPhone());
+            }
+            // Fallback: nếu transaction không có seller trực tiếp, lấy từ reservation's listing hoặc eventBike
+            if (r.getSellerId() == 0) {
+                if (res.getListing() != null && res.getListing().getSeller() != null) {
+                    Users listingSeller = res.getListing().getSeller();
+                    r.setSellerId(listingSeller.getUserId());
+                    r.setSellerName(listingSeller.getFullName() != null && !listingSeller.getFullName().isEmpty()
+                            ? listingSeller.getFullName() : listingSeller.getUsername());
+                } else if (res.getEventBicycle() != null && res.getEventBicycle().getSeller() != null) {
+                    Users ebSeller = res.getEventBicycle().getSeller();
+                    r.setSellerId(ebSeller.getUserId());
+                    r.setSellerName(ebSeller.getFullName() != null && !ebSeller.getFullName().isEmpty()
+                            ? ebSeller.getFullName() : ebSeller.getUsername());
+                }
             }
         } else if (t.getDeposit() != null && t.getDeposit().getStatus() != null && !t.getDeposit().getStatus().isBlank()) {
             r.setStatus(t.getDeposit().getStatus());

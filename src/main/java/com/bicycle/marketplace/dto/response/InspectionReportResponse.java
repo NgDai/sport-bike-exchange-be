@@ -15,8 +15,12 @@ public class InspectionReportResponse {
     private Integer reservationId;
     private int inspectorId;
     private String result;
+    private String reason;
+    private String note;
     private String checklistItems; // JSON string
     private Date createAt;
     private String buyerName;
     private String sellerName;
+    private Boolean buyerCheckin;
+    private Boolean sellerCheckin;
 }

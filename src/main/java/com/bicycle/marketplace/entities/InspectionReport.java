@@ -26,7 +26,13 @@ public class InspectionReport {
     Users inspector;
     String result; // PASS, FAIL, PENDING
     @Column(columnDefinition = "TEXT")
+    String reason;
+    @Column(columnDefinition = "TEXT")
+    String note;
+    @Column(columnDefinition = "TEXT")
     String checklistItems; // JSON array: [{"name":"...","status":"PASS/FAIL/NOT_CHECKED","note":"..."}]
+    Boolean buyerCheckin;
+    Boolean sellerCheckin;
     @CreationTimestamp
     Date createdAt;
 }

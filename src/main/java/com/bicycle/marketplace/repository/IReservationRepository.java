@@ -12,11 +12,17 @@ import java.util.List;
 @Repository
 public interface IReservationRepository extends JpaRepository<Reservation, Integer> {
     List<Reservation> findAllByStatus(String status);
+
     List<Reservation> findAllByStatusNot(String status);
+
     List<Reservation> findByBuyer_UserIdOrderByReservedAtDesc(int userId);
+
     List<Reservation> findByBuyer_UserIdAndStatusNotOrderByReservedAtDesc(int userId, String status);
+
     java.util.Optional<Reservation> findByDeposit_DepositId(int depositId);
+
     List<Reservation> findByInspectorAndStatusIn(Users inspector, List<String> statuses);
+
     List<Reservation> findByBuyer_UserIdAndEventBicycleNotNull(int userId);
 
 }

@@ -80,6 +80,19 @@ public class InspectionReportService {
             throw new RuntimeException("Bạn không phải là Kiểm định viên được phân công cho giao dịch này!");
         }
 
+        BikeListing listing = reservation.getListing();
+        if (listing == null) {
+            throw new RuntimeException("Giao dịch này không liên đới bài đăng nào!");
+        }
+
+        if (Boolean.TRUE.equals(request.getBuyerCheckin()) && Boolean.FALSE.equals(request.getSellerCheckin())) {
+            request.setResult("SELLER_NO_SHOW");
+            request.setReason(request.getReason() != null && !request.getReason().isEmpty() ? request.getReason() : "Giao dịch thất bại: Người bán không có mặt");
+        } else if (Boolean.FALSE.equals(request.getBuyerCheckin()) && Boolean.TRUE.equals(request.getSellerCheckin())) {
+            request.setResult("BUYER_NO_SHOW");
+            request.setReason(request.getReason() != null && !request.getReason().isEmpty() ? request.getReason() : "Giao dịch thất bại: Người mua không có mặt");
+        }
+
         InspectionReport inspectionReport = inspectionReportMapper.toInspectionReport(request);
         inspectionReport.setInspector(inspector);
         inspectionReport.setReservation(reservation);
@@ -96,11 +109,6 @@ public class InspectionReportService {
 
         inspectionReport = inspectionReportRepository.save(inspectionReport);
 
-        BikeListing listing = reservation.getListing();
-        if (listing == null) {
-            throw new RuntimeException("Giao dịch này không liên đới bài đăng nào!");
-        }
-
         if ("SUCCESS".equalsIgnoreCase(request.getResult())) {
             reservation.setStatus("Waiting_Payment");
             listing.setStatus("Waiting_Payment");
@@ -108,22 +116,21 @@ public class InspectionReportService {
             bikeListingRepository.save(listing);
         } else if ("SELLER_NO_SHOW".equalsIgnoreCase(request.getResult())) {
             reservation.setStatus("Inspection_Failed"); // Trạng thái trung gian để refundDeposit được gọi
+            reservation.setCancelDescription(request.getReason());
             listing.setStatus("Hidden");
             reservationRepository.save(reservation);
             bikeListingRepository.save(listing);
-            // Kích hoạt hoàn tiền cho người mua
-            try {
-                reservationService.refundDepositAfterInspectionFail(reservationId);
-            } catch (Exception e) {
-                log.error("Lỗi khi hoàn tiền cho SELLER_NO_SHOW: {}", e.getMessage());
-            }
+            // Người mua sẽ tự nhấn nút hoàn cọc trên UI
         } else if ("BUYER_NO_SHOW".equalsIgnoreCase(request.getResult())) {
-            reservation.setStatus("Cancelled");
+            reservation.setStatus("Inspection_Failed");
+            reservation.setCancelDescription(request.getReason());
             listing.setStatus("Available");
             reservationRepository.save(reservation);
             bikeListingRepository.save(listing);
+            // Người bán sẽ tự nhấn nút nhận đền bù trên UI
         } else {
             reservation.setStatus("Inspection_Failed");
+            reservation.setCancelDescription(request.getReason());
             listing.setStatus("Available");
             reservationRepository.save(reservation);
             bikeListingRepository.save(listing);
@@ -176,9 +183,12 @@ public class InspectionReportService {
         // Kiểm tra quyền: chỉ buyer, seller, inspector của reservation hoặc ADMIN mới được xem
         boolean isBuyer = reservation.getBuyer() != null
                 && reservation.getBuyer().getUsername().equals(username);
-        boolean isSeller = reservation.getListing() != null
+        boolean isSeller = (reservation.getListing() != null
                 && reservation.getListing().getSeller() != null
-                && reservation.getListing().getSeller().getUsername().equals(username);
+                && reservation.getListing().getSeller().getUsername().equals(username)) ||
+                (reservation.getEventBicycle() != null
+                && reservation.getEventBicycle().getSeller() != null
+                && reservation.getEventBicycle().getSeller().getUsername().equals(username));
         boolean isInspector = reservation.getInspector() != null
                 && reservation.getInspector().getUsername().equals(username);
         boolean isAdmin = SecurityContextHolder.getContext().getAuthentication().getAuthorities().stream()

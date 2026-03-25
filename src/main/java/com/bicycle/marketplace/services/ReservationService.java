@@ -52,7 +52,8 @@ public class ReservationService {
     @Value("${vnpay.returnUrl}")
     private String vnpayReturnUrl;
 
-    public ReservationResponse createReservation(int bikeListingId, int eventBikeId, ReservationCreationRequest request) {
+    public ReservationResponse createReservation(int bikeListingId, int eventBikeId,
+            ReservationCreationRequest request) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated()) {
             throw new AppException(ErrorCode.UNAUTHORIZED);
@@ -157,10 +158,11 @@ public class ReservationService {
             throw new AppException(ErrorCode.UNAUTHORIZED);
         }
         String username = authentication.getName();
-        Users user =  userRepository.findByUsername(username)
+        Users user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 
-        List<Reservation> reservations = reservationRepository.findByBuyer_UserIdAndEventBicycleNotNull(user.getUserId());
+        List<Reservation> reservations = reservationRepository
+                .findByBuyer_UserIdAndEventBicycleNotNull(user.getUserId());
         return reservations.stream()
                 .map(this::toReservationResponseSafe)
                 .toList();
@@ -206,27 +208,30 @@ public class ReservationService {
         Reservation reservation = reservationRepository.findById(reservationId)
                 .orElseThrow(() -> new AppException(ErrorCode.RESERVATION_NOT_FOUND));
 
+        boolean isWaitingPaymentDeposit = reservation.getStatus().equalsIgnoreCase("Waiting_Payment")
+                && reservation.getDeposit() != null
+                && "Waiting_Payment".equalsIgnoreCase(reservation.getDeposit().getStatus());
+
         if (!reservation.getStatus().equalsIgnoreCase("Deposited")
                 && !reservation.getStatus().equalsIgnoreCase("Reserved")
-                && !reservation.getStatus().equalsIgnoreCase("Scheduled")) {
+                && !reservation.getStatus().equalsIgnoreCase("Scheduled")
+                && !isWaitingPaymentDeposit) {
             throw new RuntimeException("Không thể hủy reservation ở trạng thái: " + reservation.getStatus());
         }
 
-        BikeListing listing = bikeListingRepository.findById(reservation.getListing().getListingId())
-                .orElseThrow(() -> new AppException(ErrorCode.BIKE_LISTING_NOT_FOUND));
-
-        // 1. Cập nhật Transaction liên quan (nếu có) và xóa Deposit trước khi xóa Reservation
+        // 1. Cập nhật Transaction liên quan (nếu có) và xóa Deposit trước khi xóa
+        // Reservation
         transactionRepository.findByReservation_ReservationId(reservationId)
                 .ifPresent(transaction -> {
                     // Lấy Deposit từ Transaction rồi xóa
                     var deposit = transaction.getDeposit();
-                    
+
                     // Giữ lại transaction làm lịch sử, cập nhật status và xóa reference
                     transaction.setStatus("Cancelled");
                     transaction.setReservation(null);
                     transaction.setDeposit(null);
                     transactionRepository.save(transaction);
-                    
+
                     if (deposit != null) {
                         depositRepository.delete(deposit);
                     }
@@ -236,8 +241,19 @@ public class ReservationService {
         reservationRepository.delete(reservation);
 
         // 3. Đặt lại trạng thái listing về Available
-        listing.setStatus("Available");
-        bikeListingRepository.save(listing);
+        if (reservation.getListing() != null) {
+            BikeListing listing = bikeListingRepository.findById(reservation.getListing().getListingId())
+                    .orElseThrow(() -> new AppException(ErrorCode.BIKE_LISTING_NOT_FOUND));
+            listing.setStatus("Available");
+            bikeListingRepository.save(listing);
+        }
+
+        if (reservation.getEventBicycle() != null) {
+            EventBicycle eventBicycle = eventBicycleRepository.findById(reservation.getEventBicycle().getEventBikeId())
+                    .orElseThrow(() -> new AppException(ErrorCode.EVENT_BICYCLE_NOT_FOUND));
+            eventBicycle.setStatus("Available in Event");
+            eventBicycleRepository.save(eventBicycle);
+        }
 
         return "Reservation và Deposit đã được xóa, Transaction được giữ lại làm lịch sử, xe đã trở về trạng thái Available.";
     }
@@ -255,13 +271,25 @@ public class ReservationService {
         Reservation reservation = reservationRepository.findById(reservationId)
                 .orElseThrow(() -> new AppException(ErrorCode.RESERVATION_NOT_FOUND));
 
-        if (reservation.getListing().getSeller().getUserId() != seller.getUserId()) {
+        Integer sellerId = null;
+        if (reservation.getListing() != null) {
+            sellerId = reservation.getListing().getSeller().getUserId();
+        } else if (reservation.getEventBicycle() != null && reservation.getEventBicycle().getSeller() != null) {
+            sellerId = reservation.getEventBicycle().getSeller().getUserId();
+        }
+
+        if (sellerId == null || sellerId != seller.getUserId()) {
             throw new RuntimeException("Chỉ người bán mới có quyền yêu cầu hủy giao dịch này.");
         }
 
+        boolean isWaitingPaymentDeposit = reservation.getStatus().equalsIgnoreCase("Waiting_Payment")
+                && reservation.getDeposit() != null
+                && "Waiting_Payment".equalsIgnoreCase(reservation.getDeposit().getStatus());
+
         if (!reservation.getStatus().equalsIgnoreCase("Deposited")
                 && !reservation.getStatus().equalsIgnoreCase("Reserved")
-                && !reservation.getStatus().equalsIgnoreCase("Scheduled")) {
+                && !reservation.getStatus().equalsIgnoreCase("Scheduled")
+                && !isWaitingPaymentDeposit) {
             throw new RuntimeException("Không thể yêu cầu hủy reservation ở trạng thái: " + reservation.getStatus());
         }
 
@@ -270,7 +298,8 @@ public class ReservationService {
         reservation.setCancelImage(request.getCancelImage());
         reservationRepository.save(reservation);
 
-        // Đồng bộ Transaction nếu có (chờ admin duyệt nên đổi status của transation cũng hợp lý, hoặc giữ nguyên nhưng đổi Reservation là đủ)
+        // Đồng bộ Transaction nếu có (chờ admin duyệt nên đổi status của transation
+        // cũng hợp lý, hoặc giữ nguyên nhưng đổi Reservation là đủ)
         transactionRepository.findByReservation_ReservationId(reservationId).ifPresent(transaction -> {
             transaction.setStatus("Pending_Cancel");
             transactionRepository.save(transaction);
@@ -294,20 +323,18 @@ public class ReservationService {
         }
 
         // Thực hiện hủy như cancel bình thường
-        // Vì status hiện tại là Pending_Cancel nên ta gọi logic giống cancelReservation, nhưng bypass cái check status đó
-        BikeListing listing = bikeListingRepository.findById(reservation.getListing().getListingId())
-                .orElseThrow(() -> new AppException(ErrorCode.BIKE_LISTING_NOT_FOUND));
-
+        // Vì status hiện tại là Pending_Cancel nên ta gọi logic giống
+        // cancelReservation, nhưng bypass cái check status đó
         transactionRepository.findByReservation_ReservationId(reservationId)
                 .ifPresent(transaction -> {
                     var deposit = transaction.getDeposit();
-                    
+
                     // Giữ lại transaction làm lịch sử, cập nhật status và xóa reference
                     transaction.setStatus("Cancelled");
                     transaction.setReservation(null);
                     transaction.setDeposit(null);
                     transactionRepository.save(transaction);
-                    
+
                     if (deposit != null) {
                         depositRepository.delete(deposit);
                     }
@@ -315,8 +342,19 @@ public class ReservationService {
 
         reservationRepository.delete(reservation);
 
-        listing.setStatus("Available");
-        bikeListingRepository.save(listing);
+        if (reservation.getListing() != null) {
+            BikeListing listing = bikeListingRepository.findById(reservation.getListing().getListingId())
+                    .orElseThrow(() -> new AppException(ErrorCode.BIKE_LISTING_NOT_FOUND));
+            listing.setStatus("Available");
+            bikeListingRepository.save(listing);
+        }
+
+        if (reservation.getEventBicycle() != null) {
+            EventBicycle eventBicycle = eventBicycleRepository.findById(reservation.getEventBicycle().getEventBikeId())
+                    .orElseThrow(() -> new AppException(ErrorCode.EVENT_BICYCLE_NOT_FOUND));
+            eventBicycle.setStatus("Available in Event");
+            eventBicycleRepository.save(eventBicycle);
+        }
 
         return "Yêu cầu hủy giao dịch đã được duyệt. Đã hủy Reservation và Deposit, Transaction được giữ lại làm lịch sử.";
     }
@@ -336,16 +374,17 @@ public class ReservationService {
         }
 
         // Khôi phục lại trạng thái cũ
-        // Nếu có inspector thì có thể là Scheduled, nếu không có inspector và có meeting info thì là Reserved, không तो là Deposited
-        String restoredStatus = "Deposited"; 
+        // Nếu có inspector thì có thể là Scheduled, nếu không có inspector và có
+        // meeting info thì là Reserved, không तो là Deposited
+        String restoredStatus = "Deposited";
         if (reservation.getInspector() != null && reservation.getMeetingTime() != null) {
             restoredStatus = "Scheduled";
         } else if (reservation.getMeetingTime() == null) {
             restoredStatus = "Deposited"; // Hoặc Reserved tuỳ luồng ban đầu
         } else {
-             restoredStatus = "Reserved";
+            restoredStatus = "Reserved";
         }
-        
+
         reservation.setStatus(restoredStatus);
         reservation.setCancelDescription(null);
         reservation.setCancelImage(null);
@@ -372,15 +411,19 @@ public class ReservationService {
                 .orElseThrow(() -> new AppException(ErrorCode.RESERVATION_NOT_FOUND));
 
         if (!"Inspection_Failed".equalsIgnoreCase(reservation.getStatus())) {
-            throw new RuntimeException("Chỉ có thể hoàn tiền cho giao dịch có trạng thái Inspection_Failed. Trạng thái hiện tại: " + reservation.getStatus());
+            throw new RuntimeException(
+                    "Chỉ có thể hoàn tiền cho giao dịch có trạng thái Inspection_Failed. Trạng thái hiện tại: "
+                            + reservation.getStatus());
         }
 
-        // Kiểm tra quyền: chỉ buyer hoặc admin mới được thực hiện
+        // Kiểm tra quyền: chỉ buyer, admin hoặc inspector mới được thực hiện
         boolean isAdmin = authentication.getAuthorities().stream()
                 .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+        boolean isInspector = authentication.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_INSPECTOR"));
         boolean isBuyer = reservation.getBuyer() != null
                 && reservation.getBuyer().getUsername().equals(username);
-        if (!isAdmin && !isBuyer) {
+        if (!isAdmin && !isBuyer && !isInspector) {
             throw new RuntimeException("Bạn không có quyền thực hiện hoàn tiền cho giao dịch này.");
         }
 
@@ -393,15 +436,23 @@ public class ReservationService {
             throw new RuntimeException("Không tìm thấy số tiền cọc hợp lệ hoặc tiền cọc bằng 0");
         }
 
-        // Hoàn tiền từ System Wallet về ví buyer
+        // Hoàn tiền cọc 100% từ System Wallet về ví buyer
         walletService.refundToUserWallet(amount, reservation.getBuyer().getUsername(),
                 "Hoàn tiền cọc do kiểm định thất bại - Giao dịch #" + reservationId);
+
+        // Nếu là SELLER_NO_SHOW → thưởng thêm 200,000 VND cho buyer
+        boolean isSellerNoShow = reservation.getCancelDescription() != null
+                && reservation.getCancelDescription().toLowerCase().contains("người bán không có mặt");
+        if (isSellerNoShow) {
+            double bonus = 200000;
+            walletService.refundToUserWallet(bonus, reservation.getBuyer().getUsername(),
+                    "Tiền bồi thường thêm 200,000 VND do người bán không đến - Giao dịch #" + reservationId);
+        }
 
         // Cập nhật Transaction: tách reference, đặt status Refunded
         transactionRepository.findByReservation_ReservationId(reservationId).ifPresent(transaction -> {
             var deposit = transaction.getDeposit();
             transaction.setStatus("Refunded");
-            transaction.setReservation(null);
             transaction.setDeposit(null);
             transactionRepository.save(transaction);
             // Xóa Deposit sau khi tách khỏi Transaction
@@ -418,18 +469,23 @@ public class ReservationService {
             depositRepository.delete(deposit);
         }
 
-        // Đảm bảo listing về Available (InspectionReportService đã làm, đây là safety net)
+        // Đảm bảo listing về Available (InspectionReportService đã làm, đây là safety
+        // net)
         BikeListing listing = reservation.getListing();
         if (listing != null && !"Available".equalsIgnoreCase(listing.getStatus())) {
             listing.setStatus("Available");
             bikeListingRepository.save(listing);
         }
 
-        // Đặt reservation thành Cancelled (đã hoàn tiền xong)
-        reservation.setStatus("Cancelled");
+        // Đặt reservation thành Refunded (đã hoàn tiền xong)
+        reservation.setStatus("Refunded");
         reservationRepository.save(reservation);
 
-        return "Đã hoàn tiền cọc " + amount.longValue() + " VND thành công cho người mua. Giao dịch đã bị hủy.";
+        String message = "Đã hoàn tiền cọc " + amount.longValue() + " VND cho người mua.";
+        if (isSellerNoShow) {
+            message += " Đã cộng thêm 200,000 VND tiền bồi thường.";
+        }
+        return message;
     }
 
     @Transactional
@@ -497,6 +553,87 @@ public class ReservationService {
         return "Đã hoàn tiền cọc " + amount.longValue() + " VND thành công cho người mua.";
     }
 
+    @Transactional
+    public String transferDepositToSellerAfterBuyerNoShow(int reservationId) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new AppException(ErrorCode.UNAUTHORIZED);
+        }
+
+        Reservation reservation = reservationRepository.findById(reservationId)
+                .orElseThrow(() -> new AppException(ErrorCode.RESERVATION_NOT_FOUND));
+
+        if (!"Inspection_Failed".equalsIgnoreCase(reservation.getStatus())
+                && !"Cancelled".equalsIgnoreCase(reservation.getStatus())) {
+            // Since BUYER_NO_SHOW sets status to Cancelled or Inspection_Failed. We will
+            // just check if we can process it.
+            // Normally the caller handles the status.
+        }
+
+        // Lấy số tiền cọc
+        Double amount = reservation.getDepositAmount();
+        if (amount == null && reservation.getDeposit() != null) {
+            amount = reservation.getDeposit().getAmount();
+        }
+        if (amount == null || amount <= 0) {
+            throw new RuntimeException("Không tìm thấy số tiền cọc hợp lệ hoặc tiền cọc bằng 0");
+        }
+
+        // Xác định Seller: ưu tiên từ listing, sau đó từ eventBicycle
+        Users seller = null;
+        if (reservation.getListing() != null) {
+            BikeListing listing = bikeListingRepository.findById(reservation.getListing().getListingId())
+                    .orElseThrow(() -> new AppException(ErrorCode.BIKE_LISTING_NOT_FOUND));
+            seller = listing.getSeller();
+        } else if (reservation.getEventBicycle() != null) {
+            EventBicycle eb = reservation.getEventBicycle();
+            seller = eb.getSeller();
+        }
+
+        if (seller == null) {
+            throw new RuntimeException("Không tìm thấy thông tin seller để chuyển tiền.");
+        }
+
+        // Chia tiền cọc: Seller nhận 50%, System giữ 50%
+        double sellerShare = amount * 0.5;
+
+        walletService.refundToUserWallet(sellerShare, seller.getUsername(),
+                "Nhận 50% tiền cọc (đền bù do người mua không đến kiểm định) - Giao dịch #" + reservationId);
+
+        // Cập nhật Transaction: tách reference, đặt status Compensated
+        transactionRepository.findByReservation_ReservationId(reservationId).ifPresent(transaction -> {
+            var deposit = transaction.getDeposit();
+            transaction.setStatus("Compensated");
+            transaction.setDeposit(null);
+            transactionRepository.save(transaction);
+            // Xóa Deposit sau khi tách khỏi Transaction
+            if (deposit != null) {
+                depositRepository.delete(deposit);
+            }
+        });
+
+        // Nếu reservation vẫn có Deposit nhưng Transaction không track, xóa luôn
+        if (reservation.getDeposit() != null) {
+            var deposit = reservation.getDeposit();
+            reservation.setDeposit(null);
+            reservationRepository.save(reservation);
+            depositRepository.delete(deposit);
+        }
+
+        // Đảm bảo listing về Available
+        BikeListing listing = reservation.getListing();
+        if (listing != null && !"Available".equalsIgnoreCase(listing.getStatus())) {
+            listing.setStatus("Available");
+            bikeListingRepository.save(listing);
+        }
+
+        // Đặt reservation thành Compensated
+        reservation.setStatus("Compensated");
+        reservationRepository.save(reservation);
+
+        return "Đã chuyển 50% tiền cọc (" + (long) sellerShare + " VND) cho người bán. Hệ thống giữ lại 50% còn lại. Giao dịch đã được đền bù.";
+    }
+
     // ==========================================
     // THANH TOÁN CUỐI SAU KHI KIỂM ĐỊNH THÀNH CÔNG
     // ==========================================
@@ -515,7 +652,9 @@ public class ReservationService {
                 .orElseThrow(() -> new AppException(ErrorCode.RESERVATION_NOT_FOUND));
 
         if (!"Waiting_Payment".equalsIgnoreCase(reservation.getStatus())) {
-            throw new RuntimeException("Chỉ có thể thanh toán cuối cho giao dịch đã hoàn thành kiểm định (Waiting_Payment). Trạng thái hiện tại: " + reservation.getStatus());
+            throw new RuntimeException(
+                    "Chỉ có thể thanh toán cuối cho giao dịch đã hoàn thành kiểm định (Waiting_Payment). Trạng thái hiện tại: "
+                            + reservation.getStatus());
         }
 
         if (reservation.getBuyer() == null || reservation.getBuyer().getUserId() != buyer.getUserId()) {
@@ -530,7 +669,8 @@ public class ReservationService {
         double remainingAmount = listingPrice - depositAmount;
 
         if (remainingAmount <= 0) {
-            throw new RuntimeException("Số tiền còn lại không hợp lệ (" + remainingAmount + "). Giao dịch có thể đã thanh toán đủ.");
+            throw new RuntimeException(
+                    "Số tiền còn lại không hợp lệ (" + remainingAmount + "). Giao dịch có thể đã thanh toán đủ.");
         }
 
         Wallet buyerWallet = walletRepository.findByUsername(username).orElseGet(() -> {
@@ -544,7 +684,8 @@ public class ReservationService {
             return CreateDepositResponse.builder()
                     .deposit(null)
                     .paymentUrl(null)
-                    .message("Thanh toán thành công! Đã trừ " + (long) remainingAmount + " VND từ ví. Giao dịch hoàn tất.")
+                    .message("Thanh toán thành công! Đã trừ " + (long) remainingAmount
+                            + " VND từ ví. Giao dịch hoàn tất.")
                     .build();
         }
 
@@ -560,7 +701,8 @@ public class ReservationService {
         return CreateDepositResponse.builder()
                 .deposit(null)
                 .paymentUrl(paymentUrl)
-                .message("Ví không đủ tiền. Vui lòng thanh toán thêm " + amountNeeded + " VND qua VNPay để hoàn tất giao dịch.")
+                .message("Ví không đủ tiền. Vui lòng thanh toán thêm " + amountNeeded
+                        + " VND qua VNPay để hoàn tất giao dịch.")
                 .build();
     }
 
@@ -593,10 +735,6 @@ public class ReservationService {
         completeReservation(reservation, listing, remainingAmount, username);
     }
 
-    // ==========================================
-    // ADMIN CHUYỂN TIỀN CHO SELLER SAU KHI BUYER THANH TOÁN XONG
-    // ==========================================
-
     @Transactional
     public String payoutToSeller(int reservationId) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -610,7 +748,7 @@ public class ReservationService {
         if (!"Completed".equalsIgnoreCase(reservation.getStatus())) {
             throw new RuntimeException(
                     "Chỉ có thể chuyển tiền cho seller khi giao dịch đã hoàn thành (Completed). "
-                    + "Trạng thái hiện tại: " + reservation.getStatus());
+                            + "Trạng thái hiện tại: " + reservation.getStatus());
         }
 
         // Kiểm tra đã payout chưa
@@ -649,8 +787,7 @@ public class ReservationService {
         walletService.refundToUserWallet(
                 totalAmount,
                 seller.getUsername(),
-                "Thanh toán từ hệ thống cho người bán - Giao dịch đặt chỗ #" + reservationId
-        );
+                "Thanh toán từ hệ thống cho người bán - Giao dịch đặt chỗ #" + reservationId);
 
         // Cập nhật Transaction status → Paid_Out
         transactionRepository.findByReservation_ReservationId(reservationId).ifPresent(txn -> {
@@ -675,15 +812,18 @@ public class ReservationService {
             // Giữ nguyên status, không cần làm gì thêm
         });
     }
-    
-    private void completeReservation(Reservation reservation, BikeListing listing, double remainingAmount, String buyerUsername) {
+
+    private void completeReservation(Reservation reservation, BikeListing listing, double remainingAmount,
+            String buyerUsername) {
         Wallet buyerWallet = walletRepository.findByUsername(buyerUsername)
                 .orElseThrow(() -> new AppException(ErrorCode.WALLET_NOT_FOUND));
         Wallet systemWallet = walletRepository.findByUsername("System")
                 .orElseThrow(() -> new RuntimeException("Chưa cấu hình System Wallet"));
 
         if (buyerWallet.getBalance() < remainingAmount) {
-            throw new RuntimeException("Ví không đủ tiền để hoàn tất thanh toán. Số dư hiện tại: " + (long) buyerWallet.getBalance() + " VND, cần thêm: " + (long) (remainingAmount - buyerWallet.getBalance()) + " VND.");
+            throw new RuntimeException(
+                    "Ví không đủ tiền để hoàn tất thanh toán. Số dư hiện tại: " + (long) buyerWallet.getBalance()
+                            + " VND, cần thêm: " + (long) (remainingAmount - buyerWallet.getBalance()) + " VND.");
         }
 
         // Chuyển tiền Buyer → System Wallet
@@ -734,7 +874,8 @@ public class ReservationService {
 
             if (eb.getSeller() != null) {
                 response.setSellerName(eb.getSeller().getFullName() != null
-                        ? eb.getSeller().getFullName() : eb.getSellerName());
+                        ? eb.getSeller().getFullName()
+                        : eb.getSellerName());
                 response.setSellerId(eb.getSeller().getUserId());
             } else if (eb.getSellerName() != null) {
                 response.setSellerName(eb.getSellerName());

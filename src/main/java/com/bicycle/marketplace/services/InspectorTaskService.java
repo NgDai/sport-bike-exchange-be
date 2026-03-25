@@ -33,7 +33,7 @@ public class InspectorTaskService {
         Users inspector = getCurrentUser();
         List<Reservation> tasks = reservationRepository.findByInspectorAndStatusIn(
                 inspector,
-                List.of("Scheduled", "Pending", "Waiting_Payment", "Inspection_Failed", "Completed") // Lấy cả nhiệm vụ cũ để xem report
+                List.of("Scheduled", "Pending", "Waiting_Payment", "Inspection_Failed", "Completed", "Cancelled", "Refunded", "Compensated")
         );
         return tasks.stream().map(this::mapToTaskResponse).collect(Collectors.toList());
     }

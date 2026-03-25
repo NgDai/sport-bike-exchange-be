@@ -65,4 +65,5 @@ public class TransactionResponse {
     private Date createdAt;
     private Date updatedAt;
     private String status;
+    private String cancelDescription; // Thêm
 }
