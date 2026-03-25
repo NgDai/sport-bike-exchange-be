@@ -547,7 +547,7 @@ public class ReservationService {
         }
 
         // Đặt reservation thành Cancelled (đã hoàn tiền xong)
-        reservation.setStatus("Cancelled");
+        reservation.setStatus("Completed");
         reservationRepository.save(reservation);
 
         return "Đã hoàn tiền cọc " + amount.longValue() + " VND thành công cho người mua.";
