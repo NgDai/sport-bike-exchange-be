@@ -266,7 +266,7 @@ public class DepositService {
         // 2. Nhả lại xe trong sự kiện (Nếu xe đang tham gia sự kiện)
         EventBicycle eventBicycle = deposit.getEventBicycle();
         if (eventBicycle != null && "Waiting_Payment".equals(eventBicycle.getStatus())) {
-            eventBicycle.setStatus("Available");
+            eventBicycle.setStatus("Available_in_event");
             eventBicycleRepository.save(eventBicycle);
         }
 
