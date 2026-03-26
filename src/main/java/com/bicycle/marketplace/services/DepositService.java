@@ -440,7 +440,7 @@ public class DepositService {
                 "Thanh toán cọc xe #" + eventBicycle.getEventBikeId());
 
         // KIỂM TRA LẠI TRẠNG THÁI XE (TRÁNH TRANH CHẤP)
-        if (!"Available".equals(eventBicycle.getStatus())) {
+        if (!"Available_in_event".equals(eventBicycle.getStatus())) {
             deposit.setStatus("Cancelled_AlreadyDeposited");
             depositRepository.save(deposit);
 
@@ -485,7 +485,7 @@ public class DepositService {
         // Nhả lại xe cho người khác mua
         EventBicycle eventBicycle = deposit.getEventBicycle();
         if ("Waiting_Payment".equals(eventBicycle.getStatus())) {
-            eventBicycle.setStatus("Available in Event");
+            eventBicycle.setStatus("Available_in_event");
             eventBicycleRepository.save(eventBicycle);
         }
 
