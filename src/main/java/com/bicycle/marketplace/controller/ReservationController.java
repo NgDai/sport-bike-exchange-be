@@ -60,6 +60,15 @@ public class ReservationController {
         return apiResponse;
     }
 
+    @GetMapping("/eventBicycle/my-reservations")
+    @PreAuthorize("isAuthenticated()")
+    public ApiResponse<List<ReservationResponse>> getMyEventBicycle() {
+        ApiResponse<List<ReservationResponse>> apiResponse = new ApiResponse<>();
+        apiResponse.setResult(reservationService.getMyReservationsWithEventBicycle());
+        apiResponse.setMessage("Lấy danh sách đặt chỗ xe sự kiện thành công");
+        return apiResponse;
+    }
+
     // --- API MỚI CHO ADMIN LÊN LỊCH ---
     @PutMapping("/{reservationId}/schedule")
     @PreAuthorize("hasRole('ADMIN')")
