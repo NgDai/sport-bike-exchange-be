@@ -101,24 +101,42 @@ public class EventBicycleService {
             throw new RuntimeException("Sự kiện này đã kết thúc, không thể đăng ký xe mới");
         }
 
-        if (bikeListing.getStatus().equalsIgnoreCase("Available")) {
-            EventBicycle eventBicycle = new EventBicycle();
-            eventBicycle.setSeller(user);
-            eventBicycle.setEvent(events);
-            eventBicycle.setListing(bikeListing);
-            eventBicycle.setBicycle(bicycle);
-            eventBicycle.setSellerName(user.getFullName());
-            eventBicycle.setStatus("Pending");
-            eventBicycle.setPrice(bikeListing.getPrice());
-            eventBicycle.setTitle(bikeListing.getTitle());
-            eventBicycle.setBikeType(bikeListing.getBicycle().getBikeType());
-            eventBicycle.setImage_url(bikeListing.getImage_url());
-            eventBicycle.setCondition(bikeListing.getCondition());
-            eventBicycle.setCreateDate(LocalDate.now());
-            return eventBicycleMapper.toEventBicycleResponse(eventBicycleRepository.save(eventBicycle));
-        } else {
-            throw new RuntimeException("Xe này không có sẵn!!!");
-        }
+        bikeListing.setStatus("Available_in_event");
+        bikeListingRepository.save(bikeListing);
+
+        EventBicycle eventBicycle = new EventBicycle();
+        eventBicycle.setSeller(user);
+        eventBicycle.setEvent(events);
+        eventBicycle.setListing(bikeListing);
+        eventBicycle.setBicycle(bicycle);
+        eventBicycle.setSellerName(user.getFullName());
+        eventBicycle.setStatus("Pending");
+        eventBicycle.setPrice(bikeListing.getPrice());
+        eventBicycle.setTitle(bikeListing.getTitle());
+        eventBicycle.setBikeType(bikeListing.getBicycle().getBikeType());
+        eventBicycle.setImage_url(bikeListing.getImage_url());
+        eventBicycle.setCondition(bikeListing.getCondition());
+        eventBicycle.setCreateDate(LocalDate.now());
+        return eventBicycleMapper.toEventBicycleResponse(eventBicycleRepository.save(eventBicycle));
+
+//        if (bikeListing.getStatus().equalsIgnoreCase("Available")) {
+//            EventBicycle eventBicycle = new EventBicycle();
+//            eventBicycle.setSeller(user);
+//            eventBicycle.setEvent(events);
+//            eventBicycle.setListing(bikeListing);
+//            eventBicycle.setBicycle(bicycle);
+//            eventBicycle.setSellerName(user.getFullName());
+//            eventBicycle.setStatus("Pending");
+//            eventBicycle.setPrice(bikeListing.getPrice());
+//            eventBicycle.setTitle(bikeListing.getTitle());
+//            eventBicycle.setBikeType(bikeListing.getBicycle().getBikeType());
+//            eventBicycle.setImage_url(bikeListing.getImage_url());
+//            eventBicycle.setCondition(bikeListing.getCondition());
+//            eventBicycle.setCreateDate(LocalDate.now());
+//            return eventBicycleMapper.toEventBicycleResponse(eventBicycleRepository.save(eventBicycle));
+//        } else {
+//            throw new RuntimeException("Xe này không có sẵn!!!");
+//        }
     }
 
     public Bicycle createBicycle(CreatePostingRequest request) {
@@ -309,7 +327,7 @@ public class EventBicycleService {
         }
         EventBicycle eventBicycle = eventBicycleRepository.findById(eventBikeId)
                 .orElseThrow(() -> new AppException(ErrorCode.EVENT_BICYCLE_NOT_FOUND));
-        eventBicycle.setStatus("Available");
+        eventBicycle.setStatus("Available_in_event");
         return eventBicycleMapper.toEventBicycleResponse(eventBicycleRepository.save(eventBicycle));
     }
 

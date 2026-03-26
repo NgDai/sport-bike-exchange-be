@@ -251,7 +251,7 @@ public class ReservationService {
         if (reservation.getEventBicycle() != null) {
             EventBicycle eventBicycle = eventBicycleRepository.findById(reservation.getEventBicycle().getEventBikeId())
                     .orElseThrow(() -> new AppException(ErrorCode.EVENT_BICYCLE_NOT_FOUND));
-            eventBicycle.setStatus("Available");
+            eventBicycle.setStatus("Available_in_event");
             eventBicycleRepository.save(eventBicycle);
         }
 
@@ -352,7 +352,7 @@ public class ReservationService {
         if (reservation.getEventBicycle() != null) {
             EventBicycle eventBicycle = eventBicycleRepository.findById(reservation.getEventBicycle().getEventBikeId())
                     .orElseThrow(() -> new AppException(ErrorCode.EVENT_BICYCLE_NOT_FOUND));
-            eventBicycle.setStatus("Available");
+            eventBicycle.setStatus("Available_in_event");
             eventBicycleRepository.save(eventBicycle);
         }
 
@@ -562,7 +562,7 @@ public class ReservationService {
         // net)
         EventBicycle event = reservation.getEventBicycle();
         if (event != null && !"Available".equalsIgnoreCase(event.getStatus())) {
-            event.setStatus("Available");
+            event.setStatus("Available_in_event");
             eventBicycleRepository.save(event);
         }
 

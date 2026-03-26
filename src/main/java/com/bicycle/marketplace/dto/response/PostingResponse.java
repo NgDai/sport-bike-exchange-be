@@ -26,7 +26,7 @@ public class PostingResponse {
 
     // Seller info
     String sellerName;
-    
+
 
     // Bicycle basic info
     int bikeId;
