@@ -1,6 +1,8 @@
 package com.bicycle.marketplace.services;
 
 import com.bicycle.marketplace.dto.response.InspectorTaskResponse;
+import com.bicycle.marketplace.entities.BikeListing;
+import com.bicycle.marketplace.entities.EventBicycle;
 import com.bicycle.marketplace.entities.Reservation;
 import com.bicycle.marketplace.entities.Users;
 import com.bicycle.marketplace.exception.AppException;
@@ -50,20 +52,35 @@ public class InspectorTaskService {
     }
 
     private InspectorTaskResponse mapToTaskResponse(Reservation reservation) {
-        return InspectorTaskResponse.builder()
+        InspectorTaskResponse.InspectorTaskResponseBuilder builder = InspectorTaskResponse.builder()
                 .id(reservation.getReservationId())
-                .bikeName(reservation.getListing().getTitle())
-                .bikeImage(reservation.getListing().getImage_url())
-                .price(reservation.getListing().getPrice())
                 .buyerName(reservation.getBuyer().getFullName())
                 .buyerPhone(reservation.getBuyer().getPhone())
-                .sellerName(reservation.getListing().getSeller().getFullName())
-                .sellerPhone(reservation.getListing().getSeller().getPhone())
                 .buyerAvatar(reservation.getBuyer().getAvatar())
-                .sellerAvatar(reservation.getListing().getSeller().getAvatar())
                 .location(reservation.getMeetingLocation())
                 .scheduledTime(reservation.getMeetingTime())
-                .status(reservation.getStatus())
-                .build();
+                .status(reservation.getStatus());
+
+        if (reservation.getListing() != null) {
+            BikeListing listing = reservation.getListing();
+            builder.bikeName(listing.getTitle())
+                    .bikeImage(listing.getImage_url())
+                    .price(listing.getPrice())
+                    .sellerName(listing.getSeller().getFullName())
+                    .sellerPhone(listing.getSeller().getPhone())
+                    .sellerAvatar(listing.getSeller().getAvatar())
+                    .isEventBike(false);
+        } else if (reservation.getEventBicycle() != null) {
+            EventBicycle eventBike = reservation.getEventBicycle();
+            builder.bikeName(eventBike.getTitle())
+                    .bikeImage(eventBike.getImage_url())
+                    .price(eventBike.getPrice())
+                    .sellerName(eventBike.getSeller().getFullName())
+                    .sellerPhone(eventBike.getSeller().getPhone())
+                    .sellerAvatar(eventBike.getSeller().getAvatar())
+                    .isEventBike(true);
+        }
+
+        return builder.build();
     }
 }

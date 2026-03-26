@@ -25,4 +25,5 @@ public class InspectorTaskResponse {
     private String location;
     private Date scheduledTime;
     private String status;
+    private boolean isEventBike;
 }
