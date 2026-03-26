@@ -23,4 +23,5 @@ public class InspectionReportResponse {
     private String sellerName;
     private Boolean buyerCheckin;
     private Boolean sellerCheckin;
+    private boolean isEventBike;
 }

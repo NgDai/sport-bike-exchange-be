@@ -8,6 +8,7 @@ import com.bicycle.marketplace.exception.AppException;
 import com.bicycle.marketplace.exception.ErrorCode;
 import com.bicycle.marketplace.mapper.InspectionReportMapper;
 import com.bicycle.marketplace.repository.IBikeListingRepository;
+import com.bicycle.marketplace.repository.IEventBicycleRepository;
 import com.bicycle.marketplace.repository.IInspectionReportRepository;
 import com.bicycle.marketplace.repository.IReservationRepository;
 import com.bicycle.marketplace.repository.IUserRepository;
@@ -34,6 +35,8 @@ public class InspectionReportService {
     @Autowired
     private IBikeListingRepository bikeListingRepository;
     @Autowired
+    private IEventBicycleRepository eventBicycleRepository;
+    @Autowired
     private IReservationRepository reservationRepository;
     @Autowired
     private ReservationService reservationService; // Used for refund in NO_SHOW
@@ -58,6 +61,7 @@ public class InspectionReportService {
                 } else if (eb.getSellerName() != null) {
                     response.setSellerName(eb.getSellerName());
                 }
+                response.setEventBike(true);
             }
         }
         return response;
@@ -81,8 +85,10 @@ public class InspectionReportService {
         }
 
         BikeListing listing = reservation.getListing();
-        if (listing == null) {
-            throw new RuntimeException("Giao dịch này không liên đới bài đăng nào!");
+        EventBicycle eventBicycle = reservation.getEventBicycle();
+        
+        if (listing == null && eventBicycle == null) {
+            throw new RuntimeException("Giao dịch này không liên đới bài đăng hay xe sự kiện nào!");
         }
 
         if (Boolean.TRUE.equals(request.getBuyerCheckin()) && Boolean.FALSE.equals(request.getSellerCheckin())) {
@@ -109,31 +115,29 @@ public class InspectionReportService {
 
         inspectionReport = inspectionReportRepository.save(inspectionReport);
 
+        String newStatus;
+        String bikeStatus;
         if ("SUCCESS".equalsIgnoreCase(request.getResult())) {
-            reservation.setStatus("Waiting_Payment");
-            listing.setStatus("Waiting_Payment");
-            reservationRepository.save(reservation);
-            bikeListingRepository.save(listing);
+            newStatus = "Waiting_Payment";
+            bikeStatus = "Waiting_Payment";
         } else if ("SELLER_NO_SHOW".equalsIgnoreCase(request.getResult())) {
-            reservation.setStatus("Inspection_Failed"); // Trạng thái trung gian để refundDeposit được gọi
-            reservation.setCancelDescription(request.getReason());
-            listing.setStatus("Hidden");
-            reservationRepository.save(reservation);
-            bikeListingRepository.save(listing);
-            // Người mua sẽ tự nhấn nút hoàn cọc trên UI
-        } else if ("BUYER_NO_SHOW".equalsIgnoreCase(request.getResult())) {
-            reservation.setStatus("Inspection_Failed");
-            reservation.setCancelDescription(request.getReason());
-            listing.setStatus("Available");
-            reservationRepository.save(reservation);
-            bikeListingRepository.save(listing);
-            // Người bán sẽ tự nhấn nút nhận đền bù trên UI
+            newStatus = "Inspection_Failed";
+            bikeStatus = (listing != null) ? "Hidden" : "Hidden"; // Event bike also hidden
         } else {
-            reservation.setStatus("Inspection_Failed");
-            reservation.setCancelDescription(request.getReason());
-            listing.setStatus("Available");
-            reservationRepository.save(reservation);
+            newStatus = "Inspection_Failed";
+            bikeStatus = "Available";
+        }
+
+        reservation.setStatus(newStatus);
+        reservation.setCancelDescription(request.getReason());
+        reservationRepository.save(reservation);
+
+        if (listing != null) {
+            listing.setStatus(bikeStatus);
             bikeListingRepository.save(listing);
+        } else if (eventBicycle != null) {
+            eventBicycle.setStatus(bikeStatus);
+            eventBicycleRepository.save(eventBicycle);
         }
 
         return toResponseEnriched(inspectionReport);
