@@ -41,7 +41,7 @@ public class SecurityConfig {
 
     private final String[] PUBLIC_CORS_DOMAIN = {
             "http://localhost:5173",
-            "https://sport-bike-exchange-fe.vercel.app/"
+            "https://sport-bike-exchange-fe.vercel.app"
     };
 
     @Value("${jwt.signer.key}")

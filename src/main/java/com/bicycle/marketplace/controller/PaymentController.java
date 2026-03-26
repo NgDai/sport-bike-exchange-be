@@ -49,6 +49,9 @@ public class PaymentController {
     @Value("${frontend.url:http://localhost:5173}")
     private String frontendBaseUrl;
 
+    @Value("${frontend.prod-url:https://sport-bike-exchange-fe.vercel.app}")
+    private String frontendProdUrl;
+
     // 1. API GỌI TỪ FRONTEND ĐỂ NẠP TIỀN VÀO VÍ (NẠP THƯỜNG)
     @PostMapping("/submitOrder")
     public VNPayResponse submitOrder(
@@ -57,7 +60,11 @@ public class PaymentController {
 
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
 
-        String secureOrderInfo = username + "|topup|" + request.getOrderInfo();
+        // Xác định frontendUrl để quay về sau này (mặc định là localhost nếu không xác định được)
+        String origin = httpRequest.getHeader("Origin");
+        String finalFrontendUrl = (origin != null \u0026\u0026 origin.contains("vercel.app")) ? frontendProdUrl : frontendBaseUrl;
+
+        String secureOrderInfo = username + "|topup|" + request.getOrderInfo() + "|" + finalFrontendUrl;
 
         String clientIp = VNPayConfig.getIpAddress(httpRequest);
         String vnpayUrl = vnPayService.createOrder(
@@ -136,9 +143,10 @@ public class PaymentController {
     public void handleVnPayReturn(HttpServletRequest request, HttpServletResponse response) throws Exception {
         int paymentStatus = vnPayService.orderReturn(request);
         String orderInfo = request.getParameter("vnp_OrderInfo");
+        String resolvedFrontendUrl = resolveFrontendUrl(orderInfo);
 
         if (orderInfo == null || !orderInfo.contains("|")) {
-            response.sendRedirect(frontendBaseUrl);
+            response.sendRedirect(resolvedFrontendUrl);
             return;
         }
 
@@ -154,37 +162,37 @@ public class PaymentController {
 
             if (isDepositPayment(orderInfo)) {
                 depositService.confirmDepositPayment(targetId, username, amount);
-                response.sendRedirect(frontendBaseUrl + "/profile?tab=transaction-manage");
+                response.sendRedirect(resolvedFrontendUrl + "/profile?tab=transaction-manage");
                 return;
 
             } else if (isEventDepositPayment(orderInfo)) {
                 // ĐẶT CỌC XE SỰ KIỆN THÀNH CÔNG
                 depositService.confirmDepositPaymentForEvent(targetId, username, amount);
-                response.sendRedirect(frontendBaseUrl + "/profile?tab=transaction-manage");
+                response.sendRedirect(resolvedFrontendUrl + "/profile?tab=transaction-manage");
                 return;
 
             } else if (isPostFeePayment(orderInfo)) {
                 postingService.confirmPostingPayment(targetId, username, amount);
-                response.sendRedirect(frontendBaseUrl + "/profile?tab=my-bikes");
+                response.sendRedirect(resolvedFrontendUrl + "/profile?tab=my-bikes");
                 return;
 
             } else if (isEventFeePayment(orderInfo)) {
                 int eventId = eventBicycleService.getEventIdByEventBikeId(targetId);
                 eventBicycleService.confirmEventBicyclePayment(targetId, username, amount);
-                response.sendRedirect(frontendBaseUrl + "/events/" + eventId);
+                response.sendRedirect(resolvedFrontendUrl + "/events/" + eventId);
                 return;
 
             } else if (isFinalPayment(orderInfo)) {
                 reservationService.confirmFinalPayment(targetId, username, amount);
-                response.sendRedirect(frontendBaseUrl + "/profile?tab=transaction-manage");
+                response.sendRedirect(resolvedFrontendUrl + "/profile?tab=transaction-manage");
                 return;
             } else if (isFinalPaymentEventBicycle(orderInfo)) {
                 reservationService.confirmFinalPaymentForEventBicycle(targetId, username, amount);
-                response.sendRedirect(frontendBaseUrl + "/profile?tab=transaction-manage");
+                response.sendRedirect(resolvedFrontendUrl + "/profile?tab=transaction-manage");
                 return;
             } else if (isTopUpPayment(orderInfo)) {
                 walletService.addFundsToUserWallet(amount, username);
-                response.sendRedirect(frontendBaseUrl + "/profile?tab=wallet");
+                response.sendRedirect(resolvedFrontendUrl + "/profile?tab=wallet");
                 return;
             }
         }
@@ -201,9 +209,9 @@ public class PaymentController {
                     log.warn("Lỗi khi hủy cọc: {}", e.getMessage());
                 }
                 if (listingId != null) {
-                    response.sendRedirect(frontendBaseUrl + "/bikes/" + listingId);
+                    response.sendRedirect(resolvedFrontendUrl + "/bikes/" + listingId);
                 } else {
-                    response.sendRedirect(frontendBaseUrl + "/bikes");
+                    response.sendRedirect(resolvedFrontendUrl + "/bikes");
                 }
                 return;
 
@@ -217,9 +225,9 @@ public class PaymentController {
                 }
 
                 if (eventId != null) {
-                    response.sendRedirect(frontendBaseUrl + "/events/" + eventId);
+                    response.sendRedirect(resolvedFrontendUrl + "/events/" + eventId);
                 } else {
-                    response.sendRedirect(frontendBaseUrl + "/events");
+                    response.sendRedirect(resolvedFrontendUrl + "/events");
                 }
                 return;
 
@@ -229,7 +237,7 @@ public class PaymentController {
                 } catch (Exception e) {
                     log.warn("Lỗi khi hủy đăng bài: {}", e.getMessage());
                 }
-                response.sendRedirect(frontendBaseUrl + "/post-bike");
+                response.sendRedirect(resolvedFrontendUrl + "/post-bike");
                 return;
 
             } else if (isEventFeePayment(orderInfo)) {
@@ -241,24 +249,37 @@ public class PaymentController {
                     log.warn("Lỗi khi lấy thông tin sự kiện để hủy: {}", e.getMessage());
                 }
                 if (eventId > 0) {
-                    response.sendRedirect(frontendBaseUrl + "/events/" + eventId);
+                    response.sendRedirect(resolvedFrontendUrl + "/events/" + eventId);
                 } else {
-                    response.sendRedirect(frontendBaseUrl + "/events");
+                    response.sendRedirect(resolvedFrontendUrl + "/events");
                 }
                 return;
 
             } else if (isFinalPayment(orderInfo)) {
                 // Người dùng hủy hoặc thoát VNPay — giữ nguyên Waiting_Payment để thử lại
                 try { reservationService.cancelFinalPayment(targetId); } catch (Exception e) { log.warn("Lỗi khi xử lý hủy thanh toán cuối: {}", e.getMessage()); }
-                response.sendRedirect(frontendBaseUrl + "/profile?tab=transaction-manage");
+                response.sendRedirect(resolvedFrontendUrl + "/profile?tab=transaction-manage");
                 return;
             } else {
-                response.sendRedirect(frontendBaseUrl + "/profile?tab=wallet");
+                response.sendRedirect(resolvedFrontendUrl + "/profile?tab=wallet");
                 return;
             }
         }
 
-        response.sendRedirect(frontendBaseUrl);
+        response.sendRedirect(resolvedFrontendUrl);
+    }
+
+    /**
+     * Hàm hỗ trợ xác định Frontend URL từ chuỗi orderInfo
+     */
+    private String resolveFrontendUrl(String orderInfo) {
+        if (orderInfo != null \u0026\u0026 orderInfo.contains("|")) {
+            String[] parts = orderInfo.split("\\|");
+            if (parts.length \u003e= 4) {
+                return parts[3].trim();
+            }
+        }
+        return frontendBaseUrl;
     }
 
     // ==========================================

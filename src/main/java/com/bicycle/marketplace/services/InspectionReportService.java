@@ -113,7 +113,12 @@ public class InspectionReportService {
             }
         }
 
-        inspectionReport = inspectionReportRepository.save(inspectionReport);
+        try {
+            inspectionReport = inspectionReportRepository.save(inspectionReport);
+        } catch (Exception e) {
+            log.error("Lỗi khi lưu báo cáo kiểm định: {}", e.getMessage());
+            throw new RuntimeException("Không thể lưu báo cáo kiểm định: " + e.getMessage());
+        }
 
         String newStatus;
         String bikeStatus;
@@ -122,7 +127,10 @@ public class InspectionReportService {
             bikeStatus = "Waiting_Payment";
         } else if ("SELLER_NO_SHOW".equalsIgnoreCase(request.getResult())) {
             newStatus = "Inspection_Failed";
-            bikeStatus = (listing != null) ? "Hidden" : "Hidden"; // Event bike also hidden
+            bikeStatus = "Hidden";
+        } else if ("BUYER_NO_SHOW".equalsIgnoreCase(request.getResult())) {
+            newStatus = "Inspection_Failed";
+            bikeStatus = "Available";
         } else {
             newStatus = "Inspection_Failed";
             bikeStatus = "Available";
@@ -130,7 +138,12 @@ public class InspectionReportService {
 
         reservation.setStatus(newStatus);
         reservation.setCancelDescription(request.getReason());
-        reservationRepository.save(reservation);
+        try {
+            reservationRepository.save(reservation);
+        } catch (Exception e) {
+            log.error("Lỗi khi cập nhật trạng thái đặt chỗ: {}", e.getMessage());
+            throw new RuntimeException("Không thể cập nhật trạng thái đặt chỗ: " + e.getMessage());
+        }
 
         if (listing != null) {
             listing.setStatus(bikeStatus);
