@@ -210,6 +210,15 @@ public class ReservationController {
         return apiResponse;
     }
 
+    @PostMapping("/event-bicycle/{reservationId}/final-payment")
+    @PreAuthorize("hasRole('USER')")
+    public ApiResponse<CreateDepositResponse> finalPaymentEventBicycle(@PathVariable int reservationId) {
+        ApiResponse<CreateDepositResponse> apiResponse = new ApiResponse<>();
+        apiResponse.setResult(reservationService.finalPaymentForReservationEventBicycle(reservationId));
+        apiResponse.setMessage("Thanh toán giao dịch thành công");
+        return apiResponse;
+    }
+
     @PostMapping("/{reservationId}/payout-seller")
     @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse<String> payoutToSeller(@PathVariable int reservationId) {

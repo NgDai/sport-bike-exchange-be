@@ -936,6 +936,137 @@ public class ReservationService {
         });
     }
 
+    @Transactional
+    public CreateDepositResponse finalPaymentForReservationEventBicycle(int reservationId) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new AppException(ErrorCode.UNAUTHORIZED);
+        }
+        String username = authentication.getName();
+        Users buyer = userRepository.findByUsername(username)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+
+        Reservation reservation = reservationRepository.findById(reservationId)
+                .orElseThrow(() -> new AppException(ErrorCode.RESERVATION_NOT_FOUND));
+
+        if (!"Waiting_Payment".equalsIgnoreCase(reservation.getStatus())) {
+            throw new RuntimeException(
+                    "Chỉ có thể thanh toán cuối cho giao dịch đã hoàn thành kiểm định (Waiting_Payment). Trạng thái hiện tại: "
+                            + reservation.getStatus());
+        }
+
+        if (reservation.getBuyer() == null || reservation.getBuyer().getUserId() != buyer.getUserId()) {
+            throw new RuntimeException("Bạn không phải người mua của giao dịch này.");
+        }
+
+        EventBicycle eventBicycle = eventBicycleRepository.findById(reservation.getEventBicycle().getEventBikeId())
+                .orElseThrow(()  -> new AppException(ErrorCode.EVENT_BICYCLE_NOT_FOUND));
+
+        double price = eventBicycle.getPrice();
+        double depositAmount = reservation.getDepositAmount() != null ? reservation.getDepositAmount() : 0;
+        double remainingAmount = price - depositAmount;
+
+        if (remainingAmount <= 0) {
+            throw new RuntimeException(
+                    "Số tiền còn lại không hợp lệ (" + remainingAmount + "). Giao dịch có thể đã thanh toán đủ.");
+        }
+
+        Wallet buyerWallet = walletRepository.findByUsername(username).orElseGet(() -> {
+            Wallet newWallet = Wallet.builder().user(buyer).username(username).balance(0.0).type("User").build();
+            return walletRepository.save(newWallet);
+        });
+
+        // TRƯỜNG HỢP 1: VÍ ĐỦ TIỀN → TRỪ THẲNG
+        if (buyerWallet.getBalance() >= remainingAmount) {
+            completeReservation(reservation, eventBicycle, remainingAmount, username);
+            return CreateDepositResponse.builder()
+                    .deposit(null)
+                    .paymentUrl(null)
+                    .message("Thanh toán thành công! Đã trừ " + (long) remainingAmount
+                            + " VND từ ví. Giao dịch hoàn tất.")
+                    .build();
+        }
+
+        // TRƯỜNG HỢP 2: VÍ KHÔNG ĐỦ → TẠO VNPAY URL
+        long amountNeeded = (long) Math.ceil(remainingAmount - buyerWallet.getBalance());
+        String customReturnUrl = vnpayReturnUrl + "?reservationId=" + reservationId;
+        String paymentUrl = vnPayService.createOrder(
+                amountNeeded,
+                username + "|finalpaymentEventbicycle|" + reservationId,
+                customReturnUrl,
+                null);
+
+        return CreateDepositResponse.builder()
+                .deposit(null)
+                .paymentUrl(paymentUrl)
+                .message("Ví không đủ tiền. Vui lòng thanh toán thêm " + amountNeeded
+                        + " VND qua VNPay để hoàn tất giao dịch.")
+                .build();
+    }
+
+    @Transactional
+    public void confirmFinalPaymentForEventBicycle(int reservationId, String username, double vnpayAmount) {
+        Reservation reservation = reservationRepository.findById(reservationId)
+                .orElseThrow(() -> new AppException(ErrorCode.RESERVATION_NOT_FOUND));
+
+        if (!"Waiting_Payment".equalsIgnoreCase(reservation.getStatus())) {
+            // Đã được xử lý rồi (idempotent)
+            return;
+        }
+
+        EventBicycle eventBicycle = eventBicycleRepository.findById(reservation.getEventBicycle().getEventBikeId())
+                .orElseThrow(() -> new AppException(ErrorCode.EVENT_BICYCLE_NOT_FOUND));
+
+        double price = eventBicycle.getPrice();
+        double depositAmount = reservation.getDepositAmount() != null ? reservation.getDepositAmount() : 0;
+        double remainingAmount = price - depositAmount;
+
+        // Nạp tiền từ VNPay vào ví Buyer
+        Wallet buyerWallet = walletRepository.findByUsername(username)
+                .orElseThrow(() -> new AppException(ErrorCode.WALLET_NOT_FOUND));
+        buyerWallet.setBalance(buyerWallet.getBalance() + vnpayAmount);
+        walletRepository.save(buyerWallet);
+        walletTransactionService.createTransaction(buyerWallet, vnpayAmount, "FinalPayment_TopUp",
+                "Nạp tiền qua VNPay để thanh toán cuối giao dịch #" + reservationId);
+
+        // Hoàn tất giao dịch (trừ phần còn lại ra khỏi ví)
+        completeReservation(reservation, eventBicycle, remainingAmount, username);
+    }
+
+    private void completeReservation(Reservation reservation, EventBicycle eventBicycle, double remainingAmount,
+                                     String buyerUsername) {
+        Wallet buyerWallet = walletRepository.findByUsername(buyerUsername)
+                .orElseThrow(() -> new AppException(ErrorCode.WALLET_NOT_FOUND));
+        Wallet systemWallet = walletRepository.findByUsername("System")
+                .orElseThrow(() -> new RuntimeException("Chưa cấu hình System Wallet"));
+
+        if (buyerWallet.getBalance() < remainingAmount) {
+            throw new RuntimeException(
+                    "Ví không đủ tiền để hoàn tất thanh toán. Số dư hiện tại: " + (long) buyerWallet.getBalance()
+                            + " VND, cần thêm: " + (long) (remainingAmount - buyerWallet.getBalance()) + " VND.");
+        }
+
+        // Chuyển tiền Buyer → System Wallet
+        buyerWallet.setBalance(buyerWallet.getBalance() - remainingAmount);
+        systemWallet.setBalance(systemWallet.getBalance() + remainingAmount);
+        walletRepository.save(buyerWallet);
+        walletRepository.save(systemWallet);
+        walletTransactionService.createTransaction(buyerWallet, remainingAmount, "FinalPayment",
+                "Thanh toán cuối giao dịch xe đạp #" + eventBicycle.getEventBikeId());
+
+        // Cập nhật trạng thái
+        reservation.setStatus("Completed");
+        reservationRepository.save(reservation);
+
+        eventBicycle.setStatus("Sold");
+        eventBicycleRepository.save(eventBicycle);
+
+        transactionRepository.findByReservation_ReservationId(reservation.getReservationId()).ifPresent(txn -> {
+            txn.setStatus("Completed");
+            transactionRepository.save(txn);
+        });
+    }
+
     private ReservationResponse toReservationResponseSafe(Reservation reservation) {
         ReservationResponse response = reservationMapper.toReservationResponse(reservation);
 
