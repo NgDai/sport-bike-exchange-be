@@ -489,6 +489,95 @@ public class ReservationService {
     }
 
     @Transactional
+    public String refundDepositAfterInspectionFailEvent(int reservationId) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new AppException(ErrorCode.UNAUTHORIZED);
+        }
+        String username = authentication.getName();
+
+        Reservation reservation = reservationRepository.findById(reservationId)
+                .orElseThrow(() -> new AppException(ErrorCode.RESERVATION_NOT_FOUND));
+
+        if (!"Inspection_Failed".equalsIgnoreCase(reservation.getStatus())) {
+            throw new RuntimeException(
+                    "Chỉ có thể hoàn tiền cho giao dịch có trạng thái Inspection_Failed. Trạng thái hiện tại: "
+                            + reservation.getStatus());
+        }
+
+        // Kiểm tra quyền: chỉ buyer, admin hoặc inspector mới được thực hiện
+        boolean isAdmin = authentication.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+        boolean isInspector = authentication.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_INSPECTOR"));
+        boolean isBuyer = reservation.getBuyer() != null
+                && reservation.getBuyer().getUsername().equals(username);
+        if (!isAdmin && !isBuyer && !isInspector) {
+            throw new RuntimeException("Bạn không có quyền thực hiện hoàn tiền cho giao dịch này.");
+        }
+
+        // Lấy số tiền cọc
+        Double amount = reservation.getDepositAmount();
+        if (amount == null && reservation.getDeposit() != null) {
+            amount = reservation.getDeposit().getAmount();
+        }
+        if (amount == null || amount <= 0) {
+            throw new RuntimeException("Không tìm thấy số tiền cọc hợp lệ hoặc tiền cọc bằng 0");
+        }
+
+        // Hoàn tiền cọc 100% từ System Wallet về ví buyer
+        walletService.refundToUserWallet(amount, reservation.getBuyer().getUsername(),
+                "Hoàn tiền cọc do kiểm định thất bại - Giao dịch #" + reservationId);
+
+        // Nếu là SELLER_NO_SHOW → thưởng thêm 200,000 VND cho buyer
+        boolean isSellerNoShow = reservation.getCancelDescription() != null
+                && reservation.getCancelDescription().toLowerCase().contains("người bán không có mặt");
+        if (isSellerNoShow) {
+            double bonus = 200000;
+            walletService.refundToUserWallet(bonus, reservation.getBuyer().getUsername(),
+                    "Tiền bồi thường thêm 200,000 VND do người bán không đến - Giao dịch #" + reservationId);
+        }
+
+        // Cập nhật Transaction: tách reference, đặt status Refunded
+        transactionRepository.findByReservation_ReservationId(reservationId).ifPresent(transaction -> {
+            var deposit = transaction.getDeposit();
+            transaction.setStatus("Refunded");
+            transaction.setDeposit(null);
+            transactionRepository.save(transaction);
+            // Xóa Deposit sau khi tách khỏi Transaction
+            if (deposit != null) {
+                depositRepository.delete(deposit);
+            }
+        });
+
+        // Nếu reservation vẫn có Deposit nhưng Transaction không track, xóa luôn
+        if (reservation.getDeposit() != null) {
+            var deposit = reservation.getDeposit();
+            reservation.setDeposit(null);
+            reservationRepository.save(reservation);
+            depositRepository.delete(deposit);
+        }
+
+        // Đảm bảo event về Available (InspectionReportService đã làm, đây là safety
+        // net)
+        EventBicycle event = reservation.getEventBicycle();
+        if (event != null && !"Available".equalsIgnoreCase(event.getStatus())) {
+            event.setStatus("Available");
+            eventBicycleRepository.save(event);
+        }
+
+        // Đặt reservation thành Refunded (đã hoàn tiền xong)
+        reservation.setStatus("Refunded");
+        reservationRepository.save(reservation);
+
+        String message = "Đã hoàn tiền cọc " + amount.longValue() + " VND cho người mua.";
+        if (isSellerNoShow) {
+            message += " Đã cộng thêm 200,000 VND tiền bồi thường.";
+        }
+        return message;
+    }
+
+    @Transactional
     public String refundDepositAfterPaymentForEventBicycle(int reservationId) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated()) {
