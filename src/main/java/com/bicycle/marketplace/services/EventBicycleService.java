@@ -101,21 +101,24 @@ public class EventBicycleService {
             throw new RuntimeException("Sự kiện này đã kết thúc, không thể đăng ký xe mới");
         }
 
-        EventBicycle eventBicycle = new EventBicycle();
-        eventBicycle.setSeller(user);
-        eventBicycle.setEvent(events);
-        eventBicycle.setListing(bikeListing);
-        eventBicycle.setBicycle(bicycle);
-        eventBicycle.setSellerName(user.getFullName());
-        eventBicycle.setStatus("Pending");
-        eventBicycle.setPrice(bikeListing.getPrice());
-        eventBicycle.setTitle(bikeListing.getTitle());
-        eventBicycle.setBikeType(bikeListing.getBicycle().getBikeType());
-        eventBicycle.setImage_url(bikeListing.getImage_url());
-        eventBicycle.setCondition(bikeListing.getCondition());
-        eventBicycle.setCreateDate(LocalDate.now());
-
-        return eventBicycleMapper.toEventBicycleResponse(eventBicycleRepository.save(eventBicycle));
+        if (bikeListing.getStatus().equalsIgnoreCase("Available")) {
+            EventBicycle eventBicycle = new EventBicycle();
+            eventBicycle.setSeller(user);
+            eventBicycle.setEvent(events);
+            eventBicycle.setListing(bikeListing);
+            eventBicycle.setBicycle(bicycle);
+            eventBicycle.setSellerName(user.getFullName());
+            eventBicycle.setStatus("Pending");
+            eventBicycle.setPrice(bikeListing.getPrice());
+            eventBicycle.setTitle(bikeListing.getTitle());
+            eventBicycle.setBikeType(bikeListing.getBicycle().getBikeType());
+            eventBicycle.setImage_url(bikeListing.getImage_url());
+            eventBicycle.setCondition(bikeListing.getCondition());
+            eventBicycle.setCreateDate(LocalDate.now());
+            return eventBicycleMapper.toEventBicycleResponse(eventBicycleRepository.save(eventBicycle));
+        } else {
+            throw new RuntimeException("Xe này không có sẵn!!!");
+        }
     }
 
     public Bicycle createBicycle(CreatePostingRequest request) {

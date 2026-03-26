@@ -109,6 +109,9 @@ public class PaymentController {
             } else if (isFinalPayment(orderInfo)) {
                 reservationService.confirmFinalPayment(targetId, username, amount);
                 response.setMessage("Thanh toán cuối giao dịch thành công.");
+            } else if (isFinalPaymentEventBicycle(orderInfo)) {
+                reservationService.confirmFinalPaymentForEventBicycle(targetId, username, amount);
+                response.setMessage("Thanh toán giao dịch xe sự kiện thành công");
             } else if (isTopUpPayment(orderInfo)) {
                 walletService.addFundsToUserWallet(amount, username);
                 response.setMessage("Nạp tiền vào ví thành công.");
@@ -120,7 +123,7 @@ public class PaymentController {
                 try { postingService.cancelPostingPayment(targetId); } catch (Exception e) { log.warn("Lỗi khi hủy đăng bài: {}", e.getMessage()); }
             } else if (isEventFeePayment(orderInfo)) {
                 try { eventBicycleService.cancelEventBicyclePayment(targetId); } catch (Exception e) { log.warn("Lỗi khi hủy event bicycle: {}", e.getMessage()); }
-            } else if (isFinalPayment(orderInfo)) {
+            } else if (isFinalPayment(orderInfo) || isFinalPaymentEventBicycle(orderInfo)) {
                 try { reservationService.cancelFinalPayment(targetId); } catch (Exception e) { log.warn("Lỗi khi hủy thanh toán cuối: {}", e.getMessage()); }
             }
             throw new RuntimeException("Giao dịch thanh toán không thành công hoặc đã bị hủy.");
@@ -173,6 +176,10 @@ public class PaymentController {
 
             } else if (isFinalPayment(orderInfo)) {
                 reservationService.confirmFinalPayment(targetId, username, amount);
+                response.sendRedirect(frontendBaseUrl + "/profile?tab=transaction-manage");
+                return;
+            } else if (isFinalPaymentEventBicycle(orderInfo)) {
+                reservationService.confirmFinalPaymentForEventBicycle(targetId, username, amount);
                 response.sendRedirect(frontendBaseUrl + "/profile?tab=transaction-manage");
                 return;
             } else if (isTopUpPayment(orderInfo)) {
@@ -286,6 +293,11 @@ public class PaymentController {
     private boolean isFinalPayment(String orderInfo) {
         String[] parts = orderInfo.split("\\|");
         return parts.length >= 3 && "finalpayment".equalsIgnoreCase(parts[1].trim());
+    }
+
+    private boolean isFinalPaymentEventBicycle(String orderInfo) {
+        String[] parts = orderInfo.split("\\|");
+        return parts.length >= 3 && "finalpaymentEventbicycle".equalsIgnoreCase(parts[1].trim());
     }
 
     private boolean isTopUpPayment(String orderInfo) {

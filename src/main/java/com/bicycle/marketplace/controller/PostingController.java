@@ -72,6 +72,13 @@ public class PostingController {
         return apiResponse;
     }
 
+    @GetMapping("events/my-posts")
+    ApiResponse<List<PostingResponse>> getMyEventPostings() {
+        ApiResponse<List<PostingResponse>> apiResponse = new ApiResponse<>();
+        apiResponse.setResult(postingService.getMyPostingsForEvent());
+        return apiResponse;
+    }
+
     @DeleteMapping("/delete/{listingId}")
     ApiResponse<Void> deletePosting(@PathVariable int listingId) {
         ApiResponse<Void> apiResponse = new ApiResponse<>();

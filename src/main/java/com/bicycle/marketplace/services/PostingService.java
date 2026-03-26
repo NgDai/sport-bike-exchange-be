@@ -249,6 +249,16 @@ public class PostingService {
     }
 
     @Transactional
+    public List<PostingResponse> getMyPostingsForEvent() {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        Users user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+        return bikeListingRepository.findBySellerAndStatus(user, "Available")
+                .stream()
+                .map(postingMapper::toPostingResponse).collect(Collectors.toList());
+    }
+
+    @Transactional
     public List<PostingResponse> getAllPostings() {
         return bikeListingRepository.findAll()
                 .stream().map(postingMapper::toPostingResponse).collect(Collectors.toList());
