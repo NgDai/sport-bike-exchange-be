@@ -51,6 +51,13 @@ public class PaymentController {
 
     @Value("${frontend.prod-url:https://sport-bike-exchange-fe.vercel.app}")
     private String frontendProdUrl;
+    
+    private String getResolvedFrontendUrl(HttpServletRequest request) {
+        String serverName = request.getServerName();
+        return (serverName.contains("localhost") || serverName.equals("127.0.0.1")) 
+               ? frontendBaseUrl 
+               : frontendProdUrl;
+    }
 
     // 1. API GỌI TỪ FRONTEND ĐỂ NẠP TIỀN VÀO VÍ (NẠP THƯỜNG)
     @PostMapping("/submitOrder")
@@ -60,11 +67,7 @@ public class PaymentController {
 
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
 
-        // Xác định frontendUrl để quay về sau này (mặc định là localhost nếu không xác định được)
-        String origin = httpRequest.getHeader("Origin");
-        String finalFrontendUrl = (origin != null \u0026\u0026 origin.contains("vercel.app")) ? frontendProdUrl : frontendBaseUrl;
-
-        String secureOrderInfo = username + "|topup|" + request.getOrderInfo() + "|" + finalFrontendUrl;
+        String secureOrderInfo = username + "|topup|" + request.getOrderInfo();
 
         String clientIp = VNPayConfig.getIpAddress(httpRequest);
         String vnpayUrl = vnPayService.createOrder(
@@ -143,7 +146,7 @@ public class PaymentController {
     public void handleVnPayReturn(HttpServletRequest request, HttpServletResponse response) throws Exception {
         int paymentStatus = vnPayService.orderReturn(request);
         String orderInfo = request.getParameter("vnp_OrderInfo");
-        String resolvedFrontendUrl = resolveFrontendUrl(orderInfo);
+        String resolvedFrontendUrl = getResolvedFrontendUrl(request);
 
         if (orderInfo == null || !orderInfo.contains("|")) {
             response.sendRedirect(resolvedFrontendUrl);
@@ -267,19 +270,6 @@ public class PaymentController {
         }
 
         response.sendRedirect(resolvedFrontendUrl);
-    }
-
-    /**
-     * Hàm hỗ trợ xác định Frontend URL từ chuỗi orderInfo
-     */
-    private String resolveFrontendUrl(String orderInfo) {
-        if (orderInfo != null \u0026\u0026 orderInfo.contains("|")) {
-            String[] parts = orderInfo.split("\\|");
-            if (parts.length \u003e= 4) {
-                return parts[3].trim();
-            }
-        }
-        return frontendBaseUrl;
     }
 
     // ==========================================
