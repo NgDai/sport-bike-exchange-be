@@ -3,6 +3,8 @@ package com.bicycle.marketplace.repository;
 import com.bicycle.marketplace.entities.BikeListing;
 import com.bicycle.marketplace.entities.Users;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -11,7 +13,15 @@ import java.util.List;
 public interface IBikeListingRepository extends JpaRepository<BikeListing, Integer> {
     List<BikeListing> findBySeller(Users seller);
 
-    List<BikeListing> findBySellerAndStatus(Users seller, String status);
+    @Query("""
+    SELECT b FROM BikeListing b
+    WHERE b.seller = :seller
+    AND b.status = 'Available'
+    AND EXISTS (
+        SELECT 1 FROM EventBicycle e WHERE e.listing = b
+    )
+""")
+    List<BikeListing> findBySellerWithEvent(@Param("seller") Users seller);
 
     long countBySeller(Users seller);
 }

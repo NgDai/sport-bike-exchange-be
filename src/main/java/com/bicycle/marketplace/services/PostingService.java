@@ -253,7 +253,7 @@ public class PostingService {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         Users user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
-        return bikeListingRepository.findBySellerAndStatus(user, "Available")
+        return bikeListingRepository.findBySellerWithEvent(user)
                 .stream()
                 .map(postingMapper::toPostingResponse).collect(Collectors.toList());
     }

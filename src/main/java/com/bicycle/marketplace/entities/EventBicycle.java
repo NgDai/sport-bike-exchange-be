@@ -22,7 +22,7 @@ public class EventBicycle {
     @ManyToOne
     @JoinColumn(name = "event_id")
     Events event;
-    @ManyToOne
+    @OneToOne
     @JoinColumn(name = "listing_id", nullable = true)
     BikeListing listing;
     @ManyToOne
