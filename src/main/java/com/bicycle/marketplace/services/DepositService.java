@@ -377,6 +377,10 @@ public class DepositService {
         walletTransactionService.createTransaction(wallet, amount, "Deposit", "Đặt cọc xe đạp #" + eventBikeId);
 
         // ĐỔI TRẠNG THÁI BÀI ĐĂNG (ẨN KHỎI SÀN)
+        BikeListing bikeListing = eventBicycle.getListing();
+        bikeListing.setStatus("Deposited");
+        bikeListingRepository.save(bikeListing);
+
         eventBicycle.setStatus("Deposited");
         eventBicycleRepository.save(eventBicycle);
 

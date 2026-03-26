@@ -1058,6 +1058,13 @@ public class ReservationService {
         reservation.setStatus("Completed");
         reservationRepository.save(reservation);
 
+        BikeListing bikeListing = eventBicycle.getListing();
+
+        if (bikeListing != null) {
+            bikeListing.setStatus("Sold");
+            bikeListingRepository.save(bikeListing);
+        }
+
         eventBicycle.setStatus("Sold");
         eventBicycleRepository.save(eventBicycle);
 
