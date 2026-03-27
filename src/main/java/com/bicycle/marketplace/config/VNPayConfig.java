@@ -55,7 +55,9 @@ public final class VNPayConfig {
     }
 
     private static String formatCalendar(Calendar cal) {
-        return new java.text.SimpleDateFormat(DATE_FORMAT).format(cal.getTime());
+        java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat(DATE_FORMAT);
+        sdf.setTimeZone(VNP_TIMEZONE); // Luôn dùng giờ VN, kể cả khi JVM chạy UTC (Google Cloud)
+        return sdf.format(cal.getTime());
     }
 
     // --- Hash / HMAC ---
