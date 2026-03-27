@@ -82,7 +82,7 @@ public class DepositService {
     }
 
     @Transactional
-    public CreateDepositResponse createDepositViaVNPay(int listingId, HttpServletRequest request) {
+    public CreateDepositResponse createDepositViaVNPay(int listingId) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated()) {
             throw new AppException(ErrorCode.UNAUTHORIZED);
@@ -144,20 +144,19 @@ public class DepositService {
             transactionService.createTransaction(txnRequest);
 
             long amountNeeded = (long) Math.ceil(amount - wallet.getBalance());
-//          test
-//            String customReturnUrl = vnpayReturnUrl + "?depositId=" + deposit.getDepositId();
-//            String paymentUrl = vnPayService.createOrder(
-//                    amountNeeded,
-//                    username + "|deposit|" + deposit.getDepositId(),
-//                    customReturnUrl, null);
-
-            String baseReturnUrl = getBaseReturnUrl(request);
-            String customReturnUrl = baseReturnUrl + "?depositId=" + deposit.getDepositId();
-
+            String customReturnUrl = vnpayReturnUrl + "?depositId=" + deposit.getDepositId();
             String paymentUrl = vnPayService.createOrder(
                     amountNeeded,
                     username + "|deposit|" + deposit.getDepositId(),
                     customReturnUrl, null);
+
+//            String baseReturnUrl = getBaseReturnUrl(request);
+//            String customReturnUrl = baseReturnUrl + "?depositId=" + deposit.getDepositId();
+//
+//            String paymentUrl = vnPayService.createOrder(
+//                    amountNeeded,
+//                    username + "|deposit|" + deposit.getDepositId(),
+//                    customReturnUrl, null);
 
             return CreateDepositResponse.builder()
                     .deposit(null)

@@ -29,19 +29,19 @@ public class DepositController {
         return apiResponse;
     }
 
-//    @PostMapping("/{listingId}/create-vnpay")
-//    ApiResponse<com.bicycle.marketplace.dto.response.CreateDepositResponse> createDepositViaVNPay(
-//            @PathVariable int listingId) {
-//        ApiResponse<com.bicycle.marketplace.dto.response.CreateDepositResponse> apiResponse = new ApiResponse<>();
-//        apiResponse.setResult(depositService.createDepositViaVNPay(listingId));
-//        apiResponse.setMessage("Tạo giao dịch đặt cọc thành công");
-//        return apiResponse;
-//    }
-
-    @PostMapping("/create-vnpay/{listingId}")
-    public CreateDepositResponse createDeposit(@PathVariable int listingId, HttpServletRequest request) {
-        return depositService.createDepositViaVNPay(listingId, request);
+    @PostMapping("/{listingId}/create-vnpay")
+    ApiResponse<com.bicycle.marketplace.dto.response.CreateDepositResponse> createDepositViaVNPay(
+            @PathVariable int listingId) {
+        ApiResponse<com.bicycle.marketplace.dto.response.CreateDepositResponse> apiResponse = new ApiResponse<>();
+        apiResponse.setResult(depositService.createDepositViaVNPay(listingId));
+        apiResponse.setMessage("Tạo giao dịch đặt cọc thành công");
+        return apiResponse;
     }
+
+//    @PostMapping("/create-vnpay/{listingId}")
+//    public CreateDepositResponse createDeposit(@PathVariable int listingId, HttpServletRequest request) {
+//        return depositService.createDepositViaVNPay(listingId, request);
+//    }
 
     // @PostMapping("/confirm/{depositId}")
     // public ApiResponse<String> confirmDepositPayment(@PathVariable int depositId)
