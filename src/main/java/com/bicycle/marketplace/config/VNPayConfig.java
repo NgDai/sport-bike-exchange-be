@@ -19,7 +19,8 @@ import java.util.TimeZone;
 public final class VNPayConfig {
 
     private static final String DATE_FORMAT = "yyyyMMddHHmmss";
-    private static final TimeZone VNP_TIMEZONE = TimeZone.getTimeZone("Etc/GMT+7");
+//    private static final TimeZone VNP_TIMEZONE = TimeZone.getTimeZone("Etc/GMT+7");
+    private static final TimeZone VNP_TIMEZONE = TimeZone.getTimeZone("Asia/Ho_Chi_Minh");
     private static final String UTF_8 = StandardCharsets.UTF_8.name();
     private static final String VNP_SECURE_HASH_PREFIX = "vnp_SecureHash=";
     private static final String VNP_SECURE_HASH_TYPE_PREFIX = "vnp_SecureHashType=";
