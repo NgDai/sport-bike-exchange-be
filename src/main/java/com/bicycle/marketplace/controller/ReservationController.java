@@ -140,7 +140,7 @@ public class ReservationController {
             @PathVariable int reservationId,
             @RequestBody CancelReservationRequest request) {
         ApiResponse<String> apiResponse = new ApiResponse<>();
-        apiResponse.setResult(reservationService.requestCancelReservationBySeller(reservationId, request));
+        apiResponse.setResult(reservationService.requestCancelReservation(reservationId, request));
         apiResponse.setMessage("Gửi yêu cầu hủy giao dịch thành công");
         return apiResponse;
     }
@@ -217,6 +217,13 @@ public class ReservationController {
         apiResponse.setResult(reservationService.finalPaymentForReservationEventBicycle(reservationId));
         apiResponse.setMessage("Thanh toán giao dịch thành công");
         return apiResponse;
+    }
+
+    @PostMapping("/event-bicycle/{reservationId}/confirm-offline-payment")
+    @PreAuthorize("hasRole('USER')")
+    public ApiResponse<String> confirmOfflinePayment(@PathVariable int reservationId) {
+        reservationService.confirmPaymentOffline(reservationId);
+        return new ApiResponse<>(200, "Success", "Giao dịch đã được xác nhận hoàn tất thành công.");
     }
 
     @PostMapping("/{reservationId}/payout-seller")
