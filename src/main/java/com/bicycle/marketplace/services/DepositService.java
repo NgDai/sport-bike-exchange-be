@@ -397,8 +397,10 @@ public class DepositService {
 
         // ĐỔI TRẠNG THÁI BÀI ĐĂNG (ẨN KHỎI SÀN)
         BikeListing bikeListing = eventBicycle.getListing();
-        bikeListing.setStatus("Deposited");
-        bikeListingRepository.save(bikeListing);
+        if (bikeListing != null) {
+            bikeListing.setStatus("Deposited");
+            bikeListingRepository.save(bikeListing);
+        }
 
         eventBicycle.setStatus("Deposited");
         eventBicycleRepository.save(eventBicycle);

@@ -17,7 +17,7 @@ public interface IBikeListingRepository extends JpaRepository<BikeListing, Integ
     SELECT b FROM BikeListing b
     WHERE b.seller = :seller
     AND b.status = 'Available'
-    AND EXISTS (
+    AND NOT EXISTS (
         SELECT 1 FROM EventBicycle e WHERE e.listing = b
     )
 """)

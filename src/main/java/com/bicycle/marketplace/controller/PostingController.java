@@ -72,7 +72,7 @@ public class PostingController {
         return apiResponse;
     }
 
-    @GetMapping("events/my-posts")
+    @GetMapping("/events/my-posts")
     ApiResponse<List<PostingResponse>> getMyEventPostings() {
         ApiResponse<List<PostingResponse>> apiResponse = new ApiResponse<>();
         apiResponse.setResult(postingService.getMyPostingsForEvent());
