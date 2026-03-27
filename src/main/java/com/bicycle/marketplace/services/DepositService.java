@@ -9,12 +9,14 @@ import com.bicycle.marketplace.exception.AppException;
 import com.bicycle.marketplace.exception.ErrorCode;
 import com.bicycle.marketplace.mapper.DepositMapper;
 import com.bicycle.marketplace.repository.*;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 @Service
 public class DepositService {
@@ -70,8 +72,17 @@ public class DepositService {
                 .orElse(null);
     }
 
+    private String getBaseReturnUrl(HttpServletRequest request) {
+        String baseUrl = ServletUriComponentsBuilder.fromRequestUri(request)
+                .replacePath(null)
+                .build()
+                .toUriString();
+        // Nối thêm context-path (/api) và đường dẫn controller
+        return baseUrl + request.getContextPath() + "/payments/vnpay-payment";
+    }
+
     @Transactional
-    public CreateDepositResponse createDepositViaVNPay(int listingId) {
+    public CreateDepositResponse createDepositViaVNPay(int listingId, HttpServletRequest request) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated()) {
             throw new AppException(ErrorCode.UNAUTHORIZED);
@@ -133,7 +144,15 @@ public class DepositService {
             transactionService.createTransaction(txnRequest);
 
             long amountNeeded = (long) Math.ceil(amount - wallet.getBalance());
-            String customReturnUrl = vnpayReturnUrl + "?depositId=" + deposit.getDepositId();
+//            String customReturnUrl = vnpayReturnUrl + "?depositId=" + deposit.getDepositId();
+//            String paymentUrl = vnPayService.createOrder(
+//                    amountNeeded,
+//                    username + "|deposit|" + deposit.getDepositId(),
+//                    customReturnUrl, null);
+
+            String baseReturnUrl = getBaseReturnUrl(request);
+            String customReturnUrl = baseReturnUrl + "?depositId=" + deposit.getDepositId();
+
             String paymentUrl = vnPayService.createOrder(
                     amountNeeded,
                     username + "|deposit|" + deposit.getDepositId(),

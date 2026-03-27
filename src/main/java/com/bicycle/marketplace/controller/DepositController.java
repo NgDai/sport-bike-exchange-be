@@ -3,9 +3,11 @@ package com.bicycle.marketplace.controller;
 import com.bicycle.marketplace.dto.request.DepositCreationRequest;
 import com.bicycle.marketplace.dto.request.DepositUpdateRequest;
 import com.bicycle.marketplace.dto.response.ApiResponse;
+import com.bicycle.marketplace.dto.response.CreateDepositResponse;
 import com.bicycle.marketplace.dto.response.DepositResponse;
 import com.bicycle.marketplace.entities.Deposit;
 import com.bicycle.marketplace.services.DepositService;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -27,13 +29,18 @@ public class DepositController {
         return apiResponse;
     }
 
-    @PostMapping("/{listingId}/create-vnpay")
-    ApiResponse<com.bicycle.marketplace.dto.response.CreateDepositResponse> createDepositViaVNPay(
-            @PathVariable int listingId) {
-        ApiResponse<com.bicycle.marketplace.dto.response.CreateDepositResponse> apiResponse = new ApiResponse<>();
-        apiResponse.setResult(depositService.createDepositViaVNPay(listingId));
-        apiResponse.setMessage("Tạo giao dịch đặt cọc thành công");
-        return apiResponse;
+//    @PostMapping("/{listingId}/create-vnpay")
+//    ApiResponse<com.bicycle.marketplace.dto.response.CreateDepositResponse> createDepositViaVNPay(
+//            @PathVariable int listingId) {
+//        ApiResponse<com.bicycle.marketplace.dto.response.CreateDepositResponse> apiResponse = new ApiResponse<>();
+//        apiResponse.setResult(depositService.createDepositViaVNPay(listingId));
+//        apiResponse.setMessage("Tạo giao dịch đặt cọc thành công");
+//        return apiResponse;
+//    }
+
+    @PostMapping("/create-vnpay/{listingId}")
+    public CreateDepositResponse createDeposit(@PathVariable int listingId, HttpServletRequest request) {
+        return depositService.createDepositViaVNPay(listingId, request);
     }
 
     // @PostMapping("/confirm/{depositId}")
