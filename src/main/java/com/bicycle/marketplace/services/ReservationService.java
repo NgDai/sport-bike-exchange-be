@@ -296,16 +296,20 @@ public class ReservationService {
             throw new RuntimeException("Không thể hủy reservation ở trạng thái: " + reservation.getStatus());
         }
 
-        // Hoàn tiền cọc ngay lập tức (không chờ Admin duyệt)
-        Double depositAmount = reservation.getDepositAmount();
-        if (depositAmount == null && reservation.getDeposit() != null) {
-            depositAmount = reservation.getDeposit().getAmount();
+        // Chỉ hoàn tiền cho buyer nếu SELLER là người yêu cầu hủy.
+        // Nếu BUYER tự hủy → tiền cọc bị tịch thu (theo chính sách sàn).
+        if (isSeller) {
+            Double depositAmount = reservation.getDepositAmount();
+            if (depositAmount == null && reservation.getDeposit() != null) {
+                depositAmount = reservation.getDeposit().getAmount();
+            }
+            if (depositAmount != null && depositAmount > 0 && reservation.getBuyer() != null) {
+                walletService.refundToUserWallet(depositAmount, reservation.getBuyer().getUsername(),
+                        "Hoàn tiền cọc do người bán yêu cầu hủy giao dịch #" + reservationId
+                        + (request.getCancelDescription() != null ? " - " + request.getCancelDescription() : ""));
+            }
         }
-        if (depositAmount != null && depositAmount > 0 && reservation.getBuyer() != null) {
-            walletService.refundToUserWallet(depositAmount, reservation.getBuyer().getUsername(),
-                    "Hoàn tiền cọc do hủy giao dịch #" + reservationId
-                    + (request.getCancelDescription() != null ? " - " + request.getCancelDescription() : ""));
-        }
+        // Nếu isBuyer: KHÔNG hoàn tiền — tiền cọc bị tịch thu theo chính sách sàn
 
         // Cập nhật Transaction: giữ lịch sử, status Cancelled
         transactionRepository.findByReservation_ReservationId(reservationId).ifPresent(transaction -> {
