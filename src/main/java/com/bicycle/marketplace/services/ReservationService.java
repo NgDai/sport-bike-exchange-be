@@ -194,7 +194,7 @@ public class ReservationService {
     }
 
     public List<ReservationResponse> findAllReservationResponses() {
-        return reservationRepository.findAllByStatusNot("Cancelled").stream()
+        return reservationRepository.findAll().stream()
                 .map(this::toReservationResponseSafe)
                 .toList();
     }
@@ -342,11 +342,6 @@ public class ReservationService {
                 .ifPresent(transaction -> {
                     transaction.setStatus("Cancelled");
                     transactionRepository.save(transaction);
-                    
-                    // Xóa deposit nếu có (phòng trường hợp DB cleanup)
-                    if (transaction.getDeposit() != null) {
-                        depositRepository.delete(transaction.getDeposit());
-                    }
                 });
 
         // Thay vì delete, ta chuyển status sang Cancelled để giữ report link
