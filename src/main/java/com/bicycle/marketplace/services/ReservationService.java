@@ -220,7 +220,8 @@ public class ReservationService {
         }
 
         // 1. Cập nhật Transaction liên quan (nếu có)
-        // QUAN TRỌNG: Không setReservation(null) để giữ lại ID tra cứu Inspection Report.
+        // QUAN TRỌNG: Không setReservation(null) để giữ lại ID tra cứu Inspection
+        // Report.
         transactionRepository.findByReservation_ReservationId(reservationId)
                 .ifPresent(transaction -> {
                     // Lấy Deposit từ Transaction rồi xóa
@@ -271,7 +272,8 @@ public class ReservationService {
                 .orElseThrow(() -> new AppException(ErrorCode.RESERVATION_NOT_FOUND));
 
         // Check if user is either buyer or seller
-        boolean isBuyer = reservation.getBuyer() != null && reservation.getBuyer().getUserId() == currentUser.getUserId();
+        boolean isBuyer = reservation.getBuyer() != null
+                && reservation.getBuyer().getUserId() == currentUser.getUserId();
         boolean isSeller = false;
         if (reservation.getListing() != null) {
             isSeller = reservation.getListing().getSeller().getUserId() == currentUser.getUserId();
@@ -305,7 +307,8 @@ public class ReservationService {
         // Cập nhật Transaction tương ứng sang Pending_Cancel
         transactionRepository.findByReservation_ReservationId(reservationId).ifPresent(transaction -> {
             transaction.setStatus("Pending_Cancel");
-            transaction.setDescription("Yêu cầu hủy: " + (request.getCancelDescription() != null ? request.getCancelDescription() : "N/A"));
+            transaction.setDescription("Yêu cầu hủy: "
+                    + (request.getCancelDescription() != null ? request.getCancelDescription() : "N/A"));
             transactionRepository.save(transaction);
         });
 
@@ -336,8 +339,9 @@ public class ReservationService {
                     "Hoàn tiền cọc do Admin duyệt hủy giao dịch #" + reservationId);
         }
 
-        // Cập nhật Transaction sang trạng thái Cancelled. 
-        // QUAN TRỌNG: Không setReservation(null) để giữ lại ID tra cứu Inspection Report.
+        // Cập nhật Transaction sang trạng thái Cancelled.
+        // QUAN TRỌNG: Không setReservation(null) để giữ lại ID tra cứu Inspection
+        // Report.
         transactionRepository.findByReservation_ReservationId(reservationId)
                 .ifPresent(transaction -> {
                     transaction.setStatus("Cancelled");
@@ -726,7 +730,8 @@ public class ReservationService {
         reservation.setStatus("Compensated");
         reservationRepository.save(reservation);
 
-        return "Đã chuyển 50% tiền cọc (" + (long) sellerShare + " VND) cho người bán. Hệ thống giữ lại 50% còn lại. Giao dịch đã được đền bù.";
+        return "Đã chuyển 50% tiền cọc (" + (long) sellerShare
+                + " VND) cho người bán. Hệ thống giữ lại 50% còn lại. Giao dịch đã được đền bù.";
     }
 
     // ==========================================
@@ -968,7 +973,7 @@ public class ReservationService {
         }
 
         EventBicycle eventBicycle = eventBicycleRepository.findById(reservation.getEventBicycle().getEventBikeId())
-                .orElseThrow(()  -> new AppException(ErrorCode.EVENT_BICYCLE_NOT_FOUND));
+                .orElseThrow(() -> new AppException(ErrorCode.EVENT_BICYCLE_NOT_FOUND));
 
         double price = eventBicycle.getPrice();
         double depositAmount = reservation.getDepositAmount() != null ? reservation.getDepositAmount() : 0;
@@ -1054,9 +1059,11 @@ public class ReservationService {
         EventBicycle eventBicycle = eventBicycleRepository.findById(reservation.getEventBicycle().getEventBikeId())
                 .orElseThrow(() -> new AppException(ErrorCode.EVENT_BICYCLE_NOT_FOUND));
 
-        // Đối với giao dịch offline tại sự kiện, ta coi như Buyer đã trả full cho Seller
+        // Đối với giao dịch offline tại sự kiện, ta coi như Buyer đã trả full cho
+        // Seller
         // (Admin đã payout trước, giờ Seller xác nhận nhận tiền mặt từ Buyer)
-        // Ta chỉ cần chuyển trạng thái reservation sang Completed và eventBicycle sang Sold.
+        // Ta chỉ cần chuyển trạng thái reservation sang Completed và eventBicycle sang
+        // Sold.
 
         reservation.setStatus("Completed");
         reservationRepository.save(reservation);
@@ -1077,7 +1084,7 @@ public class ReservationService {
     }
 
     private void completeReservation(Reservation reservation, EventBicycle eventBicycle, double remainingAmount,
-                                     String buyerUsername) {
+            String buyerUsername) {
         Wallet buyerWallet = walletRepository.findByUsername(buyerUsername)
                 .orElseThrow(() -> new AppException(ErrorCode.WALLET_NOT_FOUND));
         Wallet systemWallet = walletRepository.findByUsername("System")
