@@ -219,17 +219,15 @@ public class ReservationService {
             throw new RuntimeException("Không thể hủy reservation ở trạng thái: " + reservation.getStatus());
         }
 
-        // 1. Cập nhật Transaction liên quan (nếu có) và xóa Deposit trước khi xóa
-        // Reservation
+        // 1. Cập nhật Transaction liên quan (nếu có)
+        // QUAN TRỌNG: Không setReservation(null) để giữ lại ID tra cứu Inspection Report.
         transactionRepository.findByReservation_ReservationId(reservationId)
                 .ifPresent(transaction -> {
                     // Lấy Deposit từ Transaction rồi xóa
                     var deposit = transaction.getDeposit();
 
-                    // Giữ lại transaction làm lịch sử, cập nhật status và xóa reference
+                    // Giữ lại transaction làm lịch sử, cập nhật status
                     transaction.setStatus("Cancelled");
-                    transaction.setReservation(null);
-                    transaction.setDeposit(null);
                     transactionRepository.save(transaction);
 
                     if (deposit != null) {
@@ -237,8 +235,9 @@ public class ReservationService {
                     }
                 });
 
-        // 2. Xóa Reservation
-        reservationRepository.delete(reservation);
+        // 2. Cập nhật Reservation thay vì xóa
+        reservation.setStatus("Cancelled");
+        reservationRepository.save(reservation);
 
         // 3. Đặt lại trạng thái listing về Available
         if (reservation.getListing() != null) {
@@ -296,50 +295,21 @@ public class ReservationService {
             throw new RuntimeException("Không thể hủy reservation ở trạng thái: " + reservation.getStatus());
         }
 
-        // Chỉ hoàn tiền cho buyer nếu SELLER là người yêu cầu hủy.
-        // Nếu BUYER tự hủy → tiền cọc bị tịch thu (theo chính sách sàn).
-        if (isSeller) {
-            Double depositAmount = reservation.getDepositAmount();
-            if (depositAmount == null && reservation.getDeposit() != null) {
-                depositAmount = reservation.getDeposit().getAmount();
-            }
-            if (depositAmount != null && depositAmount > 0 && reservation.getBuyer() != null) {
-                walletService.refundToUserWallet(depositAmount, reservation.getBuyer().getUsername(),
-                        "Hoàn tiền cọc do người bán yêu cầu hủy giao dịch #" + reservationId
-                        + (request.getCancelDescription() != null ? " - " + request.getCancelDescription() : ""));
-            }
+        // Cập nhật trạng thái Reservation sang Pending_Cancel để Admin duyệt
+        reservation.setStatus("Pending_Cancel");
+        if (request.getCancelDescription() != null) {
+            reservation.setCancelDescription(request.getCancelDescription());
         }
-        // Nếu isBuyer: KHÔNG hoàn tiền — tiền cọc bị tịch thu theo chính sách sàn
+        reservationRepository.save(reservation);
 
-        // Cập nhật Transaction: giữ lịch sử, status Cancelled
+        // Cập nhật Transaction tương ứng sang Pending_Cancel
         transactionRepository.findByReservation_ReservationId(reservationId).ifPresent(transaction -> {
-            var deposit = transaction.getDeposit();
-            transaction.setStatus("Cancelled");
-            transaction.setReservation(null);
-            transaction.setDeposit(null);
+            transaction.setStatus("Pending_Cancel");
+            transaction.setDescription("Yêu cầu hủy: " + (request.getCancelDescription() != null ? request.getCancelDescription() : "N/A"));
             transactionRepository.save(transaction);
-            if (deposit != null) {
-                depositRepository.delete(deposit);
-            }
         });
 
-        reservationRepository.delete(reservation);
-
-        // Đặt lại trạng thái bài đăng / xe sự kiện về Available
-        if (reservation.getListing() != null) {
-            BikeListing listing = bikeListingRepository.findById(reservation.getListing().getListingId())
-                    .orElseThrow(() -> new AppException(ErrorCode.BIKE_LISTING_NOT_FOUND));
-            listing.setStatus("Available");
-            bikeListingRepository.save(listing);
-        }
-        if (reservation.getEventBicycle() != null) {
-            EventBicycle eventBicycle = eventBicycleRepository.findById(reservation.getEventBicycle().getEventBikeId())
-                    .orElseThrow(() -> new AppException(ErrorCode.EVENT_BICYCLE_NOT_FOUND));
-            eventBicycle.setStatus("Available_in_event");
-            eventBicycleRepository.save(eventBicycle);
-        }
-
-        return "Đã hủy giao dịch và hoàn tiền cọc thành công.";
+        return "Gửi yêu cầu hủy giao dịch thành công. Vui lòng chờ Admin phê duyệt.";
     }
 
     @Transactional
@@ -366,20 +336,22 @@ public class ReservationService {
                     "Hoàn tiền cọc do Admin duyệt hủy giao dịch #" + reservationId);
         }
 
-        // Cập nhật Transaction: giữ lịch sử, status Cancelled
+        // Cập nhật Transaction sang trạng thái Cancelled. 
+        // QUAN TRỌNG: Không setReservation(null) để giữ lại ID tra cứu Inspection Report.
         transactionRepository.findByReservation_ReservationId(reservationId)
                 .ifPresent(transaction -> {
-                    var deposit = transaction.getDeposit();
                     transaction.setStatus("Cancelled");
-                    transaction.setReservation(null);
-                    transaction.setDeposit(null);
                     transactionRepository.save(transaction);
-                    if (deposit != null) {
-                        depositRepository.delete(deposit);
+                    
+                    // Xóa deposit nếu có (phòng trường hợp DB cleanup)
+                    if (transaction.getDeposit() != null) {
+                        depositRepository.delete(transaction.getDeposit());
                     }
                 });
 
-        reservationRepository.delete(reservation);
+        // Thay vì delete, ta chuyển status sang Cancelled để giữ report link
+        reservation.setStatus("Cancelled");
+        reservationRepository.save(reservation);
 
         if (reservation.getListing() != null) {
             BikeListing listing = bikeListingRepository.findById(reservation.getListing().getListingId())
