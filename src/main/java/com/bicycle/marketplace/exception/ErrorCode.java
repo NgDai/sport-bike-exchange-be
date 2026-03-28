@@ -54,7 +54,8 @@ public enum ErrorCode {
     INSUFFICIENT_FUNDS(1025, "Số dư không đủ để thực hiện giao dịch"),
     USER_INACTIVE(1030, "Tài khoản của bạn đã bị vô hiệu hóa"),
     MISSING_USER_INFO(1031, "Bạn cần cập nhật đầy đủ số điện thoại và địa chỉ trước khi đăng bán xe"),
-    DEPOSIT_NOT_WAITING_PAYMENT(1033, "Deposit không ở trạng thái chờ thanh toán, không thể hủy");
+    DEPOSIT_NOT_WAITING_PAYMENT(1033, "Deposit không ở trạng thái chờ thanh toán, không thể hủy"),
+    INVALID_BIKE_TYPE(1034, "Kiểu xe bạn không được đăng ký vào sự kiện này");
 
     private int code;
     private String message;

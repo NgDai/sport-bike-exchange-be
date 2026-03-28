@@ -163,8 +163,8 @@ public class EventBicycleService {
                 .orElseThrow(() -> new AppException(ErrorCode.BICYCLE_NOT_FOUND));
 
         if (events.getBikeType() != null && !events.getBikeType().equalsIgnoreCase("ALL")) {
-            if (!events.getBikeType().equalsIgnoreCase(bicycle.getBikeType())) {
-                throw new RuntimeException("Loại xe bạn không được đăng ký vào sự kiện này");
+            if (!events.getBikeType().trim().equalsIgnoreCase(bicycle.getBikeType().trim())) {
+                throw new AppException(ErrorCode.INVALID_BIKE_TYPE);
             }
         }
 
