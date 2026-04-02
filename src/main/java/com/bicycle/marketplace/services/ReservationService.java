@@ -452,17 +452,17 @@ public class ReservationService {
         }
 
         // Hoàn tiền cọc 100% từ System Wallet về ví buyer
-        walletService.refundToUserWallet(amount, reservation.getBuyer().getUsername(),
+        walletService.refundToUserWallet(amount + 200000, reservation.getBuyer().getUsername(),
                 "Hoàn tiền cọc do kiểm định thất bại - Giao dịch #" + reservationId);
 
         // Nếu là SELLER_NO_SHOW → thưởng thêm 200,000 VND cho buyer
         boolean isSellerNoShow = reservation.getCancelDescription() != null
                 && reservation.getCancelDescription().toLowerCase().contains("người bán không có mặt");
-        if (isSellerNoShow) {
-            double bonus = 200000;
-            walletService.refundToUserWallet(bonus, reservation.getBuyer().getUsername(),
-                    "Tiền bồi thường thêm 200,000 VND do người bán không đến - Giao dịch #" + reservationId);
-        }
+//        if (isSellerNoShow) {
+//            double bonus = 200000;
+//            walletService.refundToUserWallet(bonus, reservation.getBuyer().getUsername(),
+//                    "Tiền bồi thường thêm 200,000 VND do người bán không đến - Giao dịch #" + reservationId);
+//        }
 
         // Cập nhật Transaction: tách reference, đặt status Refunded
         transactionRepository.findByReservation_ReservationId(reservationId).ifPresent(transaction -> {
