@@ -341,6 +341,7 @@ public class ReservationService {
         transactionRepository.findByReservation_ReservationId(reservationId)
                 .ifPresent(transaction -> {
                     transaction.setStatus("Cancelled");
+                    transaction.setDeposit(null);
                     transactionRepository.save(transaction);
                 });
 
