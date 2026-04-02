@@ -6,12 +6,7 @@ import com.bicycle.marketplace.dto.request.ReservationUpdateRequest;
 import com.bicycle.marketplace.dto.request.CancelReservationRequest;
 import com.bicycle.marketplace.dto.response.CreateDepositResponse;
 import com.bicycle.marketplace.dto.response.ReservationResponse;
-import com.bicycle.marketplace.entities.BikeListing;
-import com.bicycle.marketplace.entities.Deposit;
-import com.bicycle.marketplace.entities.EventBicycle;
-import com.bicycle.marketplace.entities.Reservation;
-import com.bicycle.marketplace.entities.Users;
-import com.bicycle.marketplace.entities.Wallet;
+import com.bicycle.marketplace.entities.*;
 import com.bicycle.marketplace.exception.AppException;
 import com.bicycle.marketplace.exception.ErrorCode;
 import com.bicycle.marketplace.mapper.ReservationMapper;
@@ -346,16 +341,15 @@ public class ReservationService {
         transactionRepository.findByReservation_ReservationId(reservationId)
                 .ifPresent(transaction -> {
                     transaction.setStatus("Cancelled");
+                    transaction.setDeposit(null);
                     transactionRepository.save(transaction);
                 });
+        //thêm
 
         // Thay vì delete, ta chuyển status sang Cancelled để giữ report link
         reservation.setStatus("Cancelled");
         reservationRepository.save(reservation);
 
-        // FIX BUG: Xóa Deposit cũ (status "Paid") để user có thể đặt cọc lại xe này.
-        // Nếu không xóa, DepositService.createDepositViaVNPay sẽ tìm thấy Deposit cũ
-        // vẫn còn status "Paid" và throw ra lỗi "Bạn đã thanh toán cọc cho chiếc xe này rồi."
         if (reservation.getDeposit() != null) {
             Deposit oldDeposit = reservation.getDeposit();
             reservation.setDeposit(null);
@@ -458,17 +452,17 @@ public class ReservationService {
         }
 
         // Hoàn tiền cọc 100% từ System Wallet về ví buyer
-        walletService.refundToUserWallet(amount, reservation.getBuyer().getUsername(),
+        walletService.refundToUserWallet(amount + 200000, reservation.getBuyer().getUsername(),
                 "Hoàn tiền cọc do kiểm định thất bại - Giao dịch #" + reservationId);
 
         // Nếu là SELLER_NO_SHOW → thưởng thêm 200,000 VND cho buyer
         boolean isSellerNoShow = reservation.getCancelDescription() != null
                 && reservation.getCancelDescription().toLowerCase().contains("người bán không có mặt");
-        if (isSellerNoShow) {
-            double bonus = 200000;
-            walletService.refundToUserWallet(bonus, reservation.getBuyer().getUsername(),
-                    "Tiền bồi thường thêm 200,000 VND do người bán không đến - Giao dịch #" + reservationId);
-        }
+//        if (isSellerNoShow) {
+//            double bonus = 200000;
+//            walletService.refundToUserWallet(bonus, reservation.getBuyer().getUsername(),
+//                    "Tiền bồi thường thêm 200,000 VND do người bán không đến - Giao dịch #" + reservationId);
+//        }
 
         // Cập nhật Transaction: tách reference, đặt status Refunded
         transactionRepository.findByReservation_ReservationId(reservationId).ifPresent(transaction -> {
