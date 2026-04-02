@@ -6,11 +6,7 @@ import com.bicycle.marketplace.dto.request.ReservationUpdateRequest;
 import com.bicycle.marketplace.dto.request.CancelReservationRequest;
 import com.bicycle.marketplace.dto.response.CreateDepositResponse;
 import com.bicycle.marketplace.dto.response.ReservationResponse;
-import com.bicycle.marketplace.entities.BikeListing;
-import com.bicycle.marketplace.entities.EventBicycle;
-import com.bicycle.marketplace.entities.Reservation;
-import com.bicycle.marketplace.entities.Users;
-import com.bicycle.marketplace.entities.Wallet;
+import com.bicycle.marketplace.entities.*;
 import com.bicycle.marketplace.exception.AppException;
 import com.bicycle.marketplace.exception.ErrorCode;
 import com.bicycle.marketplace.mapper.ReservationMapper;
@@ -351,6 +347,13 @@ public class ReservationService {
         // Thay vì delete, ta chuyển status sang Cancelled để giữ report link
         reservation.setStatus("Cancelled");
         reservationRepository.save(reservation);
+
+        if (reservation.getDeposit() != null) {
+            Deposit oldDeposit = reservation.getDeposit();
+            reservation.setDeposit(null);
+            reservationRepository.save(reservation);
+            depositRepository.delete(oldDeposit);
+        }
 
         if (reservation.getListing() != null) {
             BikeListing listing = bikeListingRepository.findById(reservation.getListing().getListingId())
