@@ -344,6 +344,7 @@ public class ReservationService {
                     transaction.setDeposit(null);
                     transactionRepository.save(transaction);
                 });
+        //thêm
 
         // Thay vì delete, ta chuyển status sang Cancelled để giữ report link
         reservation.setStatus("Cancelled");
