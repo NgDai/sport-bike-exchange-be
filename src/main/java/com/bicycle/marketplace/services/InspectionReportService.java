@@ -122,18 +122,23 @@ public class InspectionReportService {
 
         String newStatus;
         String bikeStatus;
+        String bikeEventStatus;
         if ("SUCCESS".equalsIgnoreCase(request.getResult())) {
             newStatus = "Waiting_Payment";
             bikeStatus = "Waiting_Payment";
+            bikeEventStatus =  "Waiting_Payment";
         } else if ("SELLER_NO_SHOW".equalsIgnoreCase(request.getResult())) {
             newStatus = "Inspection_Failed";
             bikeStatus = "Hidden";
+            bikeEventStatus = "Hidden";
         } else if ("BUYER_NO_SHOW".equalsIgnoreCase(request.getResult())) {
             newStatus = "Inspection_Failed";
             bikeStatus = "Available";
+            bikeEventStatus = "Available_in_event";
         } else {
             newStatus = "Inspection_Failed";
             bikeStatus = "Available";
+            bikeEventStatus = "Available_in_event";
         }
 
         reservation.setStatus(newStatus);
@@ -149,7 +154,7 @@ public class InspectionReportService {
             listing.setStatus(bikeStatus);
             bikeListingRepository.save(listing);
         } else if (eventBicycle != null) {
-            eventBicycle.setStatus(bikeStatus);
+            eventBicycle.setStatus(bikeEventStatus);
             eventBicycleRepository.save(eventBicycle);
         }
 
