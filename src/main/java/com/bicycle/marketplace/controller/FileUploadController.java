@@ -24,10 +24,7 @@ public class FileUploadController {
     @PostMapping
     public ApiResponse<String> uploadFile(@RequestParam("file") MultipartFile file) {
         try {
-            // Gọi service để upload
             String imageUrl = cloudinaryService.uploadImage(file);
-
-            // Trả về URL ảnh cho Frontend
             ApiResponse<String> response = new ApiResponse<>();
             response.setResult(imageUrl);
             return response;

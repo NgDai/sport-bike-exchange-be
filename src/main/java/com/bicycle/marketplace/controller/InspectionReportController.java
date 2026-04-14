@@ -44,7 +44,6 @@ public class InspectionReportController {
         return apiResponse;
     }
 
-    // Endpoint dành cho USER (buyer/seller) xem report của giao dịch của mình
     @GetMapping("/reservation/{reservationId}/report")
     ApiResponse<InspectionReportResponse> getReportByReservationId(@PathVariable int reservationId) {
         ApiResponse<InspectionReportResponse> apiResponse = new ApiResponse<>();

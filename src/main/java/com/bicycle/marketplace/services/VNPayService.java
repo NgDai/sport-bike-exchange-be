@@ -29,28 +29,12 @@ public class VNPayService {
     private static final String DEFAULT_CLIENT_IP = "127.0.0.1";
     private static final String CHARSET_ASCII = StandardCharsets.US_ASCII.name();
 
-    /**
-     * Builds the full VNPay payment URL (version 2.1.0).
-     * Hash input uses URL-encoded key=value per VNPay 2.1.0.
-     */
-    // public String createOrder(
-    // int amountVnd,
-    // String orderInfo,
-    // String baseUrl,
-    // String clientIp
-    // ) {
-    // Map<String, String> params =
-    // buildPaymentParams(amountVnd, orderInfo, baseUrl, clientIp);
-    // String queryWithHash = buildQueryWithSecureHash(params, CHARSET_ASCII);
-    // return VNPayConfig.vnp_PayUrl + "?" + queryWithHash;
-    // }
 
     public String createOrder(
             long amountVnd,
             String orderInfo,
-            String returnUrl, // Đổi tên biến cho rõ nghĩa
+            String returnUrl,
             String clientIp) {
-        // Truyền returnUrl vào hàm buildPaymentParams
         Map<String, String> params = buildPaymentParams(amountVnd, orderInfo, returnUrl, clientIp);
         String queryWithHash = buildQueryWithSecureHash(params, CHARSET_ASCII);
         return VNPayConfig.vnp_PayUrl + "?" + queryWithHash;
@@ -76,36 +60,11 @@ public class VNPayService {
         return VNP_TRANSACTION_STATUS_SUCCESS.equals(txnStatus) ? 1 : 0;
     }
 
-    // private Map<String, String> buildPaymentParams(
-    // int amountVnd,
-    // String orderInfo,
-    // String baseUrl,
-    // String clientIp
-    // ) {
-    // Map<String, String> params = new HashMap<>();
-    // params.put("vnp_Version", "2.1.0");
-    // params.put("vnp_Command", "pay");
-    // params.put("vnp_TmnCode", VNPayConfig.vnp_TmnCode);
-    // params.put("vnp_Amount", String.valueOf(amountVnd * 100));
-    // params.put("vnp_CurrCode", "VND");
-    // params.put("vnp_TxnRef", VNPayConfig.getRandomNumber(8));
-    // params.put("vnp_OrderInfo", orderInfo != null ? orderInfo : "");
-    // params.put("vnp_OrderType", "other");
-    // params.put("vnp_Locale", "vn");
-    // params.put("vnp_ReturnUrl", buildReturnUrl(baseUrl));
-    // String ip = (clientIp != null && !clientIp.isEmpty())
-    // ? clientIp
-    // : DEFAULT_CLIENT_IP;
-    // params.put("vnp_IpAddr", ip);
-    // params.put("vnp_CreateDate", VNPayConfig.formatCreateDate());
-    // params.put("vnp_ExpireDate", VNPayConfig.formatExpireDate());
-    // return params;
-    // }
 
     private Map<String, String> buildPaymentParams(
             long amountVnd,
             String orderInfo,
-            String returnUrl, // Đổi tên biến
+            String returnUrl,
             String clientIp) {
         Map<String, String> params = new HashMap<>();
         params.put("vnp_Version", "2.1.0");
@@ -117,10 +76,7 @@ public class VNPayService {
         params.put("vnp_OrderInfo", orderInfo != null ? orderInfo : "");
         params.put("vnp_OrderType", "other");
         params.put("vnp_Locale", "vn");
-
-        // GÁN TRỰC TIẾP URL TỪ FRONTEND VÀO THAM SỐ VNPAY
         params.put("vnp_ReturnUrl", returnUrl);
-
         String ip = (clientIp != null && !clientIp.isEmpty())
                 ? clientIp
                 : DEFAULT_CLIENT_IP;
@@ -167,16 +123,6 @@ public class VNPayService {
         return query + "&vnp_SecureHash=" + secureHash;
     }
 
-    // private Map<String, String> collectReturnParams(HttpServletRequest request) {
-    // Map<String, String> params = new HashMap<>();
-    // Enumeration<String> names = request.getParameterNames();
-    // while (names.hasMoreElements()) {
-    // String name = names.nextElement();
-    // String value = request.getParameter(name);
-    // params.put(name, value != null ? value : "");
-    // }
-    // return params;
-    // }
 
     private Map<String, String> collectReturnParams(HttpServletRequest request) {
         Map<String, String> params = new HashMap<>();

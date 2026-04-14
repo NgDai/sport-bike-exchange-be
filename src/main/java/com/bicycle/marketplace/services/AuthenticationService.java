@@ -76,8 +76,6 @@ public class AuthenticationService {
         }
 
         boolean authenticated = request.getPassword().equals(user.getPassword());
-        // boolean authenticated = passwordEncoder.matches(request.getPassword(),
-        // user.getPassword());
         if (!authenticated) {
             throw new AppException(ErrorCode.USER_INVALID_AUTHENTICATION);
         }
@@ -96,8 +94,6 @@ public class AuthenticationService {
             throw new AppException(ErrorCode.USER_INACTIVE);
         }
 
-        // boolean authenticated = passwordEncoder.matches(request.getPassword(),
-        // user.getPassword());
         boolean authenticated = request.getPassword().equals(user.getPassword());
         if (!authenticated) {
             throw new AppException(ErrorCode.USER_INVALID_AUTHENTICATION);
@@ -161,7 +157,7 @@ public class AuthenticationService {
         Users user = userRepository.findByEmail(email).orElseGet(() -> {
             Users newUser = Users.builder()
                     .email(email)
-                    .username(email) // dùng email làm username cho Google user
+                    .username(email)
                     .fullName(name)
                     .avatar(picture)
                     .googleId(googleId)
@@ -177,7 +173,6 @@ public class AuthenticationService {
             throw new AppException(ErrorCode.USER_INACTIVE);
         }
 
-        // Trả về JWT nội bộ như flow đăng nhập thường
         return AuthenticationResponse.builder()
                 .token(generateToken(user))
                 .build();

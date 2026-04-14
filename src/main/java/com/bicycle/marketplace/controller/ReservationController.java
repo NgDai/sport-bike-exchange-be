@@ -69,7 +69,6 @@ public class ReservationController {
         return apiResponse;
     }
 
-    // --- API MỚI CHO ADMIN LÊN LỊCH ---
     @PutMapping("/{reservationId}/schedule")
     @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse<ReservationResponse> scheduleReservation(
@@ -77,18 +76,9 @@ public class ReservationController {
             @RequestBody ReservationScheduleRequest request) {
         ApiResponse<ReservationResponse> apiResponse = new ApiResponse<>();
         apiResponse.setResult(reservationService.scheduleReservation(reservationId, request));
-        apiResponse.setMessage("Gán lịch hẹn và người kiểm định thành công");
+        apiResponse.setMessage("Scheduled reservation successfully");
         return apiResponse;
     }
-
-    // @GetMapping
-    // @PreAuthorize("hasRole('ADMIN')")
-    // ApiResponse<List<Reservation>> findAllReservations() {
-    // ApiResponse<List<Reservation>> apiResponse = new ApiResponse<>();
-    // apiResponse.setResult(reservationService.findAllReservations());
-    // apiResponse.setMessage("Reservations fetched successfully");
-    // return apiResponse;
-    // }
 
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")

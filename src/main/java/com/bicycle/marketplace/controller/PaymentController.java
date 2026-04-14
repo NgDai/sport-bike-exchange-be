@@ -45,7 +45,7 @@ public class PaymentController {
     @Autowired
     private ReservationService reservationService;
 
-    // Đọc Base URL của Frontend từ file properties (Hỗ trợ Local & Vercel)
+
     @Value("${frontend.url:http://localhost:5173}")
     private String frontendBaseUrl;
 
@@ -59,7 +59,6 @@ public class PaymentController {
                : frontendProdUrl;
     }
 
-    // 1. API GỌI TỪ FRONTEND ĐỂ NẠP TIỀN VÀO VÍ (NẠP THƯỜNG)
     @PostMapping("/submitOrder")
     public VNPayResponse submitOrder(
             @RequestBody VNPayRequest request,
@@ -81,7 +80,6 @@ public class PaymentController {
         return response;
     }
 
-    // 2. WEBHOOK/IPN (VNPAY GỌI NGẦM XUỐNG ĐỂ XÁC NHẬN GIAO DỊCH - Dùng cho BE)
     @GetMapping("/vnpay-wallet")
     public VNPayResponse handleVnPayWallet(HttpServletRequest request) {
         int paymentStatus = vnPayService.orderReturn(request);
@@ -141,7 +139,6 @@ public class PaymentController {
         return response;
     }
 
-    // 3. RETURN URL (SAU KHI USER THANH TOÁN XONG SẼ BỊ ĐIỀU HƯỚNG VỀ ĐÂY)
     @GetMapping("/vnpay-payment")
     public void handleVnPayReturn(HttpServletRequest request, HttpServletResponse response) throws Exception {
         int paymentStatus = vnPayService.orderReturn(request);
@@ -156,9 +153,6 @@ public class PaymentController {
         String username = parseUsername(orderInfo);
         int targetId = parseId(orderInfo);
 
-        // =========================================================
-        // TRƯỜNG HỢP 1: THANH TOÁN THÀNH CÔNG
-        // =========================================================
         if (paymentStatus == 1) {
             String vnpAmountStr = request.getParameter("vnp_Amount");
             double amount = (vnpAmountStr != null && !vnpAmountStr.isEmpty()) ? Double.parseDouble(vnpAmountStr) / 100 : 0;
@@ -200,9 +194,6 @@ public class PaymentController {
             }
         }
 
-        // =========================================================
-        // TRƯỜNG HỢP 2: THANH TOÁN THẤT BẠI / NGƯỜI DÙNG BẤM HỦY
-        // =========================================================
         else {
             if (isDepositPayment(orderInfo)) {
                 Integer listingId = depositService.getListingIdByDepositId(targetId);
@@ -272,10 +263,6 @@ public class PaymentController {
         response.sendRedirect(resolvedFrontendUrl);
     }
 
-    // ==========================================
-    // CÁC HÀM HỖ TRỢ XỬ LÝ CHUỖI ORDER_INFO
-    // ==========================================
-
     private String parseUsername(String orderInfo) {
         return orderInfo.split("\\|")[0].trim();
     }
@@ -290,7 +277,6 @@ public class PaymentController {
         return parts.length >= 3 && "deposit".equalsIgnoreCase(parts[1].trim());
     }
 
-    // --- THÊM HÀM KIỂM TRA TAG eventdeposit ---
     private boolean isEventDepositPayment(String orderInfo) {
         String[] parts = orderInfo.split("\\|");
         return parts.length >= 3 && "eventdeposit".equalsIgnoreCase(parts[1].trim());
@@ -316,7 +302,6 @@ public class PaymentController {
         return parts.length >= 3 && "topup".equalsIgnoreCase(parts[1].trim());
     }
 
-    // Sửa lại hàm parseId ở cuối file PaymentController.java
     private int parseId(String orderInfo) {
         try {
             String[] parts = orderInfo.split("\\|");
